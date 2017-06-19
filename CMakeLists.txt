@@ -11,6 +11,20 @@ find_package(rmw REQUIRED)
 
 include_directories(include)
 
+# Default to C11
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 11)
+endif()
+
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
 set(rcl_lifecycle_sources
   src/com_interface.c
   src/default_state_machine.c
@@ -43,12 +57,6 @@ install(TARGETS rcl_lifecycle
   RUNTIME DESTINATION bin)
 
 if(BUILD_TESTING)
-  if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-    add_compile_options(-Wall -Wextra -Wpedantic)
-  endif()
-
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
   find_package(rcl REQUIRED)
@@ -74,6 +82,16 @@ if(BUILD_TESTING)
       ${rcl_lifecycle_INCLUDE_DIRS}
     )
     target_link_libraries(test_multiple_instances ${PROJECT_NAME})
+  endif()
+  ament_add_gtest(test_transition_map
+    test/test_transition_map.cpp
+  )
+  if(TARGET test_transition_map)
+    target_include_directories(test_transition_map PUBLIC
+      ${rcl_INCLUDE_DIRS}
+      ${rcl_lifecycle_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_transition_map ${PROJECT_NAME})
   endif()
 endif()
 
