@@ -24,6 +24,7 @@ extern "C"
 
 #include "./common.h"
 #include "rcl/expand_topic_name.h"
+#include "rcutils/logging_macros.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/validate_full_topic_name.h"
@@ -88,11 +89,11 @@ rcl_service_init(
   if (ret != RCL_RET_OK) {
     rcutils_ret = rcutils_string_map_fini(&substitutions_map);
     if (rcutils_ret != RCUTILS_RET_OK) {
-      fprintf(stderr,
-        "[" RCUTILS_STRINGIFY(__FILE__) ":" RCUTILS_STRINGIFY(__LINE__) "]: "
-        "failed to fini string_map (%d) during error handling: %s\n",
+      RCUTILS_LOG_ERROR_NAMED(
+        "rcl",
+        "failed to fini string_map (%d) during error handling: %s",
         rcutils_ret,
-        rcutils_get_error_string_safe());
+        rcutils_get_error_string_safe())
     }
     if (ret == RCL_RET_BAD_ALLOC) {
       return ret;
@@ -140,8 +141,10 @@ rcl_service_init(
     service->impl, "allocating memory failed", return RCL_RET_BAD_ALLOC, *allocator);
 
   if (RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL == options->qos.durability) {
-    fprintf(stderr, "Warning: Setting QoS durability to 'transient local' for service servers "
-      "can cause them to receive requests from clients that have since terminated.\n");
+    RCUTILS_LOG_WARN_NAMED(
+      "rcl",
+      "Warning: Setting QoS durability to 'transient local' for service servers "
+      "can cause them to receive requests from clients that have since terminated.")
   }
   // Fill out implementation struct.
   // rmw handle (create rmw service)
@@ -211,21 +214,25 @@ rcl_service_get_service_name(const rcl_service_t * service)
   return service->impl->rmw_handle->service_name;
 }
 
+/* *INDENT-OFF* */
+#define _service_get_options(service) &service->impl->options
+/* *INDENT-ON* */
+
 const rcl_service_options_t *
 rcl_service_get_options(const rcl_service_t * service)
 {
-  RCL_CHECK_ARGUMENT_FOR_NULL(service, NULL, rcl_get_default_allocator());
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    service->impl, "service is invalid", return NULL, rcl_get_default_allocator());
-  return &service->impl->options;
+  if (!rcl_service_is_valid(service)) {
+    return NULL;
+  }
+  return _service_get_options(service);
 }
 
 rmw_service_t *
 rcl_service_get_rmw_handle(const rcl_service_t * service)
 {
-  RCL_CHECK_ARGUMENT_FOR_NULL(service, NULL, rcl_get_default_allocator());
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    service->impl, "service is invalid", return NULL, rcl_get_default_allocator());
+  if (!rcl_service_is_valid(service)) {
+    return NULL;
+  }
   return service->impl->rmw_handle;
 }
 
@@ -235,11 +242,7 @@ rcl_take_request(
   rmw_request_id_t * request_header,
   void * ros_request)
 {
-  RCL_CHECK_ARGUMENT_FOR_NULL(service, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
   const rcl_service_options_t * options = rcl_service_get_options(service);
-  if (!options) {
-    return RCL_RET_SERVICE_INVALID;
-  }
   RCL_CHECK_ARGUMENT_FOR_NULL(request_header, RCL_RET_INVALID_ARGUMENT, options->allocator);
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_request, RCL_RET_INVALID_ARGUMENT, options->allocator);
 
@@ -262,11 +265,7 @@ rcl_send_response(
   rmw_request_id_t * request_header,
   void * ros_response)
 {
-  RCL_CHECK_ARGUMENT_FOR_NULL(service, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
   const rcl_service_options_t * options = rcl_service_get_options(service);
-  if (!options) {
-    return RCL_RET_SERVICE_INVALID;
-  }
   RCL_CHECK_ARGUMENT_FOR_NULL(request_header, RCL_RET_INVALID_ARGUMENT, options->allocator);
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_response, RCL_RET_INVALID_ARGUMENT, options->allocator);
 
@@ -278,6 +277,27 @@ rcl_send_response(
   }
 
   return RCL_RET_OK;
+}
+
+bool
+rcl_service_is_valid(const rcl_service_t * service)
+{
+  const rcl_service_options_t * options;
+  RCL_CHECK_ARGUMENT_FOR_NULL(service, false, rcl_get_default_allocator());
+  options = _service_get_options(service);
+  RCL_CHECK_FOR_NULL_WITH_MSG(options,
+    "service's options pointer is invalid",
+    return false,
+    rcl_get_default_allocator());
+  RCL_CHECK_FOR_NULL_WITH_MSG(service->impl,
+    "service implementation is invalid",
+    return false,
+    options->allocator);
+  RCL_CHECK_FOR_NULL_WITH_MSG(service->impl->rmw_handle,
+    "service's rmw handle is invalid",
+    return false,
+    options->allocator);
+  return true;
 }
 
 #if __cplusplus

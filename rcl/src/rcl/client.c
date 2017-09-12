@@ -23,6 +23,7 @@ extern "C"
 #include <string.h>
 
 #include "rcl/expand_topic_name.h"
+#include "rcutils/logging_macros.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/validate_full_topic_name.h"
@@ -91,11 +92,11 @@ rcl_client_init(
   if (ret != RCL_RET_OK) {
     rcutils_ret = rcutils_string_map_fini(&substitutions_map);
     if (rcutils_ret != RCUTILS_RET_OK) {
-      fprintf(stderr,
-        "[" RCUTILS_STRINGIFY(__FILE__) ":" RCUTILS_STRINGIFY(__LINE__) "]: "
+      RCUTILS_LOG_ERROR_NAMED(
+        "rcl",
         "failed to fini string_map (%d) during error handling: %s\n",
         rcutils_ret,
-        rcutils_get_error_string_safe());
+        rcutils_get_error_string_safe())
     }
     if (ret == RCL_RET_BAD_ALLOC) {
       return ret;
@@ -201,29 +202,29 @@ rcl_client_get_default_options()
 const char *
 rcl_client_get_service_name(const rcl_client_t * client)
 {
-  const rcl_client_options_t * options = rcl_client_get_options(client);
-  if (!options) {
+  if (!rcl_client_is_valid(client)) {
     return NULL;  // error already set
   }
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    client->impl->rmw_handle, "client is invalid", return NULL, options->allocator);
   return client->impl->rmw_handle->service_name;
 }
+
+/* *INDENT-OFF* */
+#define _client_get_options(client) &client->impl->options;
+/* *INDENT-ON* */
 
 const rcl_client_options_t *
 rcl_client_get_options(const rcl_client_t * client)
 {
-  RCL_CHECK_ARGUMENT_FOR_NULL(client, NULL, rcl_get_default_allocator());
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    client->impl, "client is invalid", return NULL, rcl_get_default_allocator());
-  return &client->impl->options;
+  if (!rcl_client_is_valid(client)) {
+    return NULL;  // error already set
+  }
+  return _client_get_options(client);
 }
 
 rmw_client_t *
 rcl_client_get_rmw_handle(const rcl_client_t * client)
 {
-  const rcl_client_options_t * options = rcl_client_get_options(client);
-  if (!options) {
+  if (!rcl_client_is_valid(client)) {
     return NULL;  // error already set
   }
   return client->impl->rmw_handle;
@@ -234,12 +235,12 @@ RCL_WARN_UNUSED
 rcl_ret_t
 rcl_send_request(const rcl_client_t * client, const void * ros_request, int64_t * sequence_number)
 {
-  RCL_CHECK_ARGUMENT_FOR_NULL(client, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
+  if (!rcl_client_is_valid(client)) {
+    return RCL_RET_CLIENT_INVALID;
+  }
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_request, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
   RCL_CHECK_ARGUMENT_FOR_NULL(
     sequence_number, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    client->impl, "client is invalid", return RCL_RET_CLIENT_INVALID, rcl_get_default_allocator());
   *sequence_number = rcl_atomic_load_int64_t(&client->impl->sequence_number);
   if (rmw_send_request(
       client->impl->rmw_handle, ros_request, sequence_number) != RMW_RET_OK)
@@ -259,9 +260,10 @@ rcl_take_response(
   rmw_request_id_t * request_header,
   void * ros_response)
 {
-  RCL_CHECK_ARGUMENT_FOR_NULL(client, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    client->impl, "client is invalid", return RCL_RET_CLIENT_INVALID, rcl_get_default_allocator());
+  if (!rcl_client_is_valid(client)) {
+    return RCL_RET_CLIENT_INVALID;
+  }
+
   RCL_CHECK_ARGUMENT_FOR_NULL(
     request_header, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_response, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
@@ -280,7 +282,18 @@ rcl_take_response(
   return RCL_RET_OK;
 }
 
-
+bool rcl_client_is_valid(const rcl_client_t * client)
+{
+  const rcl_client_options_t * options;
+  RCL_CHECK_ARGUMENT_FOR_NULL(
+    client, false, rcl_get_default_allocator());
+  options = _client_get_options(client);
+  RCL_CHECK_FOR_NULL_WITH_MSG(
+    options, "client's options pointer is invalid", return false, rcl_get_default_allocator());
+  RCL_CHECK_FOR_NULL_WITH_MSG(
+    client->impl, "client's rmw implementation is invalid", return false, options->allocator);
+  return true;
+}
 #if __cplusplus
 }
 #endif

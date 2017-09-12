@@ -15,7 +15,8 @@
 #ifndef RCL_LIFECYCLE__DATA_TYPES_H_
 #define RCL_LIFECYCLE__DATA_TYPES_H_
 
-#include <rcl/rcl.h>
+#include "rcl/rcl.h"
+
 #include "rcl_lifecycle/visibility_control.h"
 
 #if __cplusplus
@@ -23,10 +24,7 @@ extern "C"
 {
 #endif
 
-typedef int rcl_lifecycle_ret_t;
-#define RCL_LIFECYCLE_RET_OK -1
-#define RCL_LIFECYCLE_RET_FAILURE -2
-#define RCL_LIFECYCLE_RET_ERROR -3
+typedef uint8_t rcl_lifecycle_transition_key_t;
 
 typedef struct rcl_lifecycle_transition_t rcl_lifecycle_transition_t;
 
@@ -44,8 +42,7 @@ typedef struct rcl_lifecycle_state_t
   // is "unconfigured_shutdown". However, the user only specifies
   // "shutdown". So we register the "unconfigured_shutdown"
   // transition with the impuls "shutdown".
-  // TODO(karsten1987): Introduce new type for valid_transition_keys
-  rcl_lifecycle_ret_t * valid_transition_keys;
+  rcl_lifecycle_transition_key_t * valid_transition_keys;
   rcl_lifecycle_transition_t * valid_transitions;
   unsigned int valid_transition_size;
 } rcl_lifecycle_state_t;
@@ -58,8 +55,6 @@ typedef struct rcl_lifecycle_transition_t
   const rcl_lifecycle_state_t * goal;
 } rcl_lifecycle_transition_t;
 
-// TODO(karsten1987): Rename map as it is no
-// associated array any longer
 typedef struct rcl_lifecycle_transition_map_t
 {
   rcl_lifecycle_state_t * states;

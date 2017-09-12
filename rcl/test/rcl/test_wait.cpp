@@ -27,6 +27,8 @@
 #include "rcl/error_handling.h"
 #include "rcl/wait.h"
 
+#include "rcutils/logging_macros.h"
+
 #ifdef RMW_IMPLEMENTATION
 # define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
 # define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
@@ -121,7 +123,7 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), negative_timeout) {
   ret = rcl_wait(&wait_set, timeout);
   std::chrono::steady_clock::time_point after_sc = std::chrono::steady_clock::now();
   // We expect a timeout here (timer value reached)
-  ASSERT_EQ(RCL_RET_TIMEOUT, ret) << rcl_get_error_string_safe();
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
   // Check time
   int64_t diff = std::chrono::duration_cast<std::chrono::nanoseconds>(after_sc - before_sc).count();
   EXPECT_LE(diff, RCL_MS_TO_NS(10) + TOLERANCE);
@@ -258,7 +260,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), multi_wait_set_threade
           } else {
             std::stringstream ss;
             ss << "[thread " << test_set.thread_id << "] Timeout (try #" << wake_try_count << ")";
-            printf("%s\n", ss.str().c_str());
+            // TODO(mikaelarguedas) replace this with stream logging once they exist
+            RCUTILS_LOG_INFO("%s", ss.str().c_str())
           }
         }
         if (!change_detected) {
