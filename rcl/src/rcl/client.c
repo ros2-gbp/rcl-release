@@ -22,6 +22,7 @@ extern "C"
 #include <stdio.h>
 #include <string.h>
 
+#include "rcl/error_handling.h"
 #include "rcl/expand_topic_name.h"
 #include "rcutils/logging_macros.h"
 #include "rmw/error_handling.h"
@@ -57,22 +58,17 @@ rcl_client_init(
 
   // check the options and allocator first, so the allocator can be passed to errors
   RCL_CHECK_ARGUMENT_FOR_NULL(options, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-  const rcl_allocator_t * allocator = &options->allocator;
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    allocator->allocate, "allocate not set",
-    return RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    allocator->deallocate, "deallocate not set",
-    return RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-
+  rcl_allocator_t * allocator = (rcl_allocator_t *)&options->allocator;
+  RCL_CHECK_ALLOCATOR_WITH_MSG(allocator, "invalid allocator", return RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(client, RCL_RET_INVALID_ARGUMENT, *allocator);
   RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, *allocator);
-  if (!node->impl) {
-    RCL_SET_ERROR_MSG("invalid node", *allocator);
+  if (!rcl_node_is_valid(node, allocator)) {
     return RCL_RET_NODE_INVALID;
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(type_support, RCL_RET_INVALID_ARGUMENT, *allocator);
   RCL_CHECK_ARGUMENT_FOR_NULL(service_name, RCL_RET_INVALID_ARGUMENT, *allocator);
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME, "Initializing client for service name '%s'", service_name)
   if (client->impl) {
     RCL_SET_ERROR_MSG("client already initialized, or memory was unintialized", *allocator);
     return RCL_RET_ALREADY_INIT;
@@ -93,7 +89,7 @@ rcl_client_init(
     rcutils_ret = rcutils_string_map_fini(&substitutions_map);
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rcl",
+        ROS_PACKAGE_NAME,
         "failed to fini string_map (%d) during error handling: %s\n",
         rcutils_ret,
         rcutils_get_error_string_safe())
@@ -126,6 +122,7 @@ rcl_client_init(
       return RCL_RET_ERROR;
     }
   }
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Expanded service name '%s'", expanded_service_name)
   // Validate the expanded service name.
   int validation_result;
   rmw_ret_t rmw_ret = rmw_validate_full_topic_name(expanded_service_name, &validation_result, NULL);
@@ -157,6 +154,7 @@ rcl_client_init(
   }
   // options
   client->impl->options = *options;
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Client initialized")
   return RCL_RET_OK;
 fail:
   if (client->impl) {
@@ -169,9 +167,13 @@ rcl_ret_t
 rcl_client_fini(rcl_client_t * client, rcl_node_t * node)
 {
   (void)node;
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Finalizing client")
   rcl_ret_t result = RCL_RET_OK;
   RCL_CHECK_ARGUMENT_FOR_NULL(client, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
   RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
+  if (!rcl_node_is_valid(node, NULL)) {
+    return RCL_RET_NODE_INVALID;
+  }
   if (client->impl) {
     rcl_allocator_t allocator = client->impl->options.allocator;
     rmw_node_t * rmw_node = rcl_node_get_rmw_handle(node);
@@ -185,6 +187,7 @@ rcl_client_fini(rcl_client_t * client, rcl_node_t * node)
     }
     allocator.deallocate(client->impl, allocator.state);
   }
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Client finalized")
   return result;
 }
 
@@ -202,7 +205,7 @@ rcl_client_get_default_options()
 const char *
 rcl_client_get_service_name(const rcl_client_t * client)
 {
-  if (!rcl_client_is_valid(client)) {
+  if (!rcl_client_is_valid(client, NULL)) {
     return NULL;  // error already set
   }
   return client->impl->rmw_handle->service_name;
@@ -215,7 +218,7 @@ rcl_client_get_service_name(const rcl_client_t * client)
 const rcl_client_options_t *
 rcl_client_get_options(const rcl_client_t * client)
 {
-  if (!rcl_client_is_valid(client)) {
+  if (!rcl_client_is_valid(client, NULL)) {
     return NULL;  // error already set
   }
   return _client_get_options(client);
@@ -224,7 +227,7 @@ rcl_client_get_options(const rcl_client_t * client)
 rmw_client_t *
 rcl_client_get_rmw_handle(const rcl_client_t * client)
 {
-  if (!rcl_client_is_valid(client)) {
+  if (!rcl_client_is_valid(client, NULL)) {
     return NULL;  // error already set
   }
   return client->impl->rmw_handle;
@@ -235,7 +238,8 @@ RCL_WARN_UNUSED
 rcl_ret_t
 rcl_send_request(const rcl_client_t * client, const void * ros_request, int64_t * sequence_number)
 {
-  if (!rcl_client_is_valid(client)) {
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Client sending service request")
+  if (!rcl_client_is_valid(client, NULL)) {
     return RCL_RET_CLIENT_INVALID;
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_request, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
@@ -260,7 +264,8 @@ rcl_take_response(
   rmw_request_id_t * request_header,
   void * ros_response)
 {
-  if (!rcl_client_is_valid(client)) {
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Client taking service response")
+  if (!rcl_client_is_valid(client, NULL)) {
     return RCL_RET_CLIENT_INVALID;
   }
 
@@ -275,23 +280,28 @@ rcl_take_response(
     RCL_SET_ERROR_MSG(rmw_get_error_string_safe(), client->impl->options.allocator);
     return RCL_RET_ERROR;
   }
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME, "Client take response succeeded: %s", taken ? "true" : "false")
   if (!taken) {
-    RCL_SET_ERROR_MSG(rmw_get_error_string_safe(), client->impl->options.allocator);
     return RCL_RET_CLIENT_TAKE_FAILED;
   }
   return RCL_RET_OK;
 }
 
-bool rcl_client_is_valid(const rcl_client_t * client)
+bool rcl_client_is_valid(const rcl_client_t * client, rcl_allocator_t * error_msg_allocator)
 {
   const rcl_client_options_t * options;
-  RCL_CHECK_ARGUMENT_FOR_NULL(
-    client, false, rcl_get_default_allocator());
+  rcl_allocator_t alloc =
+    error_msg_allocator ? *error_msg_allocator : rcl_get_default_allocator();
+  RCL_CHECK_ALLOCATOR_WITH_MSG(&alloc, "allocator is invalid", return false);
+  RCL_CHECK_ARGUMENT_FOR_NULL(client, false, alloc);
+  RCL_CHECK_FOR_NULL_WITH_MSG(
+    client->impl, "client's rmw implementation is invalid", return false, alloc);
   options = _client_get_options(client);
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    options, "client's options pointer is invalid", return false, rcl_get_default_allocator());
+    options, "client's options pointer is invalid", return false, alloc);
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    client->impl, "client's rmw implementation is invalid", return false, options->allocator);
+    client->impl->rmw_handle, "client's rmw handle is invalid", return false, alloc);
   return true;
 }
 #if __cplusplus

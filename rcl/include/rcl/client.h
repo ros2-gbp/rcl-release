@@ -20,7 +20,7 @@ extern "C"
 {
 #endif
 
-#include "rosidl_generator_c/service_type_support.h"
+#include "rosidl_generator_c/service_type_support_struct.h"
 
 #include "rcl/macros.h"
 #include "rcl/node.h"
@@ -75,7 +75,7 @@ rcl_get_zero_initialized_client(void);
  * For C a macro can be used (for example `example_interfaces/AddTwoInts`):
  *
  * ```c
- * #include <rosidl_generator_c/service_type_support.h>
+ * #include <rosidl_generator_c/service_type_support_struct.h>
  * #include <example_interfaces/srv/add_two_ints.h>
  *
  * const rosidl_service_type_support_t * ts =
@@ -109,7 +109,7 @@ rcl_get_zero_initialized_client(void);
  *
  * ```c
  * #include <rcl/rcl.h>
- * #include <rosidl_generator_c/service_type_support.h>
+ * #include <rosidl_generator_c/service_type_support_struct.h>
  * #include <example_interfaces/srv/add_two_ints.h>
  *
  * rcl_node_t node = rcl_get_zero_initialized_node();
@@ -177,6 +177,7 @@ rcl_client_init(
  * \param[in] node handle to the node used to create the client
  * \return `RCL_RET_OK` if client was finalized successfully, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
@@ -275,6 +276,8 @@ rcl_send_request(const rcl_client_t * client, const void * ros_request, int64_t 
  * \return `RCL_RET_OK` if the response was taken successfully, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
  * \return `RCL_RET_CLIENT_INVALID` if the client is invalid, or
+ * \return `RCL_RET_CLIENT_TAKE_FAILED` if take failed but no error occurred
+ *         in the middleware, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
@@ -389,8 +392,9 @@ rcl_client_get_rmw_handle(const rcl_client_t * client);
  * \param[in] client pointer to the rcl client
  * \return `true` if `client` is valid, otherwise `false`
  */
+RCL_PUBLIC
 bool
-rcl_client_is_valid(const rcl_client_t * client);
+rcl_client_is_valid(const rcl_client_t * client, rcl_allocator_t * error_msg_allocator);
 
 #if __cplusplus
 }

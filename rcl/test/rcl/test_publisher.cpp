@@ -93,11 +93,12 @@ TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_publisher_nomin
   rcl_publisher_options_t publisher_options = rcl_publisher_get_default_options();
   ret = rcl_publisher_init(&publisher, this->node_ptr, ts, topic_name, &publisher_options);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-  auto publisher_exit = make_scope_exit([&publisher, this]() {
-    stop_memory_checking();
-    rcl_ret_t ret = rcl_publisher_fini(&publisher, this->node_ptr);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-  });
+  auto publisher_exit = make_scope_exit(
+    [&publisher, this]() {
+      stop_memory_checking();
+      rcl_ret_t ret = rcl_publisher_fini(&publisher, this->node_ptr);
+      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
+    });
   EXPECT_EQ(strcmp(rcl_publisher_get_topic_name(&publisher), expected_topic_name), 0);
   std_msgs__msg__Int64 msg;
   std_msgs__msg__Int64__init(&msg);
@@ -118,11 +119,12 @@ TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_publisher_nomin
   rcl_publisher_options_t publisher_options = rcl_publisher_get_default_options();
   ret = rcl_publisher_init(&publisher, this->node_ptr, ts, topic_name, &publisher_options);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-  auto publisher_exit = make_scope_exit([&publisher, this]() {
-    stop_memory_checking();
-    rcl_ret_t ret = rcl_publisher_fini(&publisher, this->node_ptr);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-  });
+  auto publisher_exit = make_scope_exit(
+    [&publisher, this]() {
+      stop_memory_checking();
+      rcl_ret_t ret = rcl_publisher_fini(&publisher, this->node_ptr);
+      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
+    });
   std_msgs__msg__String msg;
   std_msgs__msg__String__init(&msg);
   ASSERT_TRUE(rosidl_generator_c__String__assign(&msg.data, "testing"));
@@ -141,6 +143,21 @@ TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_publisher_init_
   const rosidl_message_type_support_t * ts = ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int64);
   const char * topic_name = "chatter";
   rcl_publisher_options_t default_publisher_options = rcl_publisher_get_default_options();
+
+  // Check if null publisher is valid
+  EXPECT_FALSE(rcl_publisher_is_valid(nullptr, nullptr));
+
+  // Check if zero initialized node is valid
+  publisher = rcl_get_zero_initialized_publisher();
+  EXPECT_FALSE(rcl_publisher_is_valid(&publisher, nullptr));
+  rcl_reset_error();
+
+  // Check that valid publisher is valid
+  publisher = rcl_get_zero_initialized_publisher();
+  ret = rcl_publisher_init(&publisher, this->node_ptr, ts, topic_name, &default_publisher_options);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
+  EXPECT_TRUE(rcl_publisher_is_valid(&publisher, nullptr));
+  rcl_reset_error();
 
   // Try passing null for publisher in init.
   ret = rcl_publisher_init(nullptr, this->node_ptr, ts, topic_name, &default_publisher_options);

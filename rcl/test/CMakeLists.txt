@@ -1,5 +1,5 @@
 find_package(ament_cmake_gtest REQUIRED)
-find_package(ament_cmake_nose REQUIRED)
+find_package(ament_cmake_pytest REQUIRED)
 
 find_package(example_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -13,6 +13,10 @@ include(cmake/rcl_add_custom_launch_test.cmake)
 set(extra_test_libraries)
 set(extra_test_env)
 set(extra_lib_dirs "${rcl_lib_dir}")
+
+# finding gtest once in the highest scope
+# prevents finding it repeatedly in each local scope
+ament_find_gtest()
 
 # This subdirectory extends both extra_test_libraries, extra_test_env, and extra_lib_dirs.
 add_subdirectory(memory_tools)
@@ -172,6 +176,36 @@ function(test_target_function)
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     TIMEOUT 15
   )
+
+  set(SKIP_TEST "")
+  if(WIN32)
+    # TODO(dhood): launch does not set the return code correctly for these tests on Windows.
+    # See https://github.com/ros2/launch/issues/66
+    set(SKIP_TEST "SKIP_TEST")
+  endif()
+  set(TEST_RMW_IMPL_ID_CHECK_EXECUTABLE_NAME "$<TARGET_FILE:test_rmw_impl_id_check_exe>")
+  configure_file(
+    rcl/test_rmw_impl_id_check.py.in
+    ${CMAKE_CURRENT_BINARY_DIR}/test_rmw_impl_id_check${target_suffix}.py.configure
+    @ONLY
+  )
+  file(GENERATE
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test/test_rmw_impl_id_check${target_suffix}_$<CONFIG>.py"
+    INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_rmw_impl_id_check${target_suffix}.py.configure"
+  )
+  ament_add_pytest_test(
+    test_rmw_impl_id_check${target_suffix}
+    "${CMAKE_CURRENT_BINARY_DIR}/test/test_rmw_impl_id_check${target_suffix}_$<CONFIG>.py"
+    APPEND_LIBRARY_DIRS "${extra_lib_dirs}"
+    ${SKIP_TEST}
+  )
+  if(TEST test_rmw_impl_id_check${target_suffix})
+    set_tests_properties(
+      test_rmw_impl_id_check${target_suffix}
+      PROPERTIES DEPENDS test_rmw_impl_id_check_exe
+    )
+  endif()
+
 endfunction()
 
 macro(connext_workaround target)
@@ -185,6 +219,11 @@ macro(connext_workaround target)
   endif()
 endmacro()
 
+# Build simple executable for using in the test_rmw_impl_id_check
+add_executable(test_rmw_impl_id_check_exe
+  rcl/test_rmw_impl_id_check_exe.cpp)
+target_link_libraries(test_rmw_impl_id_check_exe ${PROJECT_NAME})
+
 call_for_each_rmw_implementation(test_target)
 
 rcl_add_custom_gtest(test_validate_topic_name
@@ -196,6 +235,13 @@ rcl_add_custom_gtest(test_validate_topic_name
 
 rcl_add_custom_gtest(test_expand_topic_name
   SRCS rcl/test_expand_topic_name.cpp
+  ENV ${extra_test_env}
+  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+  LIBRARIES ${PROJECT_NAME} ${extra_test_libraries}
+)
+
+rcl_add_custom_gtest(test_timer${target_suffix}
+  SRCS rcl/test_timer.cpp
   ENV ${extra_test_env}
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
   LIBRARIES ${PROJECT_NAME} ${extra_test_libraries}

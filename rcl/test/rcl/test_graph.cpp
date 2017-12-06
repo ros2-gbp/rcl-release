@@ -244,7 +244,7 @@ check_graph_state(
   bool expected_in_tnat,
   size_t number_of_tries)
 {
-  RCUTILS_LOG_INFO(
+  RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
     "Expecting %zu publishers, %zu subscribers, and that the topic is%s in the graph.",
     expected_publisher_count,
     expected_subscriber_count,
@@ -282,7 +282,7 @@ check_graph_state(
       rcl_reset_error();
     }
 
-    RCUTILS_LOG_INFO(
+    RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
       " Try %zu: %zu publishers, %zu subscribers, and that the topic is%s in the graph.",
       i + 1,
       publisher_count,
@@ -294,7 +294,7 @@ check_graph_state(
       expected_subscriber_count == subscriber_count &&
       expected_in_tnat == is_in_tnat)
     {
-      RCUTILS_LOG_INFO("  state correct!")
+      RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME, "  state correct!")
       break;
     }
     // Wait for graph change before trying again.
@@ -307,15 +307,15 @@ check_graph_state(
     ret = rcl_wait_set_add_guard_condition(wait_set_ptr, graph_guard_condition);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
     std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(200);
-    RCUTILS_LOG_INFO(
+    RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
       "  state wrong, waiting up to '%s' nanoseconds for graph changes... ",
       std::to_string(time_to_sleep.count()).c_str())
     ret = rcl_wait(wait_set_ptr, time_to_sleep.count());
     if (ret == RCL_RET_TIMEOUT) {
-      RCUTILS_LOG_INFO("timeout")
+      RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME, "timeout")
       continue;
     }
-    RCUTILS_LOG_INFO("change occurred")
+    RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME, "change occurred")
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
   }
   EXPECT_EQ(expected_publisher_count, publisher_count);
@@ -334,7 +334,7 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_graph_query_functio
   std::string topic_name("/test_graph_query_functions__");
   std::chrono::nanoseconds now = std::chrono::system_clock::now().time_since_epoch();
   topic_name += std::to_string(now.count());
-  RCUTILS_LOG_INFO("Using topic name: %s", topic_name.c_str())
+  RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME, "Using topic name: %s", topic_name.c_str())
   rcl_ret_t ret;
   const rcl_guard_condition_t * graph_guard_condition =
     rcl_node_get_graph_guard_condition(this->node_ptr);
@@ -421,38 +421,39 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_graph_guard_conditi
   // Create a thread to sleep for a time, then create a publisher, sleep more, then a subscriber,
   // sleep more, destroy the subscriber, sleep more, and then destroy the publisher.
   std::promise<bool> topic_changes_promise;
-  std::thread topic_thread([this, &topic_changes_promise]() {
-    // sleep
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    // create the publisher
-    rcl_publisher_t pub = rcl_get_zero_initialized_publisher();
-    rcl_publisher_options_t pub_ops = rcl_publisher_get_default_options();
-    rcl_ret_t ret = rcl_publisher_init(
-      &pub, this->node_ptr, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
-      "/chatter_test_graph_guard_condition_topics", &pub_ops);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-    // sleep
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    // create the subscription
-    rcl_subscription_t sub = rcl_get_zero_initialized_subscription();
-    rcl_subscription_options_t sub_ops = rcl_subscription_get_default_options();
-    ret = rcl_subscription_init(
-      &sub, this->node_ptr, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
-      "/chatter_test_graph_guard_condition_topics", &sub_ops);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-    // sleep
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    // destroy the subscription
-    ret = rcl_subscription_fini(&sub, this->node_ptr);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-    // sleep
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    // destroy the publication
-    ret = rcl_publisher_fini(&pub, this->node_ptr);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-    // notify that the thread is done
-    topic_changes_promise.set_value(true);
-  });
+  std::thread topic_thread(
+    [this, &topic_changes_promise]() {
+      // sleep
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // create the publisher
+      rcl_publisher_t pub = rcl_get_zero_initialized_publisher();
+      rcl_publisher_options_t pub_ops = rcl_publisher_get_default_options();
+      rcl_ret_t ret = rcl_publisher_init(
+        &pub, this->node_ptr, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
+        "/chatter_test_graph_guard_condition_topics", &pub_ops);
+      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
+      // sleep
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // create the subscription
+      rcl_subscription_t sub = rcl_get_zero_initialized_subscription();
+      rcl_subscription_options_t sub_ops = rcl_subscription_get_default_options();
+      ret = rcl_subscription_init(
+        &sub, this->node_ptr, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
+        "/chatter_test_graph_guard_condition_topics", &sub_ops);
+      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
+      // sleep
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // destroy the subscription
+      ret = rcl_subscription_fini(&sub, this->node_ptr);
+      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
+      // sleep
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // destroy the publication
+      ret = rcl_publisher_fini(&pub, this->node_ptr);
+      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
+      // notify that the thread is done
+      topic_changes_promise.set_value(true);
+    });
   // Wait for the graph state to change, expecting it to do so at least 4 times,
   // once for each change in the topics thread.
   const rcl_guard_condition_t * graph_guard_condition =
@@ -467,7 +468,7 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_graph_guard_conditi
     ret = rcl_wait_set_add_guard_condition(this->wait_set_ptr, graph_guard_condition);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
     std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(200);
-    RCUTILS_LOG_INFO(
+    RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
       "waiting up to '%s' nanoseconds for graph changes",
       std::to_string(time_to_sleep.count()).c_str())
     ret = rcl_wait(this->wait_set_ptr, time_to_sleep.count());
@@ -493,11 +494,12 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_rcl_service_server_
   rcl_client_options_t client_options = rcl_client_get_default_options();
   ret = rcl_client_init(&client, this->node_ptr, ts, service_name, &client_options);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-  auto client_exit = make_scope_exit([&client, this]() {
-    stop_memory_checking();
-    rcl_ret_t ret = rcl_client_fini(&client, this->node_ptr);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-  });
+  auto client_exit = make_scope_exit(
+    [&client, this]() {
+      stop_memory_checking();
+      rcl_ret_t ret = rcl_client_fini(&client, this->node_ptr);
+      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
+    });
   // Check, knowing there is no service server (created by us at least).
   bool is_available;
   ret = rcl_service_server_is_available(this->node_ptr, &client, &is_available);
@@ -526,7 +528,7 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_rcl_service_server_
         ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
         ret = rcl_wait_set_add_guard_condition(this->wait_set_ptr, graph_guard_condition);
         ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-        RCUTILS_LOG_INFO(
+        RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
           "waiting up to '%s' nanoseconds for graph changes",
           std::to_string(time_to_sleep.count()).c_str())
         ret = rcl_wait(this->wait_set_ptr, time_to_sleep.count());
@@ -561,11 +563,12 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_rcl_service_server_
     rcl_service_options_t service_options = rcl_service_get_default_options();
     ret = rcl_service_init(&service, this->node_ptr, ts, service_name, &service_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-    auto service_exit = make_scope_exit([&service, this]() {
-      stop_memory_checking();
-      rcl_ret_t ret = rcl_service_fini(&service, this->node_ptr);
-      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
-    });
+    auto service_exit = make_scope_exit(
+      [&service, this]() {
+        stop_memory_checking();
+        rcl_ret_t ret = rcl_service_fini(&service, this->node_ptr);
+        EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string_safe();
+      });
     // Wait for and then assert that it is available.
     wait_for_service_state_to_change(true, is_available);
     ASSERT_TRUE(is_available);

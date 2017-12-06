@@ -21,7 +21,7 @@ extern "C"
 
 #include <stdio.h>
 
-#include "./common.h"
+#include "rcl/error_handling.h"
 #include "rcl/expand_topic_name.h"
 #include "rcutils/logging_macros.h"
 #include "rmw/error_handling.h"
@@ -53,18 +53,18 @@ rcl_subscription_init(
 
   // Check options and allocator first, so the allocator can be used in errors.
   RCL_CHECK_ARGUMENT_FOR_NULL(options, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-  const rcl_allocator_t * allocator = &options->allocator;
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    allocator->allocate, "allocate not set",
-    return RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    allocator->deallocate, "deallocate not set",
-    return RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-
+  rcl_allocator_t * allocator = (rcl_allocator_t *)&options->allocator;
+  RCL_CHECK_ALLOCATOR_WITH_MSG(allocator, "invalid allocator", return RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(subscription, RCL_RET_INVALID_ARGUMENT, *allocator);
   RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, *allocator);
+  if (!rcl_node_is_valid(node, allocator)) {
+    return RCL_RET_NODE_INVALID;
+  }
+  RCL_CHECK_ARGUMENT_FOR_NULL(subscription, RCL_RET_INVALID_ARGUMENT, *allocator);
   RCL_CHECK_ARGUMENT_FOR_NULL(type_support, RCL_RET_INVALID_ARGUMENT, *allocator);
   RCL_CHECK_ARGUMENT_FOR_NULL(topic_name, RCL_RET_INVALID_ARGUMENT, *allocator);
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME, "Initializing subscription for topic name '%s'", topic_name)
   if (subscription->impl) {
     RCL_SET_ERROR_MSG("subscription already initialized, or memory was uninitialized", *allocator);
     return RCL_RET_ALREADY_INIT;
@@ -85,7 +85,7 @@ rcl_subscription_init(
     rcutils_ret = rcutils_string_map_fini(&substitutions_map);
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rcl",
+        ROS_PACKAGE_NAME,
         "failed to fini string_map (%d) during error handling: %s",
         rcutils_ret,
         rcutils_get_error_string_safe())
@@ -118,6 +118,7 @@ rcl_subscription_init(
       return RCL_RET_ERROR;
     }
   }
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Expanded topic name '%s'", expanded_topic_name)
   // Validate the expanded topic name.
   int validation_result;
   rmw_ret_t rmw_ret = rmw_validate_full_topic_name(expanded_topic_name, &validation_result, NULL);
@@ -150,6 +151,7 @@ rcl_subscription_init(
   }
   // options
   subscription->impl->options = *options;
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription initialized")
   return RCL_RET_OK;
 fail:
   if (subscription->impl) {
@@ -161,9 +163,13 @@ fail:
 rcl_ret_t
 rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
 {
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Finalizing subscription")
   rcl_ret_t result = RCL_RET_OK;
   RCL_CHECK_ARGUMENT_FOR_NULL(subscription, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
   RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
+  if (!rcl_node_is_valid(node, NULL)) {
+    return RCL_RET_NODE_INVALID;
+  }
   if (subscription->impl) {
     rcl_allocator_t allocator = subscription->impl->options.allocator;
     rmw_node_t * rmw_node = rcl_node_get_rmw_handle(node);
@@ -178,6 +184,7 @@ rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
     }
     allocator.deallocate(subscription->impl, allocator.state);
   }
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription finalized")
   return result;
 }
 
@@ -200,6 +207,7 @@ rcl_take(
   void * ros_message,
   rmw_message_info_t * message_info)
 {
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription taking message")
   RCL_CHECK_ARGUMENT_FOR_NULL(subscription, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
   const rcl_subscription_options_t * options = rcl_subscription_get_options(subscription);
   if (!options) {
@@ -223,6 +231,8 @@ rcl_take(
     RCL_SET_ERROR_MSG(rmw_get_error_string_safe(), options->allocator);
     return RCL_RET_ERROR;
   }
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME, "Subscription take succeeded: %s", taken ? "true" : "false")
   if (!taken) {
     return RCL_RET_SUBSCRIPTION_TAKE_FAILED;
   }
@@ -232,7 +242,7 @@ rcl_take(
 const char *
 rcl_subscription_get_topic_name(const rcl_subscription_t * subscription)
 {
-  if (!rcl_subscription_is_valid(subscription)) {
+  if (!rcl_subscription_is_valid(subscription, NULL)) {
     return NULL;
   }
   return subscription->impl->rmw_handle->topic_name;
@@ -245,7 +255,7 @@ rcl_subscription_get_topic_name(const rcl_subscription_t * subscription)
 const rcl_subscription_options_t *
 rcl_subscription_get_options(const rcl_subscription_t * subscription)
 {
-  if (!rcl_subscription_is_valid(subscription)) {
+  if (!rcl_subscription_is_valid(subscription, NULL)) {
     return NULL;
   }
   return _subscription_get_options(subscription);
@@ -254,30 +264,35 @@ rcl_subscription_get_options(const rcl_subscription_t * subscription)
 rmw_subscription_t *
 rcl_subscription_get_rmw_handle(const rcl_subscription_t * subscription)
 {
-  if (!rcl_subscription_is_valid(subscription)) {
+  if (!rcl_subscription_is_valid(subscription, NULL)) {
     return NULL;
   }
   return subscription->impl->rmw_handle;
 }
 
 bool
-rcl_subscription_is_valid(const rcl_subscription_t * subscription)
+rcl_subscription_is_valid(
+  const rcl_subscription_t * subscription,
+  rcl_allocator_t * error_msg_allocator)
 {
   const rcl_subscription_options_t * options;
+  rcl_allocator_t alloc =
+    error_msg_allocator ? *error_msg_allocator : rcl_get_default_allocator();
+  RCL_CHECK_ALLOCATOR_WITH_MSG(&alloc, "allocator is invalid", return false);
   RCL_CHECK_ARGUMENT_FOR_NULL(subscription, false, rcl_get_default_allocator());
+  RCL_CHECK_FOR_NULL_WITH_MSG(
+    subscription->impl,
+    "subscription's implementation is invalid",
+    return false,
+    alloc);
   options = _subscription_get_options(subscription);
-  RCL_CHECK_FOR_NULL_WITH_MSG(options,
-    "subscription's option pointer is invalid",
+  RCL_CHECK_FOR_NULL_WITH_MSG(
+    options, "subscription's option pointer is invalid", return false, alloc);
+  RCL_CHECK_FOR_NULL_WITH_MSG(
+    subscription->impl->rmw_handle,
+    "subscription's rmw handle is invalid",
     return false,
-    rcl_get_default_allocator());
-  RCL_CHECK_FOR_NULL_WITH_MSG(subscription->impl,
-    "subscription implementation is invalid",
-    return false,
-    options->allocator);
-  RCL_CHECK_FOR_NULL_WITH_MSG(subscription->impl->rmw_handle,
-    "subscription implementation rmw_handle is invalid",
-    return false,
-    options->allocator);
+    alloc);
   return true;
 }
 

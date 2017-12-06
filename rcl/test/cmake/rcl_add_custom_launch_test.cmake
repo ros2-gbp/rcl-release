@@ -29,9 +29,11 @@ macro(rcl_add_custom_launch_test test_name executable1 executable2)
     @ONLY
   )
   file(GENERATE
-    OUTPUT "test/${test_name}${target_suffix}_$<CONFIG>.py"
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test/${test_name}${target_suffix}_$<CONFIG>.py"
     INPUT "${CMAKE_CURRENT_BINARY_DIR}/${test_name}${target_suffix}.py.configure"
   )
-  ament_add_nose_test(${test_name}${target_suffix} "${CMAKE_CURRENT_BINARY_DIR}/${test_name}${target_suffix}_$<CONFIG>.py" ${ARGN})
-  set_tests_properties(${test_name}${target_suffix} PROPERTIES DEPENDS "${executable1}${target_suffix} ${executable2}${target_suffix}")
+  ament_add_pytest_test(${test_name}${target_suffix} "${CMAKE_CURRENT_BINARY_DIR}/test/${test_name}${target_suffix}_$<CONFIG>.py" ${ARGN})
+  if(TEST ${test_name}${target_suffix})
+    set_tests_properties(${test_name}${target_suffix} PROPERTIES DEPENDS "${executable1}${target_suffix} ${executable2}${target_suffix}")
+  endif()
 endmacro()

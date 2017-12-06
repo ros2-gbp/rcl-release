@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,29 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SCOPE_EXIT_HPP_
-#define SCOPE_EXIT_HPP_
+#include "rcl/rcl.h"
 
-#include <functional>
-
-template<typename Callable>
-struct ScopeExit
+int main(int, char **)
 {
-  explicit ScopeExit(Callable callable)
-  : callable_(callable) {}
-  ~ScopeExit() {callable_();}
-
-private:
-  Callable callable_;
-};
-
-template<typename Callable>
-ScopeExit<Callable>
-make_scope_exit(Callable callable)
-{
-  return ScopeExit<Callable>(callable);
+  rcl_ret_t ret = rcl_init(0, nullptr, rcl_get_default_allocator());
+  if (ret != RCL_RET_OK) {
+    return ret;
+  }
+  return 0;
 }
-
-#define SCOPE_EXIT(code) make_scope_exit([&]() {code;})
-
-#endif  // SCOPE_EXIT_HPP_

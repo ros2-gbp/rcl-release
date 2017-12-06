@@ -21,9 +21,9 @@ extern "C"
 
 #include <string.h>
 
-#include "./common.h"
 #include "./stdatomic_helper.h"
 #include "rcl/error_handling.h"
+#include "rcutils/logging_macros.h"
 #include "rmw/error_handling.h"
 
 static atomic_bool __rcl_is_initialized = ATOMIC_VAR_INIT(false);
@@ -59,14 +59,7 @@ rcl_init(int argc, char ** argv, rcl_allocator_t allocator)
   rcl_ret_t fail_ret = RCL_RET_ERROR;
 
   // Check allocator first, so it can be used in other errors.
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    allocator.allocate,
-    "invalid allocator, allocate not set",
-    return RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    allocator.deallocate,
-    "invalid allocator, deallocate not set",
-    return RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
+  RCL_CHECK_ALLOCATOR_WITH_MSG(&allocator, "invalid allocator", return RCL_RET_INVALID_ARGUMENT);
 
   if (argc > 0) {
     RCL_CHECK_ARGUMENT_FOR_NULL(argv, RCL_RET_INVALID_ARGUMENT, allocator);
@@ -124,6 +117,7 @@ fail:
 rcl_ret_t
 rcl_shutdown()
 {
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Shutting down")
   if (!rcl_ok()) {
     // must use default allocator here because __rcl_allocator may not be set yet
     RCL_SET_ERROR_MSG("rcl_shutdown called before rcl_init", rcl_get_default_allocator());

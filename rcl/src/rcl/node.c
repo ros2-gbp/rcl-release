@@ -24,6 +24,7 @@ extern "C"
 #include <stdlib.h>
 #include <string.h>
 
+#include "rcl/error_handling.h"
 #include "rcl/rcl.h"
 #include "rcutils/filesystem.h"
 #include "rcutils/get_env.h"
@@ -69,9 +70,9 @@ const char * rcl_get_secure_root(const char * node_name)
   if (!ros_secure_root_size) {
     return NULL;  // environment variable was empty
   }
-  const char * node_secure_root = rcutils_join_path(ros_secure_root_env, node_name);
+  char * node_secure_root = rcutils_join_path(ros_secure_root_env, node_name);
   if (!rcutils_is_directory(node_secure_root)) {
-    free((char *)node_secure_root);
+    free(node_secure_root);
     return NULL;
   }
   return node_secure_root;
@@ -102,16 +103,13 @@ rcl_node_init(
   // Check options and allocator first, so allocator can be used for errors.
   RCL_CHECK_ARGUMENT_FOR_NULL(options, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
   const rcl_allocator_t * allocator = &options->allocator;
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    allocator->allocate, "allocate not set",
-    return RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    allocator->deallocate, "deallocate not set",
-    return RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
+  RCL_CHECK_ALLOCATOR_WITH_MSG(allocator, "invalid allocator", return RCL_RET_INVALID_ARGUMENT);
 
   RCL_CHECK_ARGUMENT_FOR_NULL(name, RCL_RET_INVALID_ARGUMENT, *allocator);
   RCL_CHECK_ARGUMENT_FOR_NULL(namespace_, RCL_RET_INVALID_ARGUMENT, *allocator);
   RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, *allocator);
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME, "Initializing node '%s' in namespace '%s'", name, namespace_)
   if (node->impl) {
     RCL_SET_ERROR_MSG("node already initialized, or struct memory was unintialized", *allocator);
     return RCL_RET_ALREADY_INIT;
@@ -146,6 +144,7 @@ rcl_node_init(
     // Have this special case to avoid a memory allocation when "" is passed.
     local_namespace_ = "/";
   }
+
   // If the namespace does not start with a /, add one.
   if (namespace_length > 0 && namespace_[0] != '/') {
     // TODO(wjwwood): replace with generic strcat that takes an allocator once available
@@ -163,6 +162,9 @@ rcl_node_init(
   ret = rmw_validate_namespace(local_namespace_, &validation_result, NULL);
   if (ret != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string_safe(), *allocator);
+    if (should_free_local_namespace_) {
+      allocator->deallocate((char *)local_namespace_, allocator->state);
+    }
     return ret;
   }
   if (validation_result != RMW_NAMESPACE_VALID) {
@@ -176,11 +178,18 @@ rcl_node_init(
     } else {
       RCL_SET_ERROR_MSG(msg, *allocator);
     }
+
+    if (should_free_local_namespace_) {
+      allocator->deallocate((char *)local_namespace_, allocator->state);
+    }
     return RCL_RET_NODE_INVALID_NAMESPACE;
   }
 
   // Allocate space for the implementation struct.
   node->impl = (rcl_node_impl_t *)allocator->allocate(sizeof(rcl_node_impl_t), allocator->state);
+  if (!node->impl && should_free_local_namespace_) {
+    allocator->deallocate((char *)local_namespace_, allocator->state);
+  }
   RCL_CHECK_FOR_NULL_WITH_MSG(
     node->impl, "allocating memory failed", return RCL_RET_BAD_ALLOC, *allocator);
   node->impl->rmw_node_handle = NULL;
@@ -208,6 +217,7 @@ rcl_node_init(
   }
   // actual domain id
   node->impl->actual_domain_id = domain_id;
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Using domain ID of '%zu'", domain_id)
 
   const char * ros_security_enable = NULL;
   const char * ros_enforce_security = NULL;
@@ -216,15 +226,23 @@ rcl_node_init(
     RCL_SET_ERROR_MSG(
       "Environment variable " RCUTILS_STRINGIFY(ROS_SECURITY_ENABLE_VAR_NAME)
       " could not be read", rcl_get_default_allocator());
+    if (should_free_local_namespace_) {
+      allocator->deallocate((char *)local_namespace_, allocator->state);
+    }
     return RCL_RET_ERROR;
   }
 
   bool use_security = (0 == strcmp(ros_security_enable, "true"));
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME, "Using security: %s", use_security ? "true" : "false")
 
   if (rcutils_get_env(ROS_SECURITY_STRATEGY_VAR_NAME, &ros_enforce_security)) {
     RCL_SET_ERROR_MSG(
       "Environment variable " RCUTILS_STRINGIFY(ROS_SECURITY_STRATEGY_VAR_NAME)
       " could not be read", rcl_get_default_allocator());
+    if (should_free_local_namespace_) {
+      allocator->deallocate((char *)local_namespace_, allocator->state);
+    }
     return RCL_RET_ERROR;
   }
 
@@ -246,6 +264,9 @@ rcl_node_init(
           "SECURITY ERROR: unable to find a folder matching the node name in the "
           RCUTILS_STRINGIFY(ROS_SECURITY_ROOT_DIRECTORY_VAR_NAME)
           " directory while the requested security strategy requires it", *allocator);
+        if (should_free_local_namespace_) {
+          allocator->deallocate((char *)local_namespace_, allocator->state);
+        }
         return RCL_RET_ERROR;
       }
     }
@@ -258,15 +279,15 @@ rcl_node_init(
   // free local_namespace_ if necessary
   if (should_free_local_namespace_) {
     allocator->deallocate((char *)local_namespace_, allocator->state);
+    should_free_local_namespace_ = false;
   }
   // instance id
   node->impl->rcl_instance_id = rcl_get_instance_id();
   // graph guard condition
   rmw_graph_guard_condition = rmw_node_get_graph_guard_condition(node->impl->rmw_node_handle);
-  if (!rmw_graph_guard_condition) {
-    RCL_SET_ERROR_MSG(rmw_get_error_string_safe(), *allocator);
-    goto fail;
-  }
+  RCL_CHECK_FOR_NULL_WITH_MSG(
+    rmw_graph_guard_condition, rmw_get_error_string_safe(), goto fail, *allocator);
+
   node->impl->graph_guard_condition = (rcl_guard_condition_t *)allocator->allocate(
     sizeof(rcl_guard_condition_t), allocator->state);
   RCL_CHECK_FOR_NULL_WITH_MSG(
@@ -285,6 +306,7 @@ rcl_node_init(
     // error message already set
     goto fail;
   }
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Node initialized")
   return RCL_RET_OK;
 fail:
   if (node->impl) {
@@ -292,7 +314,7 @@ fail:
       ret = rmw_destroy_node(node->impl->rmw_node_handle);
       if (ret != RMW_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rcl",
+          ROS_PACKAGE_NAME,
           "failed to fini rmw node in error recovery: %s", rmw_get_error_string_safe()
         )
       }
@@ -301,7 +323,7 @@ fail:
       ret = rcl_guard_condition_fini(node->impl->graph_guard_condition);
       if (ret != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rcl",
+          ROS_PACKAGE_NAME,
           "failed to fini guard condition in error recovery: %s", rcl_get_error_string_safe()
         )
       }
@@ -310,12 +332,18 @@ fail:
     allocator->deallocate(node->impl, allocator->state);
   }
   *node = rcl_get_zero_initialized_node();
+
+  if (should_free_local_namespace_) {
+    allocator->deallocate((char *)local_namespace_, allocator->state);
+    local_namespace_ = NULL;
+  }
   return fail_ret;
 }
 
 rcl_ret_t
 rcl_node_fini(rcl_node_t * node)
 {
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Finalizing node")
   RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
   if (!node->impl) {
     // Repeat calls to fini or calling fini on a zero initialized node is ok.
@@ -337,20 +365,25 @@ rcl_node_fini(rcl_node_t * node)
   // assuming that allocate and deallocate are ok since they are checked in init
   allocator.deallocate(node->impl, allocator.state);
   node->impl = NULL;
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Node finalized")
   return result;
 }
 
 bool
-rcl_node_is_valid(const rcl_node_t * node)
+rcl_node_is_valid(const rcl_node_t * node, rcl_allocator_t * error_msg_allocator)
 {
-  RCL_CHECK_ARGUMENT_FOR_NULL(node, false, rcl_get_default_allocator());
+  rcl_allocator_t alloc = error_msg_allocator ? *error_msg_allocator : rcl_get_default_allocator();
+  RCL_CHECK_ALLOCATOR_WITH_MSG(&alloc, "allocator is invalid", return false);
+  RCL_CHECK_ARGUMENT_FOR_NULL(node, false, alloc);
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    node->impl, "rcl node implementation is invalid", return false, rcl_get_default_allocator());
+    node->impl, "rcl node implementation is invalid", return false, alloc);
   if (node->impl->rcl_instance_id != rcl_get_instance_id()) {
     RCL_SET_ERROR_MSG(
-      "rcl node is invalid, rcl instance id does not match", rcl_get_default_allocator());
+      "rcl node is invalid, rcl instance id does not match", alloc);
     return false;
   }
+  RCL_CHECK_FOR_NULL_WITH_MSG(
+    node->impl->rmw_node_handle, "rcl node's rmw handle is invalid", return false, alloc);
   return true;
 }
 
@@ -369,7 +402,7 @@ rcl_node_get_default_options()
 const char *
 rcl_node_get_name(const rcl_node_t * node)
 {
-  if (!rcl_node_is_valid(node)) {
+  if (!rcl_node_is_valid(node, NULL)) {
     return NULL;
   }
   return node->impl->rmw_node_handle->name;
@@ -378,7 +411,7 @@ rcl_node_get_name(const rcl_node_t * node)
 const char *
 rcl_node_get_namespace(const rcl_node_t * node)
 {
-  if (!rcl_node_is_valid(node)) {
+  if (!rcl_node_is_valid(node, NULL)) {
     return NULL;
   }
   return node->impl->rmw_node_handle->namespace_;
@@ -387,7 +420,7 @@ rcl_node_get_namespace(const rcl_node_t * node)
 const rcl_node_options_t *
 rcl_node_get_options(const rcl_node_t * node)
 {
-  if (!rcl_node_is_valid(node)) {
+  if (!rcl_node_is_valid(node, NULL)) {
     return NULL;
   }
   return &node->impl->options;
@@ -409,7 +442,7 @@ rcl_node_get_domain_id(const rcl_node_t * node, size_t * domain_id)
 rmw_node_t *
 rcl_node_get_rmw_handle(const rcl_node_t * node)
 {
-  if (!rcl_node_is_valid(node)) {
+  if (!rcl_node_is_valid(node, NULL)) {
     return NULL;
   }
   return node->impl->rmw_node_handle;
@@ -427,7 +460,7 @@ rcl_node_get_rcl_instance_id(const rcl_node_t * node)
 const struct rcl_guard_condition_t *
 rcl_node_get_graph_guard_condition(const rcl_node_t * node)
 {
-  if (!rcl_node_is_valid(node)) {
+  if (!rcl_node_is_valid(node, NULL)) {
     return NULL;
   }
   return node->impl->graph_guard_condition;

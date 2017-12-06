@@ -19,12 +19,13 @@ extern "C"
 
 #include "rcl/graph.h"
 
-#include <rcutils/allocator.h>
-#include <rcutils/types.h>
-#include <rmw/get_service_names_and_types.h>
-#include <rmw/get_topic_names_and_types.h>
-#include <rmw/names_and_types.h>
-#include <rmw/rmw.h>
+#include "rcl/error_handling.h"
+#include "rcutils/allocator.h"
+#include "rcutils/types.h"
+#include "rmw/get_service_names_and_types.h"
+#include "rmw/get_topic_names_and_types.h"
+#include "rmw/names_and_types.h"
+#include "rmw/rmw.h"
 
 #include "./common.h"
 
@@ -36,8 +37,8 @@ rcl_get_topic_names_and_types(
   rcl_names_and_types_t * topic_names_and_types)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(allocator, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator())
-  RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, *allocator)
-  if (!rcl_node_is_valid(node)) {
+  RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, *allocator);
+  if (!rcl_node_is_valid(node, allocator)) {
     return RCL_RET_NODE_INVALID;
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(topic_names_and_types, RCL_RET_INVALID_ARGUMENT, *allocator)
@@ -63,7 +64,7 @@ rcl_get_service_names_and_types(
   rcl_names_and_types_t * service_names_and_types)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, *allocator);
-  if (!rcl_node_is_valid(node)) {
+  if (!rcl_node_is_valid(node, allocator)) {
     return RCL_RET_NODE_INVALID;
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(service_names_and_types, RCL_RET_INVALID_ARGUMENT, *allocator);
@@ -97,7 +98,7 @@ rcl_get_node_names(
   rcutils_string_array_t * node_names)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, allocator);
-  if (!rcl_node_is_valid(node)) {
+  if (!rcl_node_is_valid(node, &allocator)) {
     return RCL_RET_NODE_INVALID;
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(node_names, RCL_RET_INVALID_ARGUMENT, allocator);
@@ -122,7 +123,7 @@ rcl_count_publishers(
   size_t * count)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-  if (!rcl_node_is_valid(node)) {
+  if (!rcl_node_is_valid(node, NULL)) {
     return RCL_RET_NODE_INVALID;
   }
   const rcl_node_options_t * node_options = rcl_node_get_options(node);
@@ -142,7 +143,7 @@ rcl_count_subscribers(
   size_t * count)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-  if (!rcl_node_is_valid(node)) {
+  if (!rcl_node_is_valid(node, NULL)) {
     return RCL_RET_NODE_INVALID;
   }
   const rcl_node_options_t * node_options = rcl_node_get_options(node);
@@ -162,7 +163,7 @@ rcl_service_server_is_available(
   bool * is_available)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT, rcl_get_default_allocator());
-  if (!rcl_node_is_valid(node)) {
+  if (!rcl_node_is_valid(node, NULL)) {
     return RCL_RET_NODE_INVALID;
   }
   const rcl_node_options_t * node_options = rcl_node_get_options(node);

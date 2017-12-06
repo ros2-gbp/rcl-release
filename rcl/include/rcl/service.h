@@ -20,7 +20,7 @@ extern "C"
 {
 #endif
 
-#include "rosidl_generator_c/service_type_support.h"
+#include "rosidl_generator_c/service_type_support_struct.h"
 
 #include "rcl/macros.h"
 #include "rcl/node.h"
@@ -72,7 +72,7 @@ rcl_get_zero_initialized_service(void);
  * For C a macro can be used (for example `example_interfaces/AddTwoInts`):
  *
  * ```c
- * #include <rosidl_generator_c/service_type_support.h>
+ * #include <rosidl_generator_c/service_type_support_struct.h>
  * #include <example_interfaces/srv/add_two_ints.h>
  * const rosidl_service_type_support_t * ts =
  *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, AddTwoInts);
@@ -104,7 +104,7 @@ rcl_get_zero_initialized_service(void);
  *
  * ```c
  * #include <rcl/rcl.h>
- * #include <rosidl_generator_c/service_type_support.h>
+ * #include <rosidl_generator_c/service_type_support_struct.h>
  * #include <example_interfaces/srv/add_two_ints.h>
  *
  * rcl_node_t node = rcl_get_zero_initialized_node();
@@ -138,6 +138,7 @@ rcl_get_zero_initialized_service(void);
  * \param[in] options service options, including quality of service settings
  * \return `RCL_RET_OK` if service was initialized successfully, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
  * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
  * \return `RCL_RET_SERVICE_NAME_INVALID` if the given service name is invalid, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
@@ -174,6 +175,7 @@ rcl_service_init(
  * \param[in] node handle to the node used to create the service
  * \return `RCL_RET_OK` if service was deinitialized successfully, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
@@ -234,6 +236,8 @@ rcl_service_get_default_options(void);
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
  * \return `RCL_RET_SERVICE_INVALID` if the service is invalid, or
  * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
+ * \return `RCL_RET_SERVICE_TAKE_FAILED` if take failed but no error occurred
+ *         in the middleware, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
@@ -401,8 +405,9 @@ rcl_service_get_rmw_handle(const rcl_service_t * service);
  * \param[in] service pointer to the rcl service
  * \return `true` if `service` is valid, otherwise `false`
  */
+RCL_PUBLIC
 bool
-rcl_service_is_valid(const rcl_service_t * service);
+rcl_service_is_valid(const rcl_service_t * service, rcl_allocator_t * error_msg_allocator);
 
 #if __cplusplus
 }
