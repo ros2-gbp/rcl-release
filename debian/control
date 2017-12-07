@@ -1,0 +1,13 @@
+Source: ros-ardent-rcl
+Section: misc
+Priority: extra
+Maintainer: William Woodall <william@osrfoundation.org>
+Build-Depends: debhelper (>= 9.0.0), ros-ardent-ament-cmake-gtest, ros-ardent-ament-cmake-pytest, ros-ardent-ament-cmake-ros, ros-ardent-ament-lint-auto, ros-ardent-ament-lint-common, ros-ardent-example-interfaces, ros-ardent-launch, ros-ardent-rcl-interfaces, ros-ardent-rcutils, ros-ardent-rmw, ros-ardent-rmw-implementation, ros-ardent-rmw-implementation-cmake, ros-ardent-rosidl-generator-c, ros-ardent-std-msgs, ros-ardent-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-ardent-rcl
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-ardent-ament-cmake, ros-ardent-rcl-interfaces, ros-ardent-rcutils, ros-ardent-rmw, ros-ardent-rmw-implementation, ros-ardent-rosidl-default-runtime, ros-ardent-rosidl-generator-c, ros-ardent-ros-workspace
+Description: The ROS client library common implementation.
+ This package contains an API which builds on the ROS middleware API and is optionally built upon by the other ROS client libraries.
