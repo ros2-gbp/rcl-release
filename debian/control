@@ -1,0 +1,12 @@
+Source: ros-ardent-rcl-lifecycle
+Section: misc
+Priority: extra
+Maintainer: Karsten Knese <karsten@osrfoundation.org>
+Build-Depends: debhelper (>= 9.0.0), ros-ardent-ament-cmake-gtest, ros-ardent-ament-cmake-ros, ros-ardent-ament-lint-auto, ros-ardent-ament-lint-common, ros-ardent-lifecycle-msgs, ros-ardent-rcl, ros-ardent-rcutils, ros-ardent-rmw-implementation, ros-ardent-rosidl-default-generators
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-ardent-rcl-lifecycle
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-ardent-lifecycle-msgs, ros-ardent-rcl, ros-ardent-rcutils, ros-ardent-rmw-implementation, ros-ardent-rosidl-default-runtime
+Description: Package containing a C-based lifecycle implementation
