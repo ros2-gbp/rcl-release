@@ -21,10 +21,9 @@
 #include "rcl/client.h"
 #include "rcl/rcl.h"
 
-#include "example_interfaces/srv/add_two_ints.h"
+#include "test_msgs/srv/primitives.h"
 
-#include "../memory_tools/memory_tools.hpp"
-#include "../scope_exit.hpp"
+#include "osrf_testing_tools_cpp/scope_exit.hpp"
 #include "rcl/error_handling.h"
 #include "rcl/graph.h"
 
@@ -68,14 +67,13 @@ wait_for_client_to_be_ready(
       ROS_PACKAGE_NAME, "Error in wait set init: %s", rcl_get_error_string_safe())
     return false;
   }
-  auto wait_set_exit = make_scope_exit(
-    [&wait_set]() {
-      if (rcl_wait_set_fini(&wait_set) != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          ROS_PACKAGE_NAME, "Error in wait set fini: %s", rcl_get_error_string_safe())
-        throw std::runtime_error("error while waiting for client");
-      }
-    });
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    if (rcl_wait_set_fini(&wait_set) != RCL_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        ROS_PACKAGE_NAME, "Error in wait set fini: %s", rcl_get_error_string_safe())
+      throw std::runtime_error("error while waiting for client");
+    }
+  });
   size_t iteration = 0;
   do {
     ++iteration;
@@ -123,36 +121,34 @@ int main(int argc, char ** argv)
         ROS_PACKAGE_NAME, "Error in node init: %s", rcl_get_error_string_safe())
       return -1;
     }
-    auto node_exit = make_scope_exit(
-      [&main_ret, &node]() {
-        if (rcl_node_fini(&node) != RCL_RET_OK) {
-          RCUTILS_LOG_ERROR_NAMED(
-            ROS_PACKAGE_NAME, "Error in node fini: %s", rcl_get_error_string_safe())
-          main_ret = -1;
-        }
-      });
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+      if (rcl_node_fini(&node) != RCL_RET_OK) {
+        RCUTILS_LOG_ERROR_NAMED(
+          ROS_PACKAGE_NAME, "Error in node fini: %s", rcl_get_error_string_safe())
+        main_ret = -1;
+      }
+    });
 
     const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
-      example_interfaces, AddTwoInts);
-    const char * topic = "add_two_ints";
+      test_msgs, Primitives);
+    const char * service_name = "primitives";
 
     rcl_client_t client = rcl_get_zero_initialized_client();
     rcl_client_options_t client_options = rcl_client_get_default_options();
-    rcl_ret_t ret = rcl_client_init(&client, &node, ts, topic, &client_options);
+    rcl_ret_t ret = rcl_client_init(&client, &node, ts, service_name, &client_options);
     if (ret != RCL_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         ROS_PACKAGE_NAME, "Error in client init: %s", rcl_get_error_string_safe())
       return -1;
     }
 
-    auto client_exit = make_scope_exit(
-      [&client, &main_ret, &node]() {
-        if (rcl_client_fini(&client, &node)) {
-          RCUTILS_LOG_ERROR_NAMED(
-            ROS_PACKAGE_NAME, "Error in client fini: %s", rcl_get_error_string_safe())
-          main_ret = -1;
-        }
-      });
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+      if (rcl_client_fini(&client, &node)) {
+        RCUTILS_LOG_ERROR_NAMED(
+          ROS_PACKAGE_NAME, "Error in client fini: %s", rcl_get_error_string_safe())
+        main_ret = -1;
+      }
+    });
 
     // Wait until server is available
     if (!wait_for_server_to_be_available(&node, &client, 1000, 100)) {
@@ -161,10 +157,10 @@ int main(int argc, char ** argv)
     }
 
     // Initialize a request.
-    example_interfaces__srv__AddTwoInts_Request client_request;
-    example_interfaces__srv__AddTwoInts_Request__init(&client_request);
-    client_request.a = 1;
-    client_request.b = 2;
+    test_msgs__srv__Primitives_Request client_request;
+    test_msgs__srv__Primitives_Request__init(&client_request);
+    client_request.uint8_value = 1;
+    client_request.uint32_value = 2;
     int64_t sequence_number;
 
     if (rcl_send_request(&client, &client_request, &sequence_number)) {
@@ -178,11 +174,11 @@ int main(int argc, char ** argv)
       return -1;
     }
 
-    example_interfaces__srv__AddTwoInts_Request__fini(&client_request);
+    test_msgs__srv__Primitives_Request__fini(&client_request);
 
     // Initialize the response owned by the client and take the response.
-    example_interfaces__srv__AddTwoInts_Response client_response;
-    example_interfaces__srv__AddTwoInts_Response__init(&client_response);
+    test_msgs__srv__Primitives_Response client_response;
+    test_msgs__srv__Primitives_Response__init(&client_response);
 
     if (!wait_for_client_to_be_ready(&client, 1000, 100)) {
       RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Client never became ready")
@@ -195,7 +191,7 @@ int main(int argc, char ** argv)
       return -1;
     }
 
-    example_interfaces__srv__AddTwoInts_Response__fini(&client_response);
+    test_msgs__srv__Primitives_Response__fini(&client_response);
   }
 
   return main_ret;

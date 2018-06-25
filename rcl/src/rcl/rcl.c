@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C"
 {
 #endif
@@ -21,7 +21,9 @@ extern "C"
 
 #include <string.h>
 
+#include "./arguments_impl.h"
 #include "./stdatomic_helper.h"
+#include "rcl/arguments.h"
 #include "rcl/error_handling.h"
 #include "rcutils/logging_macros.h"
 #include "rmw/error_handling.h"
@@ -49,12 +51,17 @@ __clean_up_init()
   }
   __rcl_argc = 0;
   __rcl_argv = NULL;
+  // This is the only place where it is OK to finalize the global arguments.
+  rcl_arguments_t * global_args = rcl_get_global_arguments();
+  if (NULL != global_args->impl && RCL_RET_OK != rcl_arguments_fini(global_args)) {
+    rcl_reset_error();
+  }
   rcl_atomic_store(&__rcl_instance_id, 0);
   rcl_atomic_store(&__rcl_is_initialized, false);
 }
 
 rcl_ret_t
-rcl_init(int argc, char ** argv, rcl_allocator_t allocator)
+rcl_init(int argc, char const * const * argv, rcl_allocator_t allocator)
 {
   rcl_ret_t fail_ret = RCL_RET_ERROR;
 
@@ -68,6 +75,11 @@ rcl_init(int argc, char ** argv, rcl_allocator_t allocator)
     RCL_SET_ERROR_MSG("rcl_init called while already initialized", allocator);
     return RCL_RET_ALREADY_INIT;
   }
+
+  // Zero initialize global arguments before any chance of calling __clean_up_init()
+  rcl_arguments_t * global_args = rcl_get_global_arguments();
+  *global_args = rcl_get_zero_initialized_arguments();
+
   // There is a race condition between the time __rcl_is_initialized is set true,
   // and when the allocator is set, in which rcl_shutdown() could get rcl_ok() as
   // true and try to use the allocator, but it isn't set yet...
@@ -101,6 +113,16 @@ rcl_init(int argc, char ** argv, rcl_allocator_t allocator)
     }
     memcpy(__rcl_argv[i], argv[i], strlen(argv[i]));
   }
+  if (RCL_RET_OK != rcl_parse_arguments(argc, (const char **)argv, allocator, global_args)) {
+    RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Failed to parse global arguments");
+    goto fail;
+  }
+
+  // Update the default log level if specified in arguments.
+  if (global_args->impl->log_level >= 0) {
+    rcutils_logging_set_default_logger_level(global_args->impl->log_level);
+  }
+
   rcl_atomic_store(&__rcl_instance_id, ++__rcl_next_unique_id);
   if (rcl_atomic_load_uint64_t(&__rcl_instance_id) == 0) {
     // Roll over occurred.
@@ -139,6 +161,6 @@ rcl_ok()
   return rcl_atomic_load_bool(&__rcl_is_initialized);
 }
 
-#if __cplusplus
+#ifdef __cplusplus
 }
 #endif

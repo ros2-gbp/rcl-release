@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C"
 {
 #endif
@@ -276,7 +276,7 @@ rcl_wait_set_get_allocator(const rcl_wait_set_t * wait_set, rcl_allocator_t * al
     (void *)wait_set->Type ## s, \
     0, \
     sizeof(rcl_ ## Type ## _t *) * wait_set->size_of_ ## Type ## s); \
-  wait_set->impl->Type ## _index = 0; \
+  wait_set->impl->Type ## _index = 0;
 
 #define SET_CLEAR_RMW(Type, RMWStorage, RMWCount) \
   /* Also clear the rmw storage. */ \
@@ -296,6 +296,7 @@ rcl_wait_set_get_allocator(const rcl_wait_set_t * wait_set, rcl_allocator_t * al
   } \
   rcl_allocator_t allocator = wait_set->impl->allocator; \
   wait_set->size_of_ ## Type ## s = 0; \
+  wait_set->impl->Type ## _index = 0; \
   if (size == 0) { \
     if (wait_set->Type ## s) { \
       allocator.deallocate((void *)wait_set->Type ## s, allocator.state); \
@@ -314,11 +315,12 @@ rcl_wait_set_get_allocator(const rcl_wait_set_t * wait_set, rcl_allocator_t * al
   } \
   return RCL_RET_OK;
 
-#define SET_RESIZE_RMW_DEALLOC(RMWStorage) \
+#define SET_RESIZE_RMW_DEALLOC(RMWStorage, RMWCount) \
   /* Also deallocate the rmw storage. */ \
   if (wait_set->impl->RMWStorage) { \
     allocator.deallocate((void *)wait_set->impl->RMWStorage, allocator.state); \
     wait_set->impl->RMWStorage = NULL; \
+    wait_set->impl->RMWCount = 0; \
   }
 
 #define SET_RESIZE_RMW_REALLOC(Type, RMWStorage, RMWCount) \
@@ -376,7 +378,7 @@ rcl_wait_set_resize_subscriptions(rcl_wait_set_t * wait_set, size_t size)
   SET_RESIZE(
     subscription,
     SET_RESIZE_RMW_DEALLOC(
-      rmw_subscriptions.subscribers),
+      rmw_subscriptions.subscribers, rmw_subscriptions.subscriber_count),
     SET_RESIZE_RMW_REALLOC(
       subscription, rmw_subscriptions.subscribers, rmw_subscriptions.subscriber_count)
   )
@@ -410,7 +412,8 @@ rcl_wait_set_resize_guard_conditions(rcl_wait_set_t * wait_set, size_t size)
   SET_RESIZE(
     guard_condition,
     SET_RESIZE_RMW_DEALLOC(
-      rmw_guard_conditions.guard_conditions),
+      rmw_guard_conditions.guard_conditions,
+      rmw_guard_conditions.guard_condition_count),
     SET_RESIZE_RMW_REALLOC(
       guard_condition,
       rmw_guard_conditions.guard_conditions,
@@ -466,7 +469,7 @@ rcl_wait_set_resize_clients(rcl_wait_set_t * wait_set, size_t size)
 {
   SET_RESIZE(client,
     SET_RESIZE_RMW_DEALLOC(
-      rmw_clients.clients),
+      rmw_clients.clients, rmw_clients.client_count),
     SET_RESIZE_RMW_REALLOC(
       client, rmw_clients.clients, rmw_clients.client_count)
   )
@@ -498,7 +501,7 @@ rcl_wait_set_resize_services(rcl_wait_set_t * wait_set, size_t size)
 {
   SET_RESIZE(service,
     SET_RESIZE_RMW_DEALLOC(
-      rmw_services.services),
+      rmw_services.services, rmw_services.service_count),
     SET_RESIZE_RMW_REALLOC(
       service, rmw_services.services, rmw_services.service_count)
   )
@@ -681,6 +684,6 @@ rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout)
   return RCL_RET_OK;
 }
 
-#if __cplusplus
+#ifdef __cplusplus
 }
 #endif

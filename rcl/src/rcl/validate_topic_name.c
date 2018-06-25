@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C"
 {
 #endif
@@ -34,9 +34,21 @@ rcl_validate_topic_name(
 {
   rcl_allocator_t allocator = rcutils_get_default_allocator();
   RCL_CHECK_ARGUMENT_FOR_NULL(topic_name, RCL_RET_INVALID_ARGUMENT, allocator)
+  return rcl_validate_topic_name_with_size(
+    topic_name, strlen(topic_name), validation_result, invalid_index);
+}
+
+rcl_ret_t
+rcl_validate_topic_name_with_size(
+  const char * topic_name,
+  size_t topic_name_length,
+  int * validation_result,
+  size_t * invalid_index)
+{
+  rcl_allocator_t allocator = rcutils_get_default_allocator();
+  RCL_CHECK_ARGUMENT_FOR_NULL(topic_name, RCL_RET_INVALID_ARGUMENT, allocator)
   RCL_CHECK_ARGUMENT_FOR_NULL(validation_result, RCL_RET_INVALID_ARGUMENT, allocator)
 
-  size_t topic_name_length = strlen(topic_name);
   if (topic_name_length == 0) {
     *validation_result = RCL_TOPIC_NAME_INVALID_IS_EMPTY_STRING;
     if (invalid_index) {
@@ -193,6 +205,8 @@ const char *
 rcl_topic_name_validation_result_string(int validation_result)
 {
   switch (validation_result) {
+    case RCL_TOPIC_NAME_VALID:
+      return NULL;
     case RCL_TOPIC_NAME_INVALID_IS_EMPTY_STRING:
       return "topic name must not be empty string";
     case RCL_TOPIC_NAME_INVALID_ENDS_WITH_FORWARD_SLASH:
@@ -213,10 +227,10 @@ rcl_topic_name_validation_result_string(int validation_result)
     case RCL_TOPIC_NAME_INVALID_SUBSTITUTION_STARTS_WITH_NUMBER:
       return "substitution name must not start with a number";
     default:
-      return NULL;
+      return "unknown result code for rcl topic name validation";
   }
 }
 
-#if __cplusplus
+#ifdef __cplusplus
 }
 #endif

@@ -16,7 +16,8 @@
 
 #include "rcl/rcl.h"
 
-#include "../memory_tools/memory_tools.hpp"
+#include "./failing_allocator_functions.hpp"
+#include "osrf_testing_tools_cpp/memory_tools/memory_tools.hpp"
 #include "rcl/error_handling.h"
 #include "rcutils/snprintf.h"
 
@@ -27,43 +28,49 @@
 # define CLASSNAME(NAME, SUFFIX) NAME
 #endif
 
+using osrf_testing_tools_cpp::memory_tools::on_unexpected_malloc;
+using osrf_testing_tools_cpp::memory_tools::on_unexpected_realloc;
+using osrf_testing_tools_cpp::memory_tools::on_unexpected_calloc;
+using osrf_testing_tools_cpp::memory_tools::on_unexpected_free;
+
 class CLASSNAME (TestRCLFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   void SetUp()
   {
-    set_on_unexpected_malloc_callback([]() {ASSERT_FALSE(true) << "UNEXPECTED MALLOC";});
-    set_on_unexpected_realloc_callback([]() {ASSERT_FALSE(true) << "UNEXPECTED REALLOC";});
-    set_on_unexpected_free_callback([]() {ASSERT_FALSE(true) << "UNEXPECTED FREE";});
-    start_memory_checking();
+    osrf_testing_tools_cpp::memory_tools::initialize();
+    on_unexpected_malloc([]() {ADD_FAILURE() << "UNEXPECTED MALLOC";});
+    on_unexpected_realloc([]() {ADD_FAILURE() << "UNEXPECTED REALLOC";});
+    on_unexpected_free([]() {ADD_FAILURE() << "UNEXPECTED FREE";});
   }
 
   void TearDown()
   {
-    assert_no_malloc_end();
-    assert_no_realloc_end();
-    assert_no_free_end();
-    stop_memory_checking();
-    set_on_unexpected_malloc_callback(nullptr);
-    set_on_unexpected_realloc_callback(nullptr);
-    set_on_unexpected_free_callback(nullptr);
+    osrf_testing_tools_cpp::memory_tools::uninitialize();
   }
 };
 
 struct FakeTestArgv
 {
   FakeTestArgv()
-  : argc(2)
+  : allocator(rcutils_get_default_allocator()), argc(2)
   {
-    this->argv = reinterpret_cast<char **>(malloc(2 * sizeof(char *)));
+    this->argv =
+      reinterpret_cast<char **>(allocator.allocate(2 * sizeof(char *), allocator.state));
     if (!this->argv) {
       throw std::bad_alloc();
     }
-    static const size_t size = 10;
-    this->argv[0] = reinterpret_cast<char *>(malloc(size * sizeof(char)));
-    rcutils_snprintf(this->argv[0], size, "foo");
-    this->argv[1] = reinterpret_cast<char *>(malloc(size * sizeof(char)));
-    rcutils_snprintf(this->argv[1], size, "bar");
+    this->argv[0] = rcutils_format_string(allocator, "%s", "foo");
+    if (!this->argv[0]) {
+      allocator.deallocate(this->argv, allocator.state);
+      throw std::bad_alloc();
+    }
+    this->argv[1] = rcutils_format_string(allocator, "%s", "bar");
+    if (!this->argv[1]) {
+      allocator.deallocate(this->argv[0], allocator.state);
+      allocator.deallocate(this->argv, allocator.state);
+      throw std::bad_alloc();
+    }
   }
 
   ~FakeTestArgv()
@@ -72,13 +79,14 @@ struct FakeTestArgv
       if (this->argc > 0) {
         size_t unsigned_argc = this->argc;
         for (size_t i = 0; i < unsigned_argc; --i) {
-          free(this->argv[i]);
+          allocator.deallocate(this->argv[i], allocator.state);
         }
       }
     }
-    free(this->argv);
+    allocator.deallocate(this->argv, allocator.state);
   }
 
+  rcutils_allocator_t allocator;
   int argc;
   char ** argv;
 
@@ -117,9 +125,9 @@ TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_init_and_ok_and_s
   {
     FakeTestArgv test_args;
     rcl_allocator_t failing_allocator = rcl_get_default_allocator();
-    failing_allocator.allocate = &failing_malloc;
-    failing_allocator.deallocate = failing_free;
+    failing_allocator.allocate = failing_malloc;
     failing_allocator.reallocate = failing_realloc;
+    failing_allocator.zero_allocate = failing_calloc;
     ret = rcl_init(test_args.argc, test_args.argv, failing_allocator);
     EXPECT_EQ(RCL_RET_BAD_ALLOC, ret);
     rcl_reset_error();
@@ -187,13 +195,9 @@ TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_get_instance_id_a
   }
   // And it should be allocation free.
   uint64_t first_instance_id;
-  assert_no_malloc_begin();
-  assert_no_realloc_begin();
-  assert_no_free_begin();
-  first_instance_id = rcl_get_instance_id();
-  assert_no_malloc_end();
-  assert_no_realloc_end();
-  assert_no_free_end();
+  EXPECT_NO_MEMORY_OPERATIONS({
+    first_instance_id = rcl_get_instance_id();
+  });
   EXPECT_NE(0u, first_instance_id);
   EXPECT_EQ(first_instance_id, rcl_get_instance_id());  // Repeat calls should return the same.
   EXPECT_EQ(true, rcl_ok());
