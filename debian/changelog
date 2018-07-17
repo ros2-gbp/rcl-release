@@ -1,8 +1,0 @@
-ros-bouncy-rcl-yaml-param-parser (0.5.0-0bionic) bionic; urgency=high
-
-  * Added functions to parse YAML parameter files. (#235 <https://github.com/ros2/rcl/issues/235>)
-  * Contributors: Shane Loretz, William Woodall, anup-pem, dhood
-
- -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Mon, 25 Jun 2018 07:00:00 -0000
-
-
