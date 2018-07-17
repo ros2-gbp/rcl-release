@@ -1,0 +1,18 @@
+ros-bouncy-rcl-lifecycle (0.5.1-0bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Tue, 17 Jul 2018 07:00:00 -0000
+
+ros-bouncy-rcl-lifecycle (0.5.0-0bionic) bionic; urgency=high
+
+  * Updated code to use private substitution (``~``) in lifecycle topics and services (#260 <https://github.com/ros2/rcl/issues/260>)
+    * use ~/<topic> rather than manually constructing topics/services
+    * use check argument for null macros
+  * Fixed potential segmentation fault due to nullptr dereference (#202 <https://github.com/ros2/rcl/issues/202>)
+    * Signed-off-by: Ethan Gao <mailto:ethan.gao@linux.intel.com>
+  * Contributors: Dirk Thomas, Ethan Gao, Michael Carroll, William Woodall
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Mon, 25 Jun 2018 07:00:00 -0000
+
+
