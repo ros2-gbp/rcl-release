@@ -1,0 +1,17 @@
+ros-crystal-rcl-action (0.6.0-0bionic) bionic; urgency=high
+
+  * Made rcl_action_get_*_name() functions check for empty action names. #329 <https://github.com/ros2/rcl/issues/329>
+  * Implemented Action client #319 <https://github.com/ros2/rcl/issues/319>
+  * Added function to check if goal can be transitioned to CANCELING (#325 <https://github.com/ros2/rcl/issues/325>)
+  * Implement goal handle (#320 <https://github.com/ros2/rcl/issues/320>)
+  * Update to use new error handling API from rcutils (#314 <https://github.com/ros2/rcl/issues/314>)
+  * Add action services and topics name getters #317 <https://github.com/ros2/rcl/issues/317>
+  * Implement init/fini functions for types (#312 <https://github.com/ros2/rcl/issues/312>)
+  * Refactor goal state machine implementation and add unit tests (#311 <https://github.com/ros2/rcl/issues/311>)
+  * Add missing visibilty control definitions (#315 <https://github.com/ros2/rcl/issues/315>)
+  * Add rcl_action package and headers (#307 <https://github.com/ros2/rcl/issues/307>)
+  * Contributors: Jacob Perron, Michel Hidalgo, William Woodall
+
+ -- Jacob Perron <jacob@openrobotics.org>  Fri, 16 Nov 2018 08:00:00 -0000
+
+
