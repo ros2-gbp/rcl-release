@@ -37,13 +37,14 @@ set_source_files_properties(
 
 ### C-Library depending only on RCL
 add_library(
-  rcl_lifecycle
+  ${PROJECT_NAME}
   ${rcl_lifecycle_sources})
 
 # specific order: dependents before dependencies
 ament_target_dependencies(rcl_lifecycle
   "rcl"
   "lifecycle_msgs"
+  "rosidl_generator_c"
   "rcutils"
 )
 
@@ -69,7 +70,6 @@ if(BUILD_TESTING)
   if(TARGET test_default_state_machine)
     target_include_directories(test_default_state_machine PUBLIC
       ${rcl_INCLUDE_DIRS}
-      ${rcl_lifecycle_INCLUDE_DIRS}
     )
     target_link_libraries(test_default_state_machine ${PROJECT_NAME})
   endif()
@@ -79,7 +79,6 @@ if(BUILD_TESTING)
   if(TARGET test_multiple_instances)
     target_include_directories(test_multiple_instances PUBLIC
       ${rcl_INCLUDE_DIRS}
-      ${rcl_lifecycle_INCLUDE_DIRS}
     )
     target_link_libraries(test_multiple_instances ${PROJECT_NAME})
   endif()
@@ -89,7 +88,6 @@ if(BUILD_TESTING)
   if(TARGET test_transition_map)
     target_include_directories(test_transition_map PUBLIC
       ${rcl_INCLUDE_DIRS}
-      ${rcl_lifecycle_INCLUDE_DIRS}
     )
     target_link_libraries(test_transition_map ${PROJECT_NAME})
   endif()

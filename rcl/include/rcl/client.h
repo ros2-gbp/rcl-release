@@ -55,7 +55,6 @@ RCL_WARN_UNUSED
 rcl_client_t
 rcl_get_zero_initialized_client(void);
 
-
 /// Initialize a rcl client.
 /**
  * After calling this function on a rcl_client_t, it can be used to send
@@ -72,17 +71,18 @@ rcl_get_zero_initialized_client(void);
  * required rosidl_service_type_support_t object.
  * This object can be obtained using a language appropriate mechanism.
  * \todo TODO(wjwwood) write these instructions once and link to it instead
- * For C a macro can be used (for example `example_interfaces/AddTwoInts`):
+ *
+ * For C, a macro can be used (for example `example_interfaces/AddTwoInts`):
  *
  * ```c
  * #include <rosidl_generator_c/service_type_support_struct.h>
  * #include <example_interfaces/srv/add_two_ints.h>
  *
  * const rosidl_service_type_support_t * ts =
- *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, AddTwoInts);
+ *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, srv, AddTwoInts);
  * ```
  *
- * For C++ a template function is used:
+ * For C++, a template function is used:
  *
  * ```cpp
  * #include <rosidl_typesupport_cpp/service_type_support.hpp>
@@ -117,7 +117,7 @@ rcl_get_zero_initialized_client(void);
  * rcl_ret_t ret = rcl_node_init(&node, "node_name", "/my_namespace", &node_ops);
  * // ... error handling
  * const rosidl_service_type_support_t * ts =
- *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, AddTwoInts);
+ *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, srv, AddTwoInts);
  * rcl_client_t client = rcl_get_zero_initialized_client();
  * rcl_client_options_t client_ops = rcl_client_get_default_options();
  * ret = rcl_client_init(&client, &node, ts, "add_two_ints", &client_ops);
@@ -377,7 +377,7 @@ rcl_client_get_rmw_handle(const rcl_client_t * client);
 
 /// Check that the client is valid.
 /**
- * The bool returned is `false` if client is invalid
+ * The bool returned is `false` if client is invalid.
  * The bool returned is `true` otherwise.
  * In the case where `false` is to be returned, an error message is set.
  * This function cannot fail.
@@ -391,12 +391,11 @@ rcl_client_get_rmw_handle(const rcl_client_t * client);
  * Lock-Free          | Yes
  *
  * \param[in] client pointer to the rcl client
- * \param[in] error_msg_allocator a valid allocator or `NULL`
  * \return `true` if `client` is valid, otherwise `false`
  */
 RCL_PUBLIC
 bool
-rcl_client_is_valid(const rcl_client_t * client, rcl_allocator_t * error_msg_allocator);
+rcl_client_is_valid(const rcl_client_t * client);
 
 #ifdef __cplusplus
 }

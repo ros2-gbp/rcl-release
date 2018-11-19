@@ -69,16 +69,17 @@ rcl_get_zero_initialized_service(void);
  * required rosidl_service_type_support_t object.
  * This object can be obtained using a language appropriate mechanism.
  * \todo TODO(wjwwood) write these instructions once and link to it instead
- * For C a macro can be used (for example `example_interfaces/AddTwoInts`):
+ *
+ * For C, a macro can be used (for example `example_interfaces/AddTwoInts`):
  *
  * ```c
  * #include <rosidl_generator_c/service_type_support_struct.h>
  * #include <example_interfaces/srv/add_two_ints.h>
  * const rosidl_service_type_support_t * ts =
- *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, AddTwoInts);
+ *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, srv, AddTwoInts);
  * ```
  *
- * For C++ a template function is used:
+ * For C++, a template function is used:
  *
  * ```cpp
  * #include <rosidl_generator_cpp/service_type_support.hpp>
@@ -112,7 +113,7 @@ rcl_get_zero_initialized_service(void);
  * rcl_ret_t ret = rcl_node_init(&node, "node_name", "/my_namespace", &node_ops);
  * // ... error handling
  * const rosidl_service_type_support_t * ts =
- *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, AddTwoInts);
+ *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, srv, AddTwoInts);
  * rcl_service_t service = rcl_get_zero_initialized_service();
  * rcl_service_options_t service_ops = rcl_service_get_default_options();
  * ret = rcl_service_init(&service, &node, ts, "add_two_ints", &service_ops);
@@ -175,6 +176,7 @@ rcl_service_init(
  * \param[in] node handle to the node used to create the service
  * \return `RCL_RET_OK` if service was deinitialized successfully, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_SERVICE_INVALID` if the service is invalid, or
  * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
@@ -263,7 +265,7 @@ rcl_take_request(
  * owned by the calling code, but should remain constant during
  * rcl_send_response().
  *
- e This function is thread safe so long as access to both the service and the
+ * This function is thread safe so long as access to both the service and the
  * `ros_response` is synchronized.
  * That means that calling rcl_send_response() from multiple threads is
  * allowed, but calling rcl_send_response() at the same time as non-thread safe
@@ -390,8 +392,7 @@ rcl_service_get_rmw_handle(const rcl_service_t * service);
 /**
  * The bool returned is `false` if `service` is invalid.
  * The bool returned is `true` otherwise.
- * In the case where `false` is to be returned, an
- * error message is set.
+ * In the case where `false` is to be returned, an error message is set.
  * This function cannot fail.
  *
  * <hr>
@@ -403,12 +404,11 @@ rcl_service_get_rmw_handle(const rcl_service_t * service);
  * Lock-Free          | Yes
  *
  * \param[in] service pointer to the rcl service
- * \param[in] error_msg_allocator a valid allocator or `NULL`
  * \return `true` if `service` is valid, otherwise `false`
  */
 RCL_PUBLIC
 bool
-rcl_service_is_valid(const rcl_service_t * service, rcl_allocator_t * error_msg_allocator);
+rcl_service_is_valid(const rcl_service_t * service);
 
 #ifdef __cplusplus
 }

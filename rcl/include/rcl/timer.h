@@ -23,11 +23,13 @@ extern "C"
 #include <stdbool.h>
 
 #include "rcl/allocator.h"
+#include "rcl/guard_condition.h"
 #include "rcl/macros.h"
 #include "rcl/time.h"
 #include "rcl/types.h"
 #include "rmw/rmw.h"
 
+struct rcl_clock_t;
 struct rcl_timer_impl_t;
 
 /// Structure which encapsulates a ROS Timer.
@@ -60,7 +62,7 @@ rcl_get_zero_initialized_timer(void);
 
 /// Initialize a timer.
 /**
- * A timer consists of a callback function and a period.
+ * A timer consists of a clock, a callback function and a period.
  * A timer can be added to a wait set and waited on, such that the wait set
  * will wake up when a timer is ready to be executed.
  *
@@ -77,7 +79,11 @@ rcl_get_zero_initialized_timer(void);
  * Calling this function on a timer struct which has been allocated but not
  * zero initialized is undefined behavior.
  *
- * The period is a duration (rather an absolute time in the future).
+ * The clock handle must be a pointer to an initialized rcl_clock_t struct.
+ * The life time of the clock must exceed the life time of the timer.
+ *
+ * The period is a non-negative duration (rather an absolute time in the
+ * future).
  * If the period is `0` then it will always be ready.
  *
  * The callback is an optional argument.
@@ -101,9 +107,14 @@ rcl_get_zero_initialized_timer(void);
  *   // Optionally reconfigure, cancel, or reset the timer...
  * }
  *
+ * rcl_clock_t clock;
+ * rcl_allocator_t allocator = rcl_get_default_allocator();
+ * rcl_ret_t ret = rcl_clock_init(RCL_STEADY_TIME, &clock, &allocator);
+ * // ... error handling
+ *
  * rcl_timer_t timer = rcl_get_zero_initialized_timer();
- * rcl_ret_t ret = rcl_timer_init(
- *   &timer, RCL_MS_TO_NS(100), my_timer_callback, rcl_get_default_allocator());
+ * ret = rcl_timer_init(
+ *   &timer, &clock, RCL_MS_TO_NS(100), my_timer_callback, allocator);
  * // ... error handling, use the timer with a wait set, or poll it manually, then cleanup
  * ret = rcl_timer_fini(&timer);
  * // ... error handling
@@ -123,6 +134,7 @@ rcl_get_zero_initialized_timer(void);
  * <i>[3] if `atomic_is_lock_free()` returns true for `atomic_bool`</i>
  *
  * \param[inout] timer the timer handle to be initialized
+ * \param[in] clock the clock providing the current time
  * \param[in] period the duration between calls to the callback in nanoseconds
  * \param[in] callback the user defined function to be called every period
  * \param[in] allocator the allocator to use for allocations
@@ -137,6 +149,7 @@ RCL_WARN_UNUSED
 rcl_ret_t
 rcl_timer_init(
   rcl_timer_t * timer,
+  rcl_clock_t * clock,
   int64_t period,
   const rcl_timer_callback_t callback,
   rcl_allocator_t allocator);
@@ -215,6 +228,32 @@ RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t
 rcl_timer_call(rcl_timer_t * timer);
+
+/// Retrieve the clock of the timer.
+/**
+ * This function retrieves the clock pointer and copies it into the given variable.
+ *
+ * The clock argument must be a pointer to an already allocated rcl_clock_t *.
+ *
+ * <hr>
+ * Attribute          | Adherence
+ * ------------------ | -------------
+ * Allocates Memory   | No
+ * Thread-Safe        | Yes
+ * Uses Atomics       | No
+ * Lock-Free          | Yes
+ *
+ * \param[in] timer the handle to the timer which is being queried
+ * \param[out] clock the rcl_clock_t * in which the clock is stored
+ * \return `RCL_RET_OK` if the period was retrieved successfully, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_TIMER_INVALID` if the timer is invalid, or
+ * \return `RCL_RET_ERROR` an unspecified error occur.
+ */
+RCL_PUBLIC
+RCL_WARN_UNUSED
+rcl_ret_t
+rcl_timer_clock(rcl_timer_t * timer, rcl_clock_t ** clock);
 
 /// Calculates whether or not the timer should be called.
 /**
@@ -315,7 +354,7 @@ rcl_timer_get_time_since_last_call(const rcl_timer_t * timer, int64_t * time_sin
 
 /// Retrieve the period of the timer.
 /**
- * This function retrieves the period and copies it into the give variable.
+ * This function retrieves the period and copies it into the given variable.
  *
  * The period argument must be a pointer to an already allocated int64_t.
  *
@@ -343,7 +382,7 @@ rcl_timer_get_period(const rcl_timer_t * timer, int64_t * period);
 /// Exchange the period of the timer and return the previous period.
 /**
  * This function exchanges the period in the timer and copies the old one into
- * the give variable.
+ * the given variable.
  *
  * Exchanging (changing) the period will not affect already waiting wait sets.
  *
@@ -525,6 +564,25 @@ rcl_timer_reset(rcl_timer_t * timer);
  */
 const rcl_allocator_t *
 rcl_timer_get_allocator(const rcl_timer_t * timer);
+
+/// Retrieve a guard condition used by the timer to wake the waitset when using ROSTime.
+/**
+ * <hr>
+ * Attribute          | Adherence
+ * ------------------ | -------------
+ * Allocates Memory   | No
+ * Thread-Safe        | No
+ * Uses Atomics       | No
+ * Lock-Free          | Yes
+ *
+ * \param[in] timer the timer to be queried
+ * \return `NULL` if the timer is invalid or does not have a guard condition, or
+ * \return a guard condition pointer.
+ */
+RCL_PUBLIC
+RCL_WARN_UNUSED
+rcl_guard_condition_t *
+rcl_timer_get_guard_condition(const rcl_timer_t * timer);
 
 #ifdef __cplusplus
 }

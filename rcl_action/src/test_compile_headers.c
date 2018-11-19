@@ -1,4 +1,4 @@
-// Copyright 2016 Open Source Robotics Foundation, Inc.
+// Copyright 2018 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,28 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef DEFAULT_STATE_MACHINE_H_
-#define DEFAULT_STATE_MACHINE_H_
+#include "rcl_action/rcl_action.h"
 
-#include "rcl/macros.h"
-#include "rcl/types.h"
 
-#include "rcl_lifecycle/data_types.h"
-#include "rcl_lifecycle/visibility_control.h"
-
-#ifdef __cplusplus
-extern "C"
+int main(void)
 {
-#endif
-
-RCL_LIFECYCLE_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_init_default_state_machine(
-  rcl_lifecycle_state_machine_t * state_machine, const rcl_allocator_t * allocator);
-
-#ifdef __cplusplus
+  return 0;
 }
-#endif
-
-#endif  // DEFAULT_STATE_MACHINE_H_
