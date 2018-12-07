@@ -61,6 +61,7 @@ function(test_target_function)
 
   rcl_add_custom_gtest(test_get_node_names${target_suffix}
     SRCS rcl/test_get_node_names.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
@@ -84,13 +85,15 @@ function(test_target_function)
     AMENT_DEPENDENCIES ${rmw_implementation}
   )
 
-  set(SKIP_TEST "")
+  set(AMENT_GTEST_ARGS "")
   # TODO(wjwwood): remove this when the graph API works properly for connext dynamic
-  if(
-    rmw_implementation STREQUAL "rmw_connext_dynamic_cpp"
-  )
+  if(rmw_implementation STREQUAL "rmw_connext_dynamic_cpp")
     message(STATUS "Skipping test_graph${target_suffix} test.")
-    set(SKIP_TEST "SKIP_TEST")
+    set(AMENT_GTEST_ARGS "SKIP_TEST")
+  # TODO(mm318): why rmw_connext tests run much slower than rmw_fastrtps and rmw_opensplice tests
+  elseif(rmw_implementation STREQUAL "rmw_connext_cpp")
+    message(STATUS "Increasing test_graph${target_suffix} test timeout.")
+    set(AMENT_GTEST_ARGS TIMEOUT 90)
   endif()
   rcl_add_custom_gtest(test_graph${target_suffix}
     SRCS rcl/test_graph.cpp
@@ -99,11 +102,20 @@ function(test_target_function)
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
     AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs"
-    ${SKIP_TEST}
+    ${AMENT_GTEST_ARGS}
   )
 
-  rcl_add_custom_gtest(test_rcl${target_suffix}
-    SRCS rcl/test_rcl.cpp
+  rcl_add_custom_gtest(test_count_matched${target_suffix}
+    SRCS rcl/test_count_matched.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
+    ENV ${rmw_implementation_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs"
+  )
+
+  rcl_add_custom_gtest(test_init${target_suffix}
+    SRCS rcl/test_init.cpp
     ENV ${rmw_implementation_env_var} ${memory_tools_ld_preload_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
