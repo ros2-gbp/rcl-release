@@ -35,6 +35,10 @@ typedef struct rcl_arguments_t
 } rcl_arguments_t;
 
 #define RCL_LOG_LEVEL_ARG_RULE "__log_level:="
+#define RCL_EXTERNAL_LOG_CONFIG_ARG_RULE "__log_config_file:="
+#define RCL_LOG_DISABLE_STDOUT_ARG_RULE "__log_disable_stdout:="
+#define RCL_LOG_DISABLE_ROSOUT_ARG_RULE "__log_disable_rosout:="
+#define RCL_LOG_DISABLE_EXT_LIB_ARG_RULE "__log_disable_external_lib:="
 #define RCL_PARAM_FILE_ARG_RULE "__params:="
 
 /// Return a rcl_node_t struct with members initialized to `NULL`.
@@ -277,30 +281,6 @@ RCL_WARN_UNUSED
 rcl_ret_t
 rcl_arguments_fini(
   rcl_arguments_t * args);
-
-/// Get a global instance of command line arguments.
-/**
- * \sa rcl_init(int, char **, rcl_allocator_t)
- * \sa rcl_shutdown()
- * This returns parsed command line arguments that were passed to `rcl_init()`.
- * The value returned by this function is undefined before `rcl_init()` is called and after
- * `rcl_shutdown()` is called.
- * The return value must not be finalized.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \return a global instance of parsed command line arguments.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_arguments_t *
-rcl_get_global_arguments();
 
 #ifdef __cplusplus
 }
