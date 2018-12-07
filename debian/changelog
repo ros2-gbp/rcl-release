@@ -1,0 +1,24 @@
+ros-crystal-rcl-yaml-param-parser (0.6.1-0bionic) bionic; urgency=high
+
+  * No changes.
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 07 Dec 2018 08:00:00 -0000
+
+ros-crystal-rcl-yaml-param-parser (0.6.0-0bionic) bionic; urgency=high
+
+  * Updated to use new error handling API from rcutils (#314 <https://github.com/ros2/rcl/issues/314>)
+  * Fixed FQN=//node_name when ns is / (#299 <https://github.com/ros2/rcl/issues/299>)
+  * Fixed documentation issues (#288 <https://github.com/ros2/rcl/issues/288>)
+  * Fixed to deallocate ret_val to avoid memory leak (#278 <https://github.com/ros2/rcl/issues/278>)
+  * Contributors: Chris Ye, William Woodall, dhood
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 16 Nov 2018 08:00:00 -0000
+
+ros-crystal-rcl-yaml-param-parser (0.5.0-0bionic) bionic; urgency=high
+
+  * Added functions to parse YAML parameter files. (#235 <https://github.com/ros2/rcl/issues/235>)
+  * Contributors: Shane Loretz, William Woodall, anup-pem, dhood
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Mon, 25 Jun 2018 07:00:00 -0000
+
+
