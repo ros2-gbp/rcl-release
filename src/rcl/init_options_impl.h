@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2018 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCL__MACROS_H_
-#define RCL__MACROS_H_
+#ifndef RCL__INIT_OPTIONS_IMPL_H_
+#define RCL__INIT_OPTIONS_IMPL_H_
+
+#include "rcl/init_options.h"
+
+#include "rmw/init.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#ifndef _WIN32
-/// Ignored return values of functions with this macro will emit a warning.
-# define RCL_WARN_UNUSED __attribute__((warn_unused_result))
-#else
-# define RCL_WARN_UNUSED _Check_return_
-#endif
-
-#define RCL_UNUSED(x) (void)(x)
+/// \internal
+typedef struct rcl_init_options_impl_t
+{
+  rcl_allocator_t allocator;
+  rmw_init_options_t rmw_init_options;
+} rcl_init_options_impl_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // RCL__MACROS_H_
+#endif  // RCL__INIT_OPTIONS_IMPL_H_
