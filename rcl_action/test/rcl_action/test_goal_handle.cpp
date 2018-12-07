@@ -96,7 +96,7 @@ TEST(TestGoalHandle, test_goal_handle_get_info)
   // Initialize a goal info message to test
   rcl_action_goal_info_t goal_info_input = rcl_action_get_zero_initialized_goal_info();
   for (int i = 0; i < 16; ++i) {
-    goal_info_input.uuid[i] = static_cast<uint8_t>(i);
+    goal_info_input.goal_id.uuid[i] = static_cast<uint8_t>(i);
   }
   goal_info_input.stamp.sec = 123;
   goal_info_input.stamp.nanosec = 456u;
@@ -124,7 +124,7 @@ TEST(TestGoalHandle, test_goal_handle_get_info)
   ret = rcl_action_goal_handle_get_info(&goal_handle, &goal_info_output);
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
   for (int i = 0; i < 16; ++i) {
-    EXPECT_EQ(goal_info_input.uuid[i], goal_info_output.uuid[i]);
+    EXPECT_EQ(goal_info_input.goal_id.uuid[i], goal_info_output.goal_id.uuid[i]);
   }
   EXPECT_EQ(goal_info_input.stamp.sec, goal_info_output.stamp.sec);
   EXPECT_EQ(goal_info_input.stamp.nanosec, goal_info_output.stamp.nanosec);
@@ -154,6 +154,7 @@ TEST(TestGoalHandle, test_goal_handle_update_state_invalid)
   ret = rcl_action_update_goal_state(&goal_handle, GOAL_EVENT_NUM_EVENTS);
   EXPECT_EQ(ret, RCL_RET_ACTION_GOAL_EVENT_INVALID) << rcl_get_error_string().str;
   rcl_reset_error();
+  EXPECT_EQ(RCL_RET_OK, rcl_action_goal_handle_fini(&goal_handle));
 }
 
 using EventStateActiveCancelableTuple =

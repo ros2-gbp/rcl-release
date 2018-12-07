@@ -23,7 +23,7 @@ extern "C"
 rcl_action_goal_info_t
 rcl_action_get_zero_initialized_goal_info(void)
 {
-  static rcl_action_goal_info_t goal_info = {{0}, {0, 0}};
+  static rcl_action_goal_info_t goal_info = {{{0}}, {0, 0}};
   return goal_info;
 }
 
@@ -37,7 +37,7 @@ rcl_action_get_zero_initialized_goal_status_array(void)
 rcl_action_cancel_request_t
 rcl_action_get_zero_initialized_cancel_request(void)
 {
-  static rcl_action_cancel_request_t request = {{{0}, {0, 0}}};
+  static rcl_action_cancel_request_t request = {{{{0}}, {0, 0}}};
   return request;
 }
 
@@ -81,11 +81,12 @@ rcl_ret_t
 rcl_action_goal_status_array_fini(rcl_action_goal_status_array_t * status_array)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(status_array, RCL_RET_INVALID_ARGUMENT);
-  if (!status_array->msg.status_list.data) {
-    return RCL_RET_INVALID_ARGUMENT;
+  if (status_array->msg.status_list.data) {
+    status_array->allocator.deallocate(
+      status_array->msg.status_list.data, status_array->allocator.state);
+    status_array->msg.status_list.data = NULL;
+    status_array->msg.status_list.size = 0u;
   }
-  status_array->allocator.deallocate(
-    status_array->msg.status_list.data, status_array->allocator.state);
   return RCL_RET_OK;
 }
 
@@ -122,11 +123,12 @@ rcl_ret_t
 rcl_action_cancel_response_fini(rcl_action_cancel_response_t * cancel_response)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(cancel_response, RCL_RET_INVALID_ARGUMENT);
-  if (!cancel_response->msg.goals_canceling.data) {
-    return RCL_RET_INVALID_ARGUMENT;
+  if (cancel_response->msg.goals_canceling.data) {
+    cancel_response->allocator.deallocate(
+      cancel_response->msg.goals_canceling.data, cancel_response->allocator.state);
+    cancel_response->msg.goals_canceling.data = NULL;
+    cancel_response->msg.goals_canceling.size = 0u;
   }
-  cancel_response->allocator.deallocate(
-    cancel_response->msg.goals_canceling.data, cancel_response->allocator.state);
   return RCL_RET_OK;
 }
 
