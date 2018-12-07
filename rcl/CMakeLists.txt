@@ -12,6 +12,9 @@ find_package(rosidl_generator_c REQUIRED)
 
 include_directories(include)
 
+include(cmake/get_default_rcl_logging_implementation.cmake)
+get_default_rcl_logging_implementation(RCL_LOGGING_IMPL)
+
 # Default to C11
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 11)
@@ -30,14 +33,17 @@ set(${PROJECT_NAME}_sources
   src/rcl/arguments.c
   src/rcl/client.c
   src/rcl/common.c
+  src/rcl/context.c
   src/rcl/expand_topic_name.c
   src/rcl/graph.c
   src/rcl/guard_condition.c
+  src/rcl/init.c
+  src/rcl/init_options.c
   src/rcl/lexer.c
   src/rcl/lexer_lookahead.c
+  src/rcl/logging.c
   src/rcl/node.c
   src/rcl/publisher.c
-  src/rcl/rcl.c
   src/rcl/remap.c
   src/rcl/rmw_implementation_identifier_check.c
   src/rcl/service.c
@@ -56,6 +62,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "rmw"
   "rcutils"
   "rosidl_generator_c"
+  ${RCL_LOGGING_IMPL}
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -84,6 +91,7 @@ ament_export_dependencies(rmw_implementation)
 ament_export_dependencies(rmw)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rosidl_generator_c)
+ament_export_dependencies(${RCL_LOGGING_IMPL})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
