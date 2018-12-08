@@ -1,0 +1,28 @@
+From 8326fa5be46bb7498371d195df0bea656255b4e9 Mon Sep 17 00:00:00 2001
+From: William Woodall <william@osrfoundation.org>
+Date: Fri, 7 Dec 2018 17:21:26 -0800
+Subject: [PATCH] expanding group depend on rcl_logging_packages to depend on
+ rcl_logging_noop
+
+---
+ package.xml | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/package.xml b/package.xml
+index 6f20abb..31d9a3f 100644
+--- a/package.xml
++++ b/package.xml
+@@ -37,7 +37,10 @@
+   <test_depend>osrf_testing_tools_cpp</test_depend>
+   <test_depend>test_msgs</test_depend>
+ 
++  <!-- Explicitly expanding this group_depend into a hard depend during bloom release
+   <group_depend>rcl_logging_packages</group_depend>
++  -->
++  <depend>rcl_logging_noop</depend>
+ 
+   <export>
+     <build_type>ament_cmake</build_type>
+-- 
+2.18.0
+
