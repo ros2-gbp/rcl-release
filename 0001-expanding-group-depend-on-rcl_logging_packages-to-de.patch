@@ -1,4 +1,4 @@
-From 8326fa5be46bb7498371d195df0bea656255b4e9 Mon Sep 17 00:00:00 2001
+From 51d204661676777ba7cd6d644a9993f19fc397cc Mon Sep 17 00:00:00 2001
 From: William Woodall <william@osrfoundation.org>
 Date: Fri, 7 Dec 2018 17:21:26 -0800
 Subject: [PATCH] expanding group depend on rcl_logging_packages to depend on
@@ -24,5 +24,5 @@ index 6f20abb..31d9a3f 100644
    <export>
      <build_type>ament_cmake</build_type>
 -- 
-2.18.0
+2.7.4
 
