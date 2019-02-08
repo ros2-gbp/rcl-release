@@ -1,3 +1,30 @@
+## rcl (crystal) - 0.6.5-0
+
+The packages in the `rcl` repository were released into the `crystal` distro by running `/usr/bin/bloom-release -r crystal rcl --override-release-repository-push-url git@github.com:ros2-gbp/rcl-release` on `Fri, 08 Feb 2019 18:51:24 -0000`
+
+These packages were released:
+- `rcl`
+- `rcl_action`
+- `rcl_lifecycle`
+- `rcl_yaml_param_parser`
+
+Version of package(s) in repository `rcl`:
+
+- upstream repository: https://github.com/ros2/rcl.git
+- release repository: https://github.com/ros2-gbp/rcl-release.git
+- rosdistro version: `0.6.4-0`
+- old version: `0.6.4-0`
+- new version: `0.6.5-0`
+
+Versions of tools used:
+
+- bloom version: `0.7.2`
+- catkin_pkg version: `0.4.10`
+- rosdep version: `0.15.0`
+- rosdistro version: `0.7.2`
+- vcstools version: `0.1.40`
+
+
 ## rcl (crystal) - 0.6.4-0
 
 The packages in the `rcl` repository were released into the `crystal` distro by running `/usr/bin/bloom-release -r crystal rcl --override-release-repository-push-url git@github.com:ros2-gbp/rcl-release` on `Fri, 11 Jan 2019 20:15:41 -0000`
