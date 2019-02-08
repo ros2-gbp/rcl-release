@@ -316,7 +316,7 @@ check_graph_state(
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     ret = rcl_wait_set_add_guard_condition(wait_set_ptr, graph_guard_condition, nullptr);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(200);
+    std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(400);
     RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
       "  state wrong, waiting up to '%s' nanoseconds for graph changes... ",
       std::to_string(time_to_sleep.count()).c_str());
@@ -494,12 +494,8 @@ public:
   {
     std::vector<rcl_node_t *> node_vec;
     node_vec.push_back(this->node_ptr);
-    if (!(is_opensplice || is_connext)) {
-      // TODO(ross-desmond): opensplice and connext cannot discover data about
-      // the current node due to their implementations of Simple Discovery
-      // Protocol.  Should be fixed later.
-      node_vec.push_back(this->remote_node_ptr);
-    }
+    node_vec.push_back(this->remote_node_ptr);
+
     size_t attempts = 20;
     bool is_expect = false;
     rcl_ret_t ret;
@@ -509,17 +505,16 @@ public:
       bool is_success = true;
       // verify each node contains the same node graph.
       for (auto node : node_vec) {
-        if (!(is_opensplice || is_connext)) {
-          RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking subscribers from node");
-          expect_topics_types(node, sub_func, node_state.subscribers,
-            test_graph_node_name, is_expect, is_success);
-          RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking services from node");
-          expect_topics_types(node, service_func, node_state.services,
-            test_graph_node_name, is_expect, is_success);
-          RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking publishers from node");
-          expect_topics_types(node, pub_func, node_state.publishers,
-            test_graph_node_name, is_expect, is_success);
-        }
+        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking subscribers from node");
+        expect_topics_types(node, sub_func, node_state.subscribers,
+          test_graph_node_name, is_expect, is_success);
+        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking services from node");
+        expect_topics_types(node, service_func, node_state.services,
+          test_graph_node_name, is_expect, is_success);
+        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking publishers from node");
+        expect_topics_types(node, pub_func, node_state.publishers,
+          test_graph_node_name, is_expect, is_success);
+
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking subscribers from remote node");
         expect_topics_types(node, sub_func, remote_node_state.subscribers,
           this->remote_node_name, is_expect, is_success);
@@ -536,7 +531,7 @@ public:
             rcl_wait_set_add_guard_condition(wait_set_ptr, rcl_node_get_graph_guard_condition(
                 node), NULL);
           ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-          std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(200);
+          std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(400);
           RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
             "  state wrong, waiting up to '%s' nanoseconds for graph changes... ",
             std::to_string(time_to_sleep.count()).c_str());
@@ -575,19 +570,19 @@ TEST_F(NodeGraphMultiNodeFixture, test_node_info_subscriptions)
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
 
-  VerifySubsystemCount(expected_node_state{0, 1, 0}, expected_node_state{0, 1, 0});
+  VerifySubsystemCount(expected_node_state{1, 1, 0}, expected_node_state{1, 1, 0});
 
   // Destroy the node's subscriber
   ret = rcl_subscription_fini(&sub, this->node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  VerifySubsystemCount(expected_node_state{0, 0, 0}, expected_node_state{0, 1, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0}, expected_node_state{1, 1, 0});
 
   // Destroy the remote node's subdscriber
   ret = rcl_subscription_fini(&sub2, this->remote_node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  VerifySubsystemCount(expected_node_state{0, 0, 0}, expected_node_state{0, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0}, expected_node_state{1, 0, 0});
 }
 
 TEST_F(NodeGraphMultiNodeFixture, test_node_info_publishers)
@@ -600,14 +595,14 @@ TEST_F(NodeGraphMultiNodeFixture, test_node_info_publishers)
   ret = rcl_publisher_init(&pub, this->node_ptr, ts, this->topic_name.c_str(), &pub_ops);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  VerifySubsystemCount(expected_node_state{1, 0, 0}, expected_node_state{0, 0, 0});
+  VerifySubsystemCount(expected_node_state{2, 0, 0}, expected_node_state{1, 0, 0});
 
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Destroyed publisher");
   // Destroy the publisher.
   ret = rcl_publisher_fini(&pub, this->node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  VerifySubsystemCount(expected_node_state{0, 0, 0}, expected_node_state{0, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0}, expected_node_state{1, 0, 0});
 }
 
 TEST_F(NodeGraphMultiNodeFixture, test_node_info_services)
@@ -619,12 +614,12 @@ TEST_F(NodeGraphMultiNodeFixture, test_node_info_services)
   auto ts1 = ROSIDL_GET_SRV_TYPE_SUPPORT(test_msgs, srv, Primitives);
   ret = rcl_service_init(&service, this->node_ptr, ts1, service_name, &service_options);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  VerifySubsystemCount(expected_node_state{0, 0, 1}, expected_node_state{0, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 1}, expected_node_state{1, 0, 0});
 
   // Destroy service.
   ret = rcl_service_fini(&service, this->node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  VerifySubsystemCount(expected_node_state{0, 0, 0}, expected_node_state{0, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0}, expected_node_state{1, 0, 0});
 }
 
 /*
@@ -724,7 +719,7 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_graph_guard_conditi
   std::thread topic_thread(
     [this, &topic_changes_promise]() {
       // sleep
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
       // create the publisher
       rcl_publisher_t pub = rcl_get_zero_initialized_publisher();
       rcl_publisher_options_t pub_ops = rcl_publisher_get_default_options();
@@ -733,7 +728,7 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_graph_guard_conditi
         "/chatter_test_graph_guard_condition_topics", &pub_ops);
       EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
       // sleep
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
       // create the subscription
       rcl_subscription_t sub = rcl_get_zero_initialized_subscription();
       rcl_subscription_options_t sub_ops = rcl_subscription_get_default_options();
@@ -742,12 +737,12 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_graph_guard_conditi
         "/chatter_test_graph_guard_condition_topics", &sub_ops);
       EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
       // sleep
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
       // destroy the subscription
       ret = rcl_subscription_fini(&sub, this->node_ptr);
       EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
       // sleep
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
       // destroy the publication
       ret = rcl_publisher_fini(&pub, this->node_ptr);
       EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -767,7 +762,7 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_graph_guard_conditi
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     ret = rcl_wait_set_add_guard_condition(this->wait_set_ptr, graph_guard_condition, NULL);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(200);
+    std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(400);
     RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
       "waiting up to '%s' nanoseconds for graph changes",
       std::to_string(time_to_sleep.count()).c_str());
