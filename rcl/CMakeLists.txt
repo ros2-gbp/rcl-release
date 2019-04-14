@@ -9,9 +9,10 @@ find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rmw_implementation REQUIRED)
 find_package(rosidl_generator_c REQUIRED)
+find_package(tinydir_vendor REQUIRED)
 
 include_directories(include)
-
+include(cmake/rcl_set_symbol_visibility_hidden.cmake)
 include(cmake/get_default_rcl_logging_implementation.cmake)
 get_default_rcl_logging_implementation(RCL_LOGGING_IMPL)
 
@@ -26,7 +27,7 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra)
+  add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 set(${PROJECT_NAME}_sources
@@ -44,6 +45,7 @@ set(${PROJECT_NAME}_sources
   src/rcl/logging_rosout.c
   src/rcl/logging.c
   src/rcl/node.c
+  src/rcl/node_options.c
   src/rcl/publisher.c
   src/rcl/remap.c
   src/rcl/rmw_implementation_identifier_check.c
@@ -53,6 +55,7 @@ set(${PROJECT_NAME}_sources
   src/rcl/timer.c
   src/rcl/validate_topic_name.c
   src/rcl/wait.c
+  src/rcl/security_directory.c
 )
 
 add_library(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
@@ -64,11 +67,13 @@ ament_target_dependencies(${PROJECT_NAME}
   "rcutils"
   "rosidl_generator_c"
   ${RCL_LOGGING_IMPL}
+  "tinydir_vendor"
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME} PRIVATE "RCL_BUILDING_DLL")
+rcl_set_symbol_visibility_hidden(${PROJECT_NAME} LANGUAGE "C")
 
 install(
   TARGETS ${PROJECT_NAME}
@@ -101,8 +106,12 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
-ament_package()
+ament_package(CONFIG_EXTRAS "rcl-extras.cmake")
 
+install(
+  DIRECTORY cmake
+  DESTINATION share/${PROJECT_NAME}
+)
 install(
   DIRECTORY include/
   DESTINATION include

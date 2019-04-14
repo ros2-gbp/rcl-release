@@ -31,15 +31,12 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-add_executable(test_compile_headers
-  src/test_compile_headers.c
-)
-
 set(rcl_action_sources
   src/${PROJECT_NAME}/action_client.c
   src/${PROJECT_NAME}/action_server.c
   src/${PROJECT_NAME}/goal_handle.c
   src/${PROJECT_NAME}/goal_state_machine.c
+  src/${PROJECT_NAME}/graph.c
   src/${PROJECT_NAME}/names.c
   src/${PROJECT_NAME}/types.c
 )
@@ -60,6 +57,8 @@ ament_target_dependencies(${PROJECT_NAME}
   "rmw"
   "rosidl_generator_c"
 )
+
+rcl_set_symbol_visibility_hidden(${PROJECT_NAME} LANGUAGE "C")
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME} PRIVATE "RCL_ACTION_BUILDING_DLL")
@@ -89,12 +88,15 @@ if(BUILD_TESTING)
   if(TARGET test_action_client)
     target_include_directories(test_action_client PUBLIC
       include
-      ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     )
     target_link_libraries(test_action_client
       ${PROJECT_NAME}
     )
-    ament_target_dependencies(test_action_client "rcl" "test_msgs")
+    ament_target_dependencies(test_action_client
+      "osrf_testing_tools_cpp"
+      "rcl"
+      "test_msgs"
+    )
   endif()
 
   # get the rmw implementations ahead of time
@@ -120,13 +122,15 @@ if(BUILD_TESTING)
         PUBLIC "RMW_IMPLEMENTATION=${rmw_implementation}")
       target_include_directories(${target}${target_suffix} PUBLIC
         include
-        ${rcl_INCLUDE_DIRS}
       )
       target_link_libraries(${target}${target_suffix}
         ${PROJECT_NAME}
       )
       ament_target_dependencies(${target}${target_suffix}
-        "test_msgs")
+        "osrf_testing_tools_cpp"
+        "rcl"
+        "test_msgs"
+      )
     endif()
   endfunction()
 
@@ -148,6 +152,13 @@ if(BUILD_TESTING)
       "test/rcl_action/test_action_communication.cpp")
     custom_test_c(test_action_interaction
       "test/rcl_action/test_action_interaction.cpp")
+
+    # TODO(jacobperron): Graph tests fail with opensplice. Re-enable after resolving
+    # https://github.com/ros2/ros2/issues/677
+    if(NOT rmw_implementation STREQUAL "rmw_opensplice_cpp")
+      custom_test_c(test_graph
+        "test/rcl_action/test_graph.cpp")
+    endif()
   endmacro()
 
   call_for_each_rmw_implementation(targets)
@@ -158,12 +169,14 @@ if(BUILD_TESTING)
   if(TARGET test_action_server)
     target_include_directories(test_action_server PUBLIC
       include
-      ${rcl_INCLUDE_DIRS}
     )
     target_link_libraries(test_action_server
       ${PROJECT_NAME}
     )
-    ament_target_dependencies(test_action_server "test_msgs")
+    ament_target_dependencies(test_action_server
+      "rcl"
+      "test_msgs"
+    )
   endif()
   ament_add_gtest(test_goal_handle
     test/rcl_action/test_goal_handle.cpp
@@ -171,22 +184,20 @@ if(BUILD_TESTING)
   if(TARGET test_goal_handle)
     target_include_directories(test_goal_handle PUBLIC
       include
-      ${rcl_INCLUDE_DIRS}
     )
     target_link_libraries(test_goal_handle
       ${PROJECT_NAME}
     )
+    ament_target_dependencies(test_action_server "rcl")
   endif()
   ament_add_gtest(test_goal_state_machine
     test/rcl_action/test_goal_state_machine.cpp
   )
   if(TARGET test_goal_state_machine)
-    target_include_directories(test_goal_state_machine PUBLIC
-      ${rcl_INCLUDE_DIRS}
-    )
     target_link_libraries(test_goal_state_machine
       ${PROJECT_NAME}
     )
+    ament_target_dependencies(test_action_server "rcl")
   endif()
   ament_add_gtest(test_types
     test/rcl_action/test_types.cpp
@@ -194,22 +205,20 @@ if(BUILD_TESTING)
   if(TARGET test_types)
     target_include_directories(test_types PUBLIC
       include
-      ${rcl_INCLUDE_DIRS}
     )
     target_link_libraries(test_types
       ${PROJECT_NAME}
     )
+    ament_target_dependencies(test_action_server "rcl")
   endif()
   ament_add_gtest(test_names
     test/rcl_action/test_names.cpp
   )
   if(TARGET test_names)
-    target_include_directories(test_names PUBLIC
-      ${rcl_INCLUDE_DIRS}
-    )
     target_link_libraries(test_names
       ${PROJECT_NAME}
     )
+    ament_target_dependencies(test_action_server "rcl")
   endif()
 endif()
 

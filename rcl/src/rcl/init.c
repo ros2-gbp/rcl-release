@@ -43,6 +43,9 @@ rcl_init(
 
   if (argc > 0) {
     RCL_CHECK_ARGUMENT_FOR_NULL(argv, RCL_RET_INVALID_ARGUMENT);
+    for (int i = 0; i < argc; ++i) {
+      RCL_CHECK_ARGUMENT_FOR_NULL(argv[i], RCL_RET_INVALID_ARGUMENT);
+    }
   } else {
     if (NULL != argv) {
       RCL_SET_ERROR_MSG("argc is <= 0, but argv is not NULL");
@@ -75,6 +78,9 @@ rcl_init(
   context->impl = allocator.zero_allocate(1, sizeof(rcl_context_impl_t), allocator.state);
   RCL_CHECK_FOR_NULL_WITH_MSG(
     context->impl, "failed to allocate memory for context impl", return RCL_RET_BAD_ALLOC);
+
+  // Zero initialize rmw context first so its validity can by checked in cleanup.
+  context->impl->rmw_context = rmw_get_zero_initialized_context();
 
   // Copy the options into the context for future reference.
   rcl_ret_t ret = rcl_init_options_copy(options, &(context->impl->init_options));
@@ -132,7 +138,6 @@ rcl_init(
   context->impl->init_options.impl->rmw_init_options.instance_id = next_instance_id;
 
   // Initialize rmw_init.
-  context->impl->rmw_context = rmw_get_zero_initialized_context();
   rmw_ret_t rmw_ret = rmw_init(
     &(context->impl->init_options.impl->rmw_init_options),
     &(context->impl->rmw_context));
