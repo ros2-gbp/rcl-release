@@ -1,0 +1,26 @@
+From 5f61386c552019440524252ffd5dd50b26ace8dd Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Steven!=20Ragnar=C3=B6k?= <steven@nuclearsandwich.com>
+Date: Sun, 14 Apr 2019 19:46:05 -0700
+Subject: [PATCH] Manually expand group dependency.
+
+---
+ package.xml | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/package.xml b/package.xml
+index 39fb033..5d08c28 100644
+--- a/package.xml
++++ b/package.xml
+@@ -23,6 +23,9 @@
+   <build_export_depend>rosidl_generator_c</build_export_depend>
+   <build_export_depend>tinydir_vendor</build_export_depend>
+ 
++  <depend>rcl_logging_log4cxx</depend>
++  <depend>rcl_logging_noop</depend>
++
+   <exec_depend>rcl_interfaces</exec_depend>
+   <exec_depend>ament_cmake</exec_depend>
+   <exec_depend>rcutils</exec_depend>
+-- 
+2.7.4
+
