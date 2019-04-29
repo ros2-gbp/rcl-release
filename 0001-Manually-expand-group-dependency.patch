@@ -1,4 +1,4 @@
-From 6bf242cb4d59b44a65c838b6a3ea0cabf70c0c83 Mon Sep 17 00:00:00 2001
+From f322926be3513068440ac18048e209c32a6bd30a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Steven!=20Ragnar=C3=B6k?= <steven@nuclearsandwich.com>
 Date: Sun, 14 Apr 2019 19:46:05 -0700
 Subject: [PATCH] Manually expand group dependency.
