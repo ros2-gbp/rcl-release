@@ -24,8 +24,8 @@
 #include "rcutils/logging_macros.h"
 #include "rcutils/macros.h"
 
-#include "test_msgs/msg/primitives.h"
-#include "test_msgs/srv/primitives.h"
+#include "test_msgs/msg/basic_types.h"
+#include "test_msgs/srv/basic_types.h"
 
 #ifdef RMW_IMPLEMENTATION
 # define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
@@ -70,9 +70,7 @@ class TEST_FIXTURE_P_RMW (TestGetActualQoS)
   : public ::testing::TestWithParam<TestParameters>
 {
 public:
-  rcl_node_t * node_ptr;
-  rcl_context_t * context_ptr;
-  void SetUp()
+  void SetUp() override
   {
     rcl_ret_t ret;
     rcl_node_options_t node_options = rcl_node_get_default_options();
@@ -91,7 +89,7 @@ public:
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   }
 
-  void TearDown()
+  void TearDown() override
   {
     rcl_ret_t ret;
 
@@ -106,6 +104,10 @@ public:
     delete this->context_ptr;
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   }
+
+protected:
+  rcl_node_t * node_ptr;
+  rcl_context_t * context_ptr;
 };
 
 TEST_P_RMW(TestGetActualQoS, test_publisher_get_qos_settings) {
@@ -116,7 +118,7 @@ TEST_P_RMW(TestGetActualQoS, test_publisher_get_qos_settings) {
   rcl_publisher_t pub = rcl_get_zero_initialized_publisher();
   rcl_publisher_options_t pub_ops = rcl_publisher_get_default_options();
   pub_ops.qos = parameters.qos_to_set;
-  auto ts = ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, Primitives);
+  auto ts = ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, BasicTypes);
   ret = rcl_publisher_init(&pub, this->node_ptr, ts, topic_name.c_str(), &pub_ops);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
@@ -199,8 +201,8 @@ get_parameters()
 
 #ifdef RMW_IMPLEMENTATION_STR
   std::string rmw_implementation_str = RMW_IMPLEMENTATION_STR;
-  if (!rmw_implementation_str.compare("rmw_fastrtps_cpp") ||
-    !rmw_implementation_str.compare("rmw_fastrtps_dynamic_cpp"))
+  if (rmw_implementation_str == "rmw_fastrtps_cpp" ||
+    rmw_implementation_str == "rmw_fastrtps_dynamic_cpp")
   {
     rmw_qos_profile_t expected_system_default_qos = expected_fastrtps_default_qos_profile();
     parameters.push_back({
@@ -208,9 +210,9 @@ get_parameters()
       expected_system_default_qos,
       "publisher_system_default_qos"});
   } else {
-    if (!rmw_implementation_str.compare("rmw_opensplice_cpp") ||
-      !rmw_implementation_str.compare("rmw_connext_cpp") ||
-      !rmw_implementation_str.compare("rmw_connext_dynamic_cpp"))
+    if (rmw_implementation_str == "rmw_connext_cpp" ||
+      rmw_implementation_str == "rmw_connext_dynamic_cpp" ||
+      rmw_implementation_str == "rmw_opensplice_cpp")
     {
       rmw_qos_profile_t expected_system_default_qos = expected_system_default_qos_profile();
       parameters.push_back({
