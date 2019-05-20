@@ -1,14 +1,14 @@
-From 919c36333e8cc43b385e536d671da467d0ef979f Mon Sep 17 00:00:00 2001
+From 1f0fc8c2e3c9cfee7068e579a2f2edac3894bc30 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Steven!=20Ragnar=C3=B6k?= <steven@nuclearsandwich.com>
 Date: Sun, 14 Apr 2019 19:46:05 -0700
-Subject: [PATCH] Manually expand group dependency.
+Subject: [PATCH 1/2] Manually expand group dependency.
 
 ---
  package.xml | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/package.xml b/package.xml
-index d18f8d4..f6b82af 100644
+index 508fda4..58b353f 100644
 --- a/package.xml
 +++ b/package.xml
 @@ -23,6 +23,9 @@
@@ -22,5 +22,5 @@ index d18f8d4..f6b82af 100644
    <exec_depend>ament_cmake</exec_depend>
    <exec_depend>rcutils</exec_depend>
 -- 
-2.17.1
+2.20.1 (Apple Git-117)
 
