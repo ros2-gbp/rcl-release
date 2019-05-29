@@ -28,7 +28,6 @@
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
 
 using namespace std::chrono_literals;
-using std::chrono::milliseconds;
 using std::chrono::seconds;
 using std::chrono::duration_cast;
 
@@ -43,14 +42,17 @@ constexpr seconds MAX_WAIT_PER_TESTCASE = 10s;
 # define CLASSNAME(NAME, SUFFIX) NAME
 #endif
 
+#define EXPECT_OK(varname) EXPECT_EQ(varname, RCL_RET_OK) << rcl_get_error_string().str
+
+
 class CLASSNAME (TestEventFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   void SetUp()
   {
     is_opensplice = (std::string(rmw_get_implementation_identifier()).find("rmw_opensplice") == 0);
-    is_fastrtps = (std::string(rmw_get_implementation_identifier()).find("rmw_fastrtps") == 0);
-    is_manual_liveliness_unsupported = is_fastrtps;
+    bool is_fastrtps = (std::string(rmw_get_implementation_identifier()).find("rmw_fastrtps") == 0);
+    is_liveliness_supported = !is_fastrtps;
 
     rcl_ret_t ret;
     {
@@ -128,8 +130,13 @@ public:
     rmw_time_t lifespan {0, 0};
     rmw_time_t deadline {DEADLINE_PERIOD_IN_S.count(), 0};
     rmw_time_t lease_duration {LIVELINESS_LEASE_DURATION_IN_S.count(), 0};
-    rmw_qos_liveliness_policy_t liveliness_policy = is_manual_liveliness_unsupported ?
-      RMW_QOS_POLICY_LIVELINESS_AUTOMATIC : RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
+    if (!is_liveliness_supported) {
+      lease_duration = {0, 0};
+    }
+    rmw_qos_liveliness_policy_t liveliness_policy =
+      is_liveliness_supported ?
+      RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC :
+      RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
 
     // init publisher
     ret = setup_publisher(deadline, lifespan, lease_duration, liveliness_policy);
@@ -149,21 +156,24 @@ public:
     ret = rcl_subscription_event_init(&subscription_event, &subscription, sub_event_type);
     ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
-    // wait for discovery
-    // total wait time of 10 seconds, if never ready
-    size_t max_iterations = 1000;
-    milliseconds wait_period(10);
-    size_t iteration = 0;
-    do {
-      iteration++;
-      size_t count = 0;
-      rcl_ret_t ret = rcl_subscription_get_publisher_count(&subscription, &count);
-      ASSERT_EQ(ret, RCL_RET_OK);
-      if (count > 0) {
+    // wait for discovery, time out after 10s
+    static const size_t max_iterations = 1000;
+    static const auto wait_period = 10ms;
+    bool subscribe_success = false;
+    for (size_t i = 0; i < max_iterations; ++i) {
+      size_t subscription_count = 0;
+      size_t publisher_count = 0;
+      ret = rcl_subscription_get_publisher_count(&subscription, &publisher_count);
+      EXPECT_OK(ret);
+      ret = rcl_publisher_get_subscription_count(&publisher, &subscription_count);
+      EXPECT_OK(ret);
+      if (subscription_count && publisher_count) {
+        subscribe_success = true;
         break;
       }
       std::this_thread::sleep_for(wait_period);
-    } while (iteration < max_iterations);
+    }
+    ASSERT_TRUE(subscribe_success) << "Publisher/Subscription discovery timed out";
   }
 
   void tear_down_publisher_subscriber()
@@ -207,9 +217,8 @@ protected:
   rcl_event_t publisher_event;
   rcl_subscription_t subscription;
   rcl_event_t subscription_event;
-  bool is_fastrtps;
   bool is_opensplice;
-  bool is_manual_liveliness_unsupported;
+  bool is_liveliness_supported;
   const char * topic = "rcl_test_publisher_subscription_events";
   const rosidl_message_type_support_t * ts;
 };
@@ -280,7 +289,8 @@ wait_for_msgs_and_events(
       }
     }
   }
-
+  ret = rcl_wait_set_fini(&wait_set);
+  EXPECT_OK(ret);
   return ret;
 }
 
@@ -340,30 +350,36 @@ conditional_wait_for_msgs_and_events(
 }
 
 TEST_F(CLASSNAME(TestEventFixture, RMW_IMPLEMENTATION), test_unsupported_liveliness) {
-  if (is_manual_liveliness_unsupported) {
-    rmw_time_t deadline {0, 0};
-    rmw_time_t lifespan {0, 0};
-    rmw_time_t lease_duration {0, 0};
-    rmw_qos_liveliness_policy_t liveliness_policy = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE;
-    EXPECT_EQ(RCL_RET_ERROR,
-      setup_subscriber(deadline, lifespan, lease_duration,
-      liveliness_policy)) <<
-      "Initialized subscriber RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE when unsupported";
-    EXPECT_EQ(RCL_RET_ERROR,
-      setup_publisher(deadline, lifespan, lease_duration,
-      liveliness_policy)) <<
-      "Initialized publisher RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE when unsupported";
-
-    liveliness_policy = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
-    EXPECT_EQ(RCL_RET_ERROR,
-      setup_subscriber(deadline, lifespan, lease_duration,
-      liveliness_policy)) <<
-      "Initialized subscriber RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC when unsupported";
-    EXPECT_EQ(RCL_RET_ERROR,
-      setup_publisher(deadline, lifespan, lease_duration,
-      liveliness_policy)) <<
-      "Initialized publisher RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC when unsupported";
+  if (is_liveliness_supported) {
+    return;
   }
+  rmw_time_t deadline {0, 0};
+  rmw_time_t lifespan {0, 0};
+  rmw_time_t lease_duration {0, 0};
+  rmw_time_t nonzero_lease_duration {1, 0};
+  rmw_qos_liveliness_policy_t liveliness_policy = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE;
+  EXPECT_EQ(RCL_RET_ERROR,
+    setup_subscriber(deadline, lifespan, lease_duration, liveliness_policy)) <<
+    "Initialized subscription with RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE when unsupported";
+  EXPECT_EQ(RCL_RET_ERROR,
+    setup_publisher(deadline, lifespan, lease_duration, liveliness_policy)) <<
+    "Initialized publisher with RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE when unsupported";
+
+  liveliness_policy = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
+  EXPECT_EQ(RCL_RET_ERROR,
+    setup_subscriber(deadline, lifespan, lease_duration, liveliness_policy)) <<
+    "Initialized subscription with RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC when unsupported";
+  EXPECT_EQ(RCL_RET_ERROR,
+    setup_publisher(deadline, lifespan, lease_duration, liveliness_policy)) <<
+    "Initialized publisher with RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC when unsupported";
+
+  liveliness_policy = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
+  EXPECT_EQ(RCL_RET_ERROR,
+    setup_subscriber(deadline, lifespan, nonzero_lease_duration, liveliness_policy)) <<
+    "Initialized subscription with nonzero Liveliness lease duration when unsupported";
+  EXPECT_EQ(RCL_RET_ERROR,
+    setup_publisher(deadline, lifespan, nonzero_lease_duration, liveliness_policy)) <<
+    "Initialized publisher with nonzero Liveliness lease duration when unsupported";
 }
 
 /*
@@ -506,7 +522,7 @@ TEST_F(CLASSNAME(TestEventFixture, RMW_IMPLEMENTATION), test_pubsub_deadline_mis
  */
 TEST_F(CLASSNAME(TestEventFixture, RMW_IMPLEMENTATION), test_pubsub_liveliness_kill_pub)
 {
-  if (is_manual_liveliness_unsupported) {
+  if (!is_liveliness_supported) {
     return;
   }
 
