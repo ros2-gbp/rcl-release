@@ -1,4 +1,4 @@
-From da65e6e83c42211e4f735ab81f3fba4e809b4ca8 Mon Sep 17 00:00:00 2001
+From b1c5c8f6b7cdc9014fd689930299fe7afbace3ac Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Steven!=20Ragnar=C3=B6k?= <steven@nuclearsandwich.com>
 Date: Mon, 15 Apr 2019 05:21:48 -0700
 Subject: [PATCH] Set BUILD_TESTING=OFF to avoid issue with test installation.
@@ -20,5 +20,5 @@ index 9c9604d..ff4db1b 100755
  		-DAMENT_PREFIX_PATH="@(InstallationPrefix)"
  
 -- 
-2.20.1 (Apple Git-117)
+2.17.1
 
