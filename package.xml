@@ -23,6 +23,9 @@
   <build_export_depend>rosidl_generator_c</build_export_depend>
   <build_export_depend>tinydir_vendor</build_export_depend>
 
+  <depend>rcl_logging_log4cxx</depend>
+  <depend>rcl_logging_noop</depend>
+
   <exec_depend>rcl_interfaces</exec_depend>
   <exec_depend>ament_cmake</exec_depend>
   <exec_depend>rcutils</exec_depend>
