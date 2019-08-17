@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2018 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCL__PUBLISHER_IMPL_H_
-#define RCL__PUBLISHER_IMPL_H_
+#include "rcl_action/rcl_action.h"
 
-#include "rmw/rmw.h"
 
-#include "rcl/publisher.h"
-
-typedef struct rcl_publisher_impl_t
+int main(void)
 {
-  rcl_publisher_options_t options;
-  rmw_qos_profile_t actual_qos;
-  rcl_context_t * context;
-  rmw_publisher_t * rmw_handle;
-} rcl_publisher_impl_t;
-
-#endif  // RCL__PUBLISHER_IMPL_H_
+  return 0;
+}

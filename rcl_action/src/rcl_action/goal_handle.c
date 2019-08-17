@@ -88,10 +88,6 @@ rcl_action_update_goal_state(
   rcl_action_goal_state_t new_state = rcl_action_transition_goal_state(
     goal_handle->impl->state, goal_event);
   if (GOAL_STATE_UNKNOWN == new_state) {
-    RCL_SET_ERROR_MSG_WITH_FORMAT_STRING(
-      "goal_handle attempted invalid transition from state %s with event %s",
-      goal_state_descriptions[goal_handle->impl->state],
-      goal_event_descriptions[goal_event]);
     return RCL_RET_ACTION_GOAL_EVENT_INVALID;
   }
   goal_handle->impl->state = new_state;
@@ -147,9 +143,9 @@ rcl_action_goal_handle_is_cancelable(const rcl_action_goal_handle_t * goal_handl
   if (!rcl_action_goal_handle_is_valid(goal_handle)) {
     return false;  // error message is set
   }
-  // Check if the state machine reports a cancel goal event is valid
+  // Check if the state machine reports a cancel event is valid
   rcl_action_goal_state_t state = rcl_action_transition_goal_state(
-    goal_handle->impl->state, GOAL_EVENT_CANCEL_GOAL);
+    goal_handle->impl->state, GOAL_EVENT_CANCEL);
   return GOAL_STATE_CANCELING == state;
 }
 

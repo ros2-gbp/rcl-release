@@ -22,6 +22,7 @@
 #include "rcutils/filesystem.h"
 
 static char cur_dir[1024];
+rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
 TEST(test_file_parser, correct_syntax) {
   rcutils_reset_error();
@@ -38,27 +39,6 @@ TEST(test_file_parser, correct_syntax) {
   EXPECT_TRUE(res);
   rcl_yaml_node_struct_print(params_hdl);
   rcl_yaml_node_struct_fini(params_hdl);
-  allocator.deallocate(test_path, allocator.state);
-  allocator.deallocate(path, allocator.state);
-}
-
-TEST(test_file_parser, string_array_with_quoted_number) {
-  rcutils_reset_error();
-  EXPECT_TRUE(rcutils_get_cwd(cur_dir, 1024));
-  rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  char * test_path = rcutils_join_path(cur_dir, "test", allocator);
-  char * path = rcutils_join_path(test_path, "string_array_with_quoted_number.yaml", allocator);
-  fprintf(stderr, "cur_path: %s\n", path);
-  EXPECT_TRUE(rcutils_exists(path));
-  rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
-  EXPECT_TRUE(params_hdl);
-  if (params_hdl) {
-    bool res = rcl_parse_yaml_file(path, params_hdl);
-    fprintf(stderr, "%s\n", rcutils_get_error_string().str);
-    EXPECT_TRUE(res);
-    rcl_yaml_node_struct_print(params_hdl);
-    rcl_yaml_node_struct_fini(params_hdl);
-  }
   allocator.deallocate(test_path, allocator.state);
   allocator.deallocate(path, allocator.state);
 }
@@ -192,25 +172,6 @@ TEST(test_file_parser, max_string_sz) {
   allocator.deallocate(path, allocator.state);
 }
 
-TEST(test_file_parser, empty_string) {
-  rcutils_reset_error();
-  EXPECT_TRUE(rcutils_get_cwd(cur_dir, 1024));
-  rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  char * test_path = rcutils_join_path(cur_dir, "test", allocator);
-  char * path = rcutils_join_path(test_path, "empty_string.yaml", allocator);
-  fprintf(stderr, "cur_path: %s\n", path);
-  EXPECT_TRUE(rcutils_exists(path));
-  rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
-  EXPECT_FALSE(NULL == params_hdl);
-  bool res = rcl_parse_yaml_file(path, params_hdl);
-  fprintf(stderr, "%s\n", rcutils_get_error_string().str);
-  EXPECT_TRUE(res);
-  rcl_yaml_node_struct_print(params_hdl);
-  rcl_yaml_node_struct_fini(params_hdl);
-  allocator.deallocate(test_path, allocator.state);
-  allocator.deallocate(path, allocator.state);
-}
-
 TEST(test_file_parser, no_value1) {
   rcutils_reset_error();
   EXPECT_TRUE(rcutils_get_cwd(cur_dir, 1024));
@@ -234,24 +195,6 @@ TEST(test_file_parser, indented_ns) {
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
   char * test_path = rcutils_join_path(cur_dir, "test", allocator);
   char * path = rcutils_join_path(test_path, "indented_name_space.yaml", allocator);
-  fprintf(stderr, "cur_path: %s\n", path);
-  EXPECT_TRUE(rcutils_exists(path));
-  rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
-  EXPECT_FALSE(NULL == params_hdl);
-  bool res = rcl_parse_yaml_file(path, params_hdl);
-  fprintf(stderr, "%s\n", rcutils_get_error_string().str);
-  EXPECT_FALSE(res);
-  allocator.deallocate(test_path, allocator.state);
-  allocator.deallocate(path, allocator.state);
-}
-
-// Regression test for https://github.com/ros2/rcl/issues/419
-TEST(test_file_parser, maximum_number_parameters) {
-  rcutils_reset_error();
-  EXPECT_TRUE(rcutils_get_cwd(cur_dir, 1024));
-  rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  char * test_path = rcutils_join_path(cur_dir, "test", allocator);
-  char * path = rcutils_join_path(test_path, "max_num_params.yaml", allocator);
   fprintf(stderr, "cur_path: %s\n", path);
   EXPECT_TRUE(rcutils_exists(path));
   rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);

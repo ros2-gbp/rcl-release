@@ -26,9 +26,11 @@ extern "C"
 #include "rcl/arguments.h"
 #include "rcl/context.h"
 #include "rcl/macros.h"
-#include "rcl/node_options.h"
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
+
+/// Constant which indicates that the default domain id should be used.
+#define RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID SIZE_MAX
 
 struct rcl_guard_condition_t;
 struct rcl_node_impl_t;
@@ -42,6 +44,52 @@ typedef struct rcl_node_t
   /// Private implementation pointer.
   struct rcl_node_impl_t * impl;
 } rcl_node_t;
+
+/// Structure which encapsulates the options for creating a rcl_node_t.
+typedef struct rcl_node_options_t
+{
+  // bool anonymous_name;
+
+  // rmw_qos_profile_t parameter_qos;
+
+  /// If true, no parameter infrastructure will be setup.
+  // bool no_parameters;
+
+  /// If set, then this value overrides the ROS_DOMAIN_ID environment variable.
+  /**
+   * It defaults to RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID, which will cause the
+   * node to use the ROS domain ID set in the ROS_DOMAIN_ID environment
+   * variable, or on some systems 0 if the environment variable is not set.
+   *
+   * \todo TODO(wjwwood):
+   *   Should we put a limit on the ROS_DOMAIN_ID value, that way we can have
+   *   a safe value for the default RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID?
+   *   (currently max size_t)
+   */
+  size_t domain_id;
+
+  /// Custom allocator used for internal allocations.
+  rcl_allocator_t allocator;
+
+  /// If false then only use arguments in this struct, otherwise use global arguments also.
+  bool use_global_arguments;
+
+  /// Command line arguments that apply only to this node.
+  rcl_arguments_t arguments;
+} rcl_node_options_t;
+
+/// Return the default node options in a rcl_node_options_t.
+/**
+ * The default values are:
+ *
+ * - domain_id = RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID
+ * - allocator = rcl_get_default_allocator()
+ * - use_global_arguments = true
+ * - arguments = rcl_get_zero_initialized_arguments()
+ */
+RCL_PUBLIC
+rcl_node_options_t
+rcl_node_get_default_options(void);
 
 /// Return a rcl_node_t struct with members initialized to `NULL`.
 RCL_PUBLIC
@@ -163,6 +211,7 @@ rcl_node_init(
  * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_uint_least64_t`</i>
  *
  * \param[in] node rcl_node_t to be finalized
+ * \param[in] context the context originally used to init the node
  * \return `RCL_RET_OK` if node was finalized successfully, or
  * \return `RCL_RET_NODE_INVALID` if the node pointer is null, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
@@ -171,6 +220,31 @@ RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t
 rcl_node_fini(rcl_node_t * node);
+
+/// Copy one options structure into another.
+/**
+ * <hr>
+ * Attribute          | Adherence
+ * ------------------ | -------------
+ * Allocates Memory   | Yes
+ * Thread-Safe        | No
+ * Uses Atomics       | No
+ * Lock-Free          | Yes
+ *
+ * \param[in] options The structure to be copied.
+ *   Its allocator is used to copy memory into the new structure.
+ * \param[out] options_out An options structure containing default values.
+ * \return `RCL_RET_OK` if the structure was copied successfully, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any function arguments are invalid, or
+ * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
+ * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ */
+RCL_PUBLIC
+RCL_WARN_UNUSED
+rcl_ret_t
+rcl_node_options_copy(
+  const rcl_node_options_t * options,
+  rcl_node_options_t * options_out);
 
 /// Return `true` if the node is valid, else `false`.
 /**
@@ -278,29 +352,6 @@ RCL_WARN_UNUSED
 const char *
 rcl_node_get_namespace(const rcl_node_t * node);
 
-/// Return the fully qualified name of the node.
-/**
- * This function returns the node's internal namespace and name combined string.
- * This function can fail, and therefore return `NULL`, if:
- *   - node is `NULL`
- *   - node has not been initialized (the implementation is invalid)
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] node pointer to the node
- * \return fully qualified name string if successful, otherwise `NULL`
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-const char *
-rcl_node_get_fully_qualified_name(const rcl_node_t * node);
-
 /// Return the rcl node options.
 /**
  * This function returns the node's internal options struct.
@@ -360,31 +411,6 @@ RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t
 rcl_node_get_domain_id(const rcl_node_t * node, size_t * domain_id);
-
-/// Manually assert that this node is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE)
-/**
- * If the rmw Liveliness policy is set to RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE, the creator of
- * this node may manually call `assert_liveliness` at some point in time to signal to the rest
- * of the system that this Node is still alive.
- * This function must be called at least as often as the qos_profile's liveliness_lease_duration
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] node handle to the node that needs liveliness to be asserted
- * \return `RCL_RET_OK` if the liveliness assertion was completed successfully, or
- * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_node_assert_liveliness(const rcl_node_t * node);
 
 /// Return the rmw node handle.
 /**

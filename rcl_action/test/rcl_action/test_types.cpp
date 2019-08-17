@@ -67,7 +67,6 @@ TEST(TestActionTypes, test_get_zero_initialized_cancel_response)
   rcl_action_cancel_response_t cancel_response = rcl_action_get_zero_initialized_cancel_response();
   EXPECT_EQ(cancel_response.msg.goals_canceling.size, 0u);
   EXPECT_EQ(cancel_response.msg.goals_canceling.data, nullptr);
-  EXPECT_EQ(cancel_response.msg.return_code, 0);
 }
 
 TEST(TestActionTypes, test_init_fini_goal_status_array)
@@ -134,7 +133,6 @@ TEST(TestActionTypes, test_init_fini_cancel_response)
   EXPECT_EQ(ret, RCL_RET_INVALID_ARGUMENT);
   EXPECT_EQ(cancel_response.msg.goals_canceling.size, 0u);
   EXPECT_EQ(cancel_response.msg.goals_canceling.data, nullptr);
-  EXPECT_EQ(cancel_response.msg.return_code, 0);
 
   // Initialize with zero size
   cancel_response = rcl_action_get_zero_initialized_cancel_response();
@@ -143,7 +141,6 @@ TEST(TestActionTypes, test_init_fini_cancel_response)
   EXPECT_EQ(ret, RCL_RET_INVALID_ARGUMENT);
   EXPECT_EQ(cancel_response.msg.goals_canceling.size, 0u);
   EXPECT_EQ(cancel_response.msg.goals_canceling.data, nullptr);
-  EXPECT_EQ(cancel_response.msg.return_code, 0);
 
   // Initialize with valid arguments
   cancel_response = rcl_action_get_zero_initialized_cancel_response();
@@ -155,7 +152,6 @@ TEST(TestActionTypes, test_init_fini_cancel_response)
   EXPECT_EQ(ret, RCL_RET_OK);
   EXPECT_EQ(cancel_response.msg.goals_canceling.size, num_goals_canceling);
   EXPECT_NE(cancel_response.msg.goals_canceling.data, nullptr);
-  EXPECT_EQ(cancel_response.msg.return_code, action_msgs__srv__CancelGoal_Response__ERROR_NONE);
 
   // Finalize with invalid cancel response
   ret = rcl_action_cancel_response_fini(nullptr);

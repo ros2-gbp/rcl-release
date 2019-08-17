@@ -150,8 +150,7 @@ rcl_publisher_init(
   const rcl_node_t * node,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
-  const rcl_publisher_options_t * options
-);
+  const rcl_publisher_options_t * options);
 
 /// Finalize a rcl_publisher_t.
 /**
@@ -245,7 +244,6 @@ rcl_publisher_get_default_options(void);
  *
  * \param[in] publisher handle to the publisher which will do the publishing
  * \param[in] ros_message type-erased pointer to the ROS message
- * \param[in] allocation structure pointer, used for memory preallocation (may be NULL)
  * \return `RCL_RET_OK` if the message was published successfully, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
  * \return `RCL_RET_PUBLISHER_INVALID` if the publisher is invalid, or
@@ -254,11 +252,7 @@ rcl_publisher_get_default_options(void);
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t
-rcl_publish(
-  const rcl_publisher_t * publisher,
-  const void * ros_message,
-  rmw_publisher_allocation_t * allocation
-);
+rcl_publish(const rcl_publisher_t * publisher, const void * ros_message);
 
 /// Publish a serialized message on a topic using a publisher.
 /**
@@ -285,7 +279,6 @@ rcl_publish(
  *
  * \param[in] publisher handle to the publisher which will do the publishing
  * \param[in] serialized_message  pointer to the already serialized message in raw form
- * \param[in] allocation structure pointer, used for memory preallocation (may be NULL)
  * \return `RCL_RET_OK` if the message was published successfully, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
  * \return `RCL_RET_PUBLISHER_INVALID` if the publisher is invalid, or
@@ -295,35 +288,7 @@ RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t
 rcl_publish_serialized_message(
-  const rcl_publisher_t * publisher,
-  const rcl_serialized_message_t * serialized_message,
-  rmw_publisher_allocation_t * allocation
-);
-
-/// Manually assert that this Publisher is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC)
-/**
- * If the rmw Liveliness policy is set to RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC, the creator of
- * this publisher may manually call `assert_liveliness` at some point in time to signal to the rest
- * of the system that this Node is still alive.
- * This function must be called at least as often as the qos_profile's liveliness_lease_duration
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] publisher handle to the publisher that needs liveliness to be asserted
- * \return `RCL_RET_OK` if the liveliness assertion was completed successfully, or
- * \return `RCL_RET_PUBLISHER_INVALID` if the publisher is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_publisher_assert_liveliness(const rcl_publisher_t * publisher);
+  const rcl_publisher_t * publisher, const rcl_serialized_message_t * serialized_message);
 
 /// Get the topic name for the publisher.
 /**
@@ -490,7 +455,7 @@ rcl_publisher_is_valid_except_context(const rcl_publisher_t * publisher);
  * \param[out] subscription_count number of matched subscriptions
  * \return `RCL_RET_OK` if the count was retrieved, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_PUBLISHER_INVALID` if the publisher is invalid, or
+ * \return `RCL_RET_SUBSCRIPTION_INVALID` if the subscription is invalid, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
@@ -499,32 +464,6 @@ rmw_ret_t
 rcl_publisher_get_subscription_count(
   const rcl_publisher_t * publisher,
   size_t * subscription_count);
-
-/// Get the actual qos settings of the publisher.
-/**
- * Used to get the actual qos settings of the publisher.
- * The actual configuration applied when using RMW_*_SYSTEM_DEFAULT
- * can only be resolved after the creation of the publisher, and it
- * depends on the underlying rmw implementation.
- * If the underlying setting in use can't be represented in ROS terms,
- * it will be set to RMW_*_UNKNOWN.
- * The returned struct is only valid as long as the rcl_publisher_t is valid.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] publisher pointer to the rcl publisher
- * \return qos struct if successful, otherwise `NULL`
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-const rmw_qos_profile_t *
-rcl_publisher_get_actual_qos(const rcl_publisher_t * publisher);
 
 #ifdef __cplusplus
 }

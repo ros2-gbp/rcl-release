@@ -1,53 +1,32 @@
 # generated from rcl/test/test_two_executables.py.in
 
-import os
-
-from launch import LaunchDescription
-from launch.actions import ExecuteProcess
-from launch.actions import OpaqueFunction
-
-import launch_testing
-import launch_testing.asserts
-
-import unittest
+from launch.legacy import LaunchDescriptor
+from launch.legacy.exit_handler import ignore_signal_exit_handler
+from launch.legacy.exit_handler import primary_exit_handler
+from launch.legacy.launcher import DefaultLauncher
 
 
-def generate_test_description(ready_fn):
-    launch_description = LaunchDescription()
+def @TEST_NAME@():
+    ld = LaunchDescriptor()
 
-    launch_description.add_action(
-        ExecuteProcess(
-            cmd=['@TEST_EXECUTABLE1@'],
-            name='@TEST_EXECUTABLE1_NAME@',
-        )
+    ld.add_process(
+        cmd=['@TEST_EXECUTABLE1@'],
+        name='@TEST_EXECUTABLE1_NAME@',
+        exit_handler=ignore_signal_exit_handler,
     )
 
-    executable_under_test = ExecuteProcess(
+    ld.add_process(
         cmd=['@TEST_EXECUTABLE2@', '@TEST_EXECUTABLE1_NAME@'],
         name='@TEST_EXECUTABLE2_NAME@',
+        exit_handler=primary_exit_handler,
     )
-    launch_description.add_action(executable_under_test)
 
-    launch_description.add_action(
-        OpaqueFunction(function=lambda context: ready_fn())
-    )
-    return launch_description, locals()
+    launcher = DefaultLauncher()
+    launcher.add_launch_descriptor(ld)
+    rc = launcher.launch()
 
-
-class TestTwoExecutables(unittest.TestCase):
-
-    def @TEST_NAME@(self, executable_under_test):
-        """Test that the executable under test terminates after a finite amount of time."""
-        self.proc_info.assertWaitForShutdown(process=executable_under_test, timeout=10)
+    assert rc == 0, "The launch file failed with exit code '" + str(rc) + "'. "
 
 
-@launch_testing.post_shutdown_test()
-class TestTwoExecutablesAfterShutdown(unittest.TestCase):
-
-    def @TEST_NAME@(self, executable_under_test):
-        """Test that the executable under test finished cleanly."""
-        launch_testing.asserts.assertExitCodes(
-            self.proc_info,
-            [launch_testing.asserts.EXIT_OK],
-            executable_under_test
-        )
+if __name__ == '__main__':
+    @TEST_NAME@()

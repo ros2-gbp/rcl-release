@@ -1,5 +1,5 @@
 find_package(ament_cmake_gtest REQUIRED)
-find_package(launch_testing_ament_cmake REQUIRED)
+find_package(ament_cmake_pytest REQUIRED)
 
 find_package(test_msgs REQUIRED)
 
@@ -15,8 +15,6 @@ include(cmake/rcl_add_custom_gtest.cmake)
 include(cmake/rcl_add_custom_launch_test.cmake)
 
 set(extra_lib_dirs "${rcl_lib_dir}")
-set(test_resources_dir_name "resources")
-add_definitions(-DTEST_RESOURCES_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/${test_resources_dir_name}")
 
 # finding gtest once in the highest scope
 # prevents finding it repeatedly in each local scope
@@ -35,10 +33,11 @@ function(test_target_function)
 
   rcl_add_custom_gtest(test_client${target_suffix}
     SRCS rcl/test_client.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs"
   )
 
   rcl_add_custom_gtest(test_time${target_suffix}
@@ -70,10 +69,11 @@ function(test_target_function)
 
   rcl_add_custom_gtest(test_get_node_names${target_suffix}
     SRCS rcl/test_get_node_names.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
+    AMENT_DEPENDENCIES ${rmw_implementation}
   )
 
   rcl_add_custom_gtest(test_lexer${target_suffix}
@@ -86,10 +86,11 @@ function(test_target_function)
 
   rcl_add_custom_gtest(test_lexer_lookahead${target_suffix}
     SRCS rcl/test_lexer_lookahead.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
+    AMENT_DEPENDENCIES ${rmw_implementation}
   )
 
   set(AMENT_GTEST_ARGS "")
@@ -100,31 +101,25 @@ function(test_target_function)
   # TODO(mm318): why rmw_connext tests run much slower than rmw_fastrtps and rmw_opensplice tests
   elseif(rmw_implementation STREQUAL "rmw_connext_cpp")
     message(STATUS "Increasing test_graph${target_suffix} test timeout.")
-    set(AMENT_GTEST_ARGS TIMEOUT 180)
+    set(AMENT_GTEST_ARGS TIMEOUT 90)
   endif()
   rcl_add_custom_gtest(test_graph${target_suffix}
     SRCS rcl/test_graph.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs"
     ${AMENT_GTEST_ARGS}
   )
 
   rcl_add_custom_gtest(test_count_matched${target_suffix}
     SRCS rcl/test_count_matched.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
-  )
-
-  rcl_add_custom_gtest(test_get_actual_qos${target_suffix}
-    SRCS rcl/test_get_actual_qos.cpp
-    ENV ${rmw_implementation_env_var}
-    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs" "osrf_testing_tools_cpp"
+    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs"
   )
 
   rcl_add_custom_gtest(test_init${target_suffix}
@@ -137,10 +132,11 @@ function(test_target_function)
 
   rcl_add_custom_gtest(test_node${target_suffix}
     SRCS rcl/test_node.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var} ${memory_tools_ld_preload_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
+    AMENT_DEPENDENCIES ${rmw_implementation}
   )
 
   rcl_add_custom_gtest(test_arguments${target_suffix}
@@ -152,89 +148,90 @@ function(test_target_function)
 
   rcl_add_custom_gtest(test_remap${target_suffix}
     SRCS rcl/test_remap.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
   )
 
   rcl_add_custom_gtest(test_remap_integration${target_suffix}
     SRCS rcl/test_remap_integration.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     TIMEOUT 200
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES "osrf_testing_tools_cpp" "test_msgs"
+    AMENT_DEPENDENCIES "test_msgs"
   )
 
   rcl_add_custom_gtest(test_guard_condition${target_suffix}
     SRCS rcl/test_guard_condition.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var} ${memory_tools_ld_preload_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
+    AMENT_DEPENDENCIES ${rmw_implementation}
   )
 
   rcl_add_custom_gtest(test_publisher${target_suffix}
     SRCS rcl/test_publisher.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs"
   )
 
   rcl_add_custom_gtest(test_service${target_suffix}
     SRCS rcl/test_service.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs"
   )
 
   rcl_add_custom_gtest(test_subscription${target_suffix}
     SRCS rcl/test_subscription.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
-  )
-
-  rcl_add_custom_gtest(test_events${target_suffix}
-    SRCS rcl/test_events.cpp
-    ENV ${rmw_implementation_env_var}
-    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs"
   )
 
   rcl_add_custom_gtest(test_wait${target_suffix}
     SRCS rcl/test_wait.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
+    AMENT_DEPENDENCIES ${rmw_implementation}
   )
 
   rcl_add_custom_gtest(test_namespace${target_suffix}
     SRCS test_namespace.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs"
   )
 
   # Launch tests
 
   rcl_add_custom_executable(service_fixture${target_suffix}
     SRCS rcl/service_fixture.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs"
   )
 
   rcl_add_custom_executable(client_fixture${target_suffix}
     SRCS rcl/client_fixture.cpp
+    INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
     LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs"
   )
 
   rcl_add_custom_launch_test(test_services
@@ -261,9 +258,9 @@ function(test_target_function)
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test/test_rmw_impl_id_check${target_suffix}_$<CONFIG>.py"
     INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_rmw_impl_id_check${target_suffix}.py.configure"
   )
-  add_launch_test(
+  ament_add_pytest_test(
+    test_rmw_impl_id_check${target_suffix}
     "${CMAKE_CURRENT_BINARY_DIR}/test/test_rmw_impl_id_check${target_suffix}_$<CONFIG>.py"
-    TARGET test_rmw_impl_id_check${target_suffix}
     APPEND_LIBRARY_DIRS "${extra_lib_dirs}"
     ${SKIP_TEST}
   )
@@ -297,18 +294,7 @@ rcl_add_custom_gtest(test_expand_topic_name
 
 rcl_add_custom_gtest(test_timer${target_suffix}
   SRCS rcl/test_timer.cpp
+  INCLUDE_DIRS ${osrf_testing_tools_cpp_INCLUDE_DIRS}
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
   LIBRARIES ${PROJECT_NAME}
-  AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
 )
-
-rcl_add_custom_gtest(test_security_directory
-  SRCS rcl/test_security_directory.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME}
-  AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
-)
-
-# Install test resources
-install(DIRECTORY ${test_resources_dir_name}
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

@@ -44,7 +44,7 @@ rcl_action_get_zero_initialized_cancel_request(void)
 rcl_action_cancel_response_t
 rcl_action_get_zero_initialized_cancel_response(void)
 {
-  static rcl_action_cancel_response_t response = {{0, {0, 0, 0}}, {0, 0, 0, 0, 0}};
+  static rcl_action_cancel_response_t response = {{{0, 0, 0}}, {0, 0, 0, 0, 0}};
   return response;
 }
 
@@ -104,7 +104,7 @@ rcl_action_cancel_response_init(
     return RCL_RET_INVALID_ARGUMENT;
   }
   // Ensure cancel response is zero initialized
-  if (0 != cancel_response->msg.return_code || cancel_response->msg.goals_canceling.size > 0) {
+  if (cancel_response->msg.goals_canceling.size > 0) {
     RCL_SET_ERROR_MSG("cancel_response already inititalized");
     return RCL_RET_ALREADY_INIT;
   }
@@ -131,13 +131,6 @@ rcl_action_cancel_response_fini(rcl_action_cancel_response_t * cancel_response)
   }
   return RCL_RET_OK;
 }
-
-/// Values should be changed if enum values change
-const char * goal_state_descriptions[] =
-{"UNKNOWN", "ACCEPTED", "EXECUTING", "CANCELING", "SUCCEEDED", "CANCELED", "ABORTED"};
-
-const char * goal_event_descriptions[] =
-{"EXECUTE", "CANCEL_GOAL", "SUCCEED", "ABORT", "CANCELED", "NUM_EVENTS"};
 
 #ifdef __cplusplus
 }

@@ -14,10 +14,10 @@
 
 /** \mainpage rcl: Common functionality ROS actions
  *
- * `rcl_action` provides a pure C implementation of the ROS concept of an \b action.
+ * `rcl_action` provides a pure C implementation of the ROS concept an \b action.
  * It builds on top of the implementation of topics and services in `rcl`.
  *
- * `rcl_action` consists of functions and structs for the following ROS action entities:
+ * `rcl_action` consists of functions and structs following ROS action entities:
  *
  * - Action client
  *   - rcl_action/action_client.h
@@ -52,7 +52,6 @@ extern "C"
 #include "rcl_action/default_qos.h"
 #include "rcl_action/goal_handle.h"
 #include "rcl_action/goal_state_machine.h"
-#include "rcl_action/graph.h"
 #include "rcl_action/types.h"
 #include "rcl_action/wait.h"
 

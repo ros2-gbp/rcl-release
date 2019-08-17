@@ -57,10 +57,10 @@ public:
 struct FakeTestArgv
 {
   FakeTestArgv()
-  : allocator(rcl_get_default_allocator()), argc(2)
+  : allocator(rcutils_get_default_allocator()), argc(2)
   {
     this->argv =
-      static_cast<char **>(allocator.allocate(2 * sizeof(char *), allocator.state));
+      reinterpret_cast<char **>(allocator.allocate(2 * sizeof(char *), allocator.state));
     if (!this->argv) {
       throw std::bad_alloc();
     }
@@ -82,7 +82,7 @@ struct FakeTestArgv
     if (this->argv) {
       if (this->argc > 0) {
         size_t unsigned_argc = this->argc;
-        for (size_t i = 0; i < unsigned_argc; ++i) {
+        for (size_t i = 0; i < unsigned_argc; --i) {
           allocator.deallocate(this->argv[i], allocator.state);
         }
       }
@@ -90,7 +90,7 @@ struct FakeTestArgv
     allocator.deallocate(this->argv, allocator.state);
   }
 
-  rcl_allocator_t allocator;
+  rcutils_allocator_t allocator;
   int argc;
   char ** argv;
 
@@ -113,12 +113,6 @@ TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_init_and_ok_and_s
   ASSERT_FALSE(rcl_context_is_valid(&context));
   // If argc is not 0, but argv is, it should be an invalid argument.
   ret = rcl_init(42, nullptr, &init_options, &context);
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
-  rcl_reset_error();
-  ASSERT_FALSE(rcl_context_is_valid(&context));
-  // If argc is not 0, argv is not null but contains one, it should be an invalid argument.
-  const char * invalid_args[] = {"some-arg", nullptr};
-  ret = rcl_init(2, invalid_args, &init_options, &context);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
   rcl_reset_error();
   ASSERT_FALSE(rcl_context_is_valid(&context));
@@ -201,9 +195,6 @@ TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_init_and_ok_and_s
   ret = rcl_context_fini(&context);
   EXPECT_EQ(ret, RCL_RET_OK);
   context = rcl_get_zero_initialized_context();
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
-    EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
-  });
 }
 
 /* Tests the rcl_get_instance_id() and rcl_ok() functions.
