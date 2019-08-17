@@ -38,10 +38,7 @@
   <test_depend>osrf_testing_tools_cpp</test_depend>
   <test_depend>test_msgs</test_depend>
 
-  <!-- Explicitly expanding this group_depend into a hard depend during bloom release
   <group_depend>rcl_logging_packages</group_depend>
-  -->
-  <depend>rcl_logging_noop</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
