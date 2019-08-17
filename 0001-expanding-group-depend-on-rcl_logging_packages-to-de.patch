@@ -1,4 +1,4 @@
-From df19e797660faa86b24484e1de61f33710276582 Mon Sep 17 00:00:00 2001
+From e02c63c137565b627040ffecbbcddf68aff61481 Mon Sep 17 00:00:00 2001
 From: William Woodall <william@osrfoundation.org>
 Date: Fri, 7 Dec 2018 17:21:26 -0800
 Subject: [PATCH] expanding group depend on rcl_logging_packages to depend on
@@ -9,10 +9,10 @@ Subject: [PATCH] expanding group depend on rcl_logging_packages to depend on
  1 file changed, 3 insertions(+)
 
 diff --git a/package.xml b/package.xml
-index 15a356c..70dc18e 100644
+index 4224a77..bce3a2d 100644
 --- a/package.xml
 +++ b/package.xml
-@@ -37,7 +37,10 @@
+@@ -38,7 +38,10 @@
    <test_depend>osrf_testing_tools_cpp</test_depend>
    <test_depend>test_msgs</test_depend>
  
