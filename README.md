@@ -1,3 +1,30 @@
+## rcl (dashing) - 0.7.7-1
+
+The packages in the `rcl` repository were released into the `dashing` distro by running `/usr/bin/bloom-release --rosdistro dashing rcl` on `Fri, 20 Sep 2019 20:48:51 -0000`
+
+These packages were released:
+- `rcl`
+- `rcl_action`
+- `rcl_lifecycle`
+- `rcl_yaml_param_parser`
+
+Version of package(s) in repository `rcl`:
+
+- upstream repository: https://github.com/ros2/rcl.git
+- release repository: https://github.com/ros2-gbp/rcl-release.git
+- rosdistro version: `0.7.6-1`
+- old version: `0.7.6-1`
+- new version: `0.7.7-1`
+
+Versions of tools used:
+
+- bloom version: `0.8.0`
+- catkin_pkg version: `0.4.12`
+- rosdep version: `0.15.2`
+- rosdistro version: `0.7.4`
+- vcstools version: `0.1.42`
+
+
 ## rcl (crystal) - 0.6.6-1
 
 The packages in the `rcl` repository were released into the `crystal` distro by running `/usr/bin/bloom-release -r crystal rcl --override-release-repository-push-url git@github.com:ros2-gbp/rcl-release` on `Sat, 17 Aug 2019 16:49:55 -0000`
