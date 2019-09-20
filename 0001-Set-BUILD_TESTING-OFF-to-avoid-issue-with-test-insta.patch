@@ -1,4 +1,4 @@
-From 438bc3253053dfef3c2ee8b98308e7915a5de2eb Mon Sep 17 00:00:00 2001
+From 2e4d37bb0cb846149b70884c06ae1843622da4ad Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Steven!=20Ragnar=C3=B6k?= <steven@nuclearsandwich.com>
 Date: Mon, 15 Apr 2019 05:21:48 -0700
 Subject: [PATCH] Set BUILD_TESTING=OFF to avoid issue with test installation.
@@ -20,5 +20,5 @@ index 9c9604d..ff4db1b 100755
  		-DAMENT_PREFIX_PATH="@(InstallationPrefix)"
  
 -- 
-2.7.4
+2.17.1
 
