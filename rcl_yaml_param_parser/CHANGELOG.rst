@@ -2,11 +2,41 @@
 Changelog for package rcl_yaml_param_parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.6.6 (2019-08-17)
+0.7.7 (2019-09-20)
+------------------
+* Increase MAX_STRING_SIZE (`#487 <https://github.com/ros2/rcl/issues/487>`_) (`#503 <https://github.com/ros2/rcl/issues/503>`_)
+* Contributors: Zachary Michaels, Hyunseok Yang
+
+0.7.6 (2019-08-01)
+------------------
+* Accept quoted int or float values as strings. (`#474 <https://github.com/ros2/rcl/issues/474>`_)
+* Contributors: ivanpauno
+
+0.7.5 (2019-06-12)
+------------------
+* Fix memory corruption when maximum number of parameters is exceeded (`#456 <https://github.com/ros2/rcl/issues/456>`_)
+* Contributors: Jacob Perron
+
+0.7.4 (2019-05-29)
+------------------
+* Allow empty strings if they are quoted. (`#450 <https://github.com/ros2/rcl/issues/450>`_)
+* Contributors: Ralf Anton Beier
+
+0.7.3 (2019-05-20)
 ------------------
 
-0.6.5 (2019-02-08)
+0.7.2 (2019-05-08)
 ------------------
+
+0.7.1 (2019-04-29)
+------------------
+
+0.7.0 (2019-04-14)
+------------------
+* Corrected bool reading from yaml files. (`#415 <https://github.com/ros2/rcl/issues/415>`_)
+* Added launch along with launch_testing as test dependencies. (`#393 <https://github.com/ros2/rcl/issues/393>`_)
+* Set symbol visibility to hidden for rcl. (`#391 <https://github.com/ros2/rcl/issues/391>`_)
+* Contributors: Michel Hidalgo, Sachin Suresh Bhat, ivanpauno
 
 0.6.4 (2019-01-11)
 ------------------

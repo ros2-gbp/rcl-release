@@ -2,11 +2,36 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.6.6 (2019-08-17)
+0.7.7 (2019-09-20)
+------------------
+* reset error message before setting a new one, embed the original one (`#501 <https://github.com/ros2/rcl/issues/501>`_) (`#505 <https://github.com/ros2/rcl/issues/505>`_)
+* Contributors: Zachary Michaels
+
+0.7.6 (2019-08-01)
 ------------------
 
-0.6.5 (2019-02-08)
+0.7.5 (2019-06-12)
 ------------------
+
+0.7.4 (2019-05-29)
+------------------
+
+0.7.3 (2019-05-20)
+------------------
+
+0.7.2 (2019-05-08)
+------------------
+* Rmw preallocate (`#428 <https://github.com/ros2/rcl/issues/428>`_)
+* Contributors: Michael Carroll
+
+0.7.1 (2019-04-29)
+------------------
+
+0.7.0 (2019-04-14)
+------------------
+* Updated to use ament_target_dependencies where possible. (`#400 <https://github.com/ros2/rcl/issues/400>`_)
+* Set symbol visibility to hidden for rcl. (`#391 <https://github.com/ros2/rcl/issues/391>`_)
+* Contributors: Sachin Suresh Bhat, ivanpauno
 
 0.6.4 (2019-01-11)
 ------------------
@@ -23,7 +48,7 @@ Changelog for package rcl_lifecycle
 * Contributors: William Woodall
 
 0.6.0 (2018-11-16)
------------
+------------------
 * Updated use new error handling API from rcutils (`#314 <https://github.com/ros2/rcl/issues/314>`_)
 * Deleted TRANSITION_SHUTDOWN (`#313 <https://github.com/ros2/rcl/issues/313>`_)
 * Refactored lifecycle (`#298 <https://github.com/ros2/rcl/issues/298>`_)

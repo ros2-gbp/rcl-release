@@ -2,19 +2,87 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.6.6 (2019-08-17)
+0.7.7 (2019-09-20)
 ------------------
-* Fix leak in __wait_set_clean_up. (`#418 <https://github.com/ros2/rcl/issues/418>`_) (`#486 <https://github.com/ros2/rcl/issues/486>`_)
-* Contributors: Dirk Thomas, Steven! Ragnarök
 
-0.6.5 (2019-02-08)
+0.7.6 (2019-08-01)
 ------------------
-* Changed error to warning when loggers are created for nodes non-unique names.(`#385 <https://github.com/ros2/rcl/issues/385>`_)
-  * Backported by `#384 <https://github.com/ros2/rcl/issues/384>`_ for Crystal.
-* Removed test circumvention now that a bug is fixed in rmw_opensplice. (`#386 <https://github.com/ros2/rcl/issues/386>`_)
-  * Backported by `#368 <https://github.com/ros2/rcl/issues/368>`_ for Crystal.
-* Publish logs to Rosout (`#350 <https://github.com/ros2/rcl/issues/350>`_)
-* Contributors: Nick Burek, Steven! Ragnarök
+
+0.7.5 (2019-06-12)
+------------------
+
+0.7.4 (2019-05-29)
+------------------
+* Fix tests now that FastRTPS correctly reports that liveliness is not supported (`#452 <https://github.com/ros2/rcl/issues/452>`_)
+* In test_events, wait for discovery to be complete bidirectionally before moving on (`#451 <https://github.com/ros2/rcl/issues/451>`_)
+* fix leak in test_service (`#447 <https://github.com/ros2/rcl/issues/447>`_)
+* fix leak in test_guard_condition (`#446 <https://github.com/ros2/rcl/issues/446>`_)
+* fix leak in test_get_actual_qos (`#445 <https://github.com/ros2/rcl/issues/445>`_)
+* fix leak in test_expand_topic_name (`#444 <https://github.com/ros2/rcl/issues/444>`_)
+* Contributors: Abby Xu, Emerson Knapp
+
+0.7.3 (2019-05-20)
+------------------
+* Fixed memory leak in ``test_client`` (`#443 <https://github.com/ros2/rcl/issues/443>`_)
+* Fixed memory leaks in ``test_wait.cpp`` (`#439 <https://github.com/ros2/rcl/issues/439>`_)
+* Fixed memory leak in ``test_context`` (`#441 <https://github.com/ros2/rcl/issues/441>`_)
+* Fixed memory leak in ``test_init`` (`#440 <https://github.com/ros2/rcl/issues/440>`_)
+* Enabled rcl ``test_events`` unit tests on macOS (`#433 <https://github.com/ros2/rcl/issues/433>`_)
+* Enabled deadline tests for FastRTPS (`#438 <https://github.com/ros2/rcl/issues/438>`_)
+* Corrected use of ``launch_testing.assert.assertExitCodes`` (`#437 <https://github.com/ros2/rcl/issues/437>`_)
+* Reverted "Changes the default 3rd party logger from rcl_logging_noop to… (`#436 <https://github.com/ros2/rcl/issues/436>`_)
+* Fixed memory leaks in ``test_security_directory`` (`#420 <https://github.com/ros2/rcl/issues/420>`_)
+* Fixed a memory leak in rcl context fini (`#434 <https://github.com/ros2/rcl/issues/434>`_)
+* Contributors: Abby Xu, Cameron Evans, Chris Lalancette, Dirk Thomas, M. M, ivanpauno
+
+0.7.2 (2019-05-08)
+------------------
+* Changes the default 3rd party logger from rcl_logging_noop to rcl_logging_log4cxx (`#425 <https://github.com/ros2/rcl/issues/425>`_)
+* fix leak in node.c (`#424 <https://github.com/ros2/rcl/issues/424>`_)
+* Add new RCL_RET_UNSUPPORTED (`#432 <https://github.com/ros2/rcl/issues/432>`_)
+* New interfaces and their implementations for QoS features (`#408 <https://github.com/ros2/rcl/issues/408>`_)
+* Add an allocator to the external logging initialization. (`#430 <https://github.com/ros2/rcl/issues/430>`_)
+* fix buffer overflow in test_security_dir (`#423 <https://github.com/ros2/rcl/issues/423>`_)
+* Rmw preallocate (`#428 <https://github.com/ros2/rcl/issues/428>`_)
+* Use new test interface definitions (`#427 <https://github.com/ros2/rcl/pull/427>`_)
+* Migrate launch tests to new launch_testing features & API (`#405 <https://github.com/ros2/rcl/issues/405>`_)
+* Fix argument passed to logging macros (`#421 <https://github.com/ros2/rcl/issues/421>`_)
+* Make sure to initialize the bool field. (`#426 <https://github.com/ros2/rcl/issues/426>`_)
+* Contributors: Abby Xu, Chris Lalancette, Emerson Knapp, Jacob Perron, M. M, Michael Carroll, Michel Hidalgo, Nick Burek, Thomas Moulard
+
+0.7.1 (2019-04-29)
+------------------
+* Replaced reinterperet_cast with static_cast. (`#410 <https://github.com/ros2/rcl/issues/410>`_)
+* Fixed leak in __wait_set_clean_up. (`#418 <https://github.com/ros2/rcl/issues/418>`_)
+* Updated initialization of rmw_qos_profile_t struct instances. (`#416 <https://github.com/ros2/rcl/issues/416>`_)
+* Contributors: Dirk Thomas, M. M, jhdcs
+
+0.7.0 (2019-04-14)
+------------------
+* Added more test cases for graph API + fix bug. (`#404 <https://github.com/ros2/rcl/issues/404>`_)
+* Fixed missing include. (`#413 <https://github.com/ros2/rcl/issues/413>`_)
+* Updated to use pedantic. (`#412 <https://github.com/ros2/rcl/issues/412>`_)
+* Added function to get publisher actual qos settings. (`#406 <https://github.com/ros2/rcl/issues/406>`_)
+* Refactored graph API docs. (`#401 <https://github.com/ros2/rcl/issues/401>`_)
+* Updated to use ament_target_dependencies where possible. (`#400 <https://github.com/ros2/rcl/issues/400>`_)
+* Fixed regression around fully qualified node name. (`#402 <https://github.com/ros2/rcl/issues/402>`_)
+* Added function rcl_names_and_types_init. (`#403 <https://github.com/ros2/rcl/issues/403>`_)
+* Fixed uninitialize sequence number of client. (`#395 <https://github.com/ros2/rcl/issues/395>`_)
+* Added launch along with launch_testing as test dependencies. (`#393 <https://github.com/ros2/rcl/issues/393>`_)
+* Set symbol visibility to hidden for rcl. (`#391 <https://github.com/ros2/rcl/issues/391>`_)
+* Updated to split test_token to avoid compiler note. (`#392 <https://github.com/ros2/rcl/issues/392>`_)
+* Dropped legacy launch API usage. (`#387 <https://github.com/ros2/rcl/issues/387>`_)
+* Improved security directory lookup. (`#332 <https://github.com/ros2/rcl/issues/332>`_)
+* Enforce non-null argv values on rcl_init(). (`#388 <https://github.com/ros2/rcl/issues/388>`_)
+* Removed incorrect argument documentation. (`#361 <https://github.com/ros2/rcl/issues/361>`_)
+* Changed error to warning for multiple loggers. (`#384 <https://github.com/ros2/rcl/issues/384>`_)
+* Added rcl_node_get_fully_qualified_name. (`#255 <https://github.com/ros2/rcl/issues/255>`_)
+* Updated rcl_remap_t to use the PIMPL pattern. (`#377 <https://github.com/ros2/rcl/issues/377>`_)
+* Fixed documentation typo. (`#376 <https://github.com/ros2/rcl/issues/376>`_)
+* Removed test circumvention now that a bug is fixed in rmw_opensplice. (`#368 <https://github.com/ros2/rcl/issues/368>`_)
+* Updated to pass context to wait set, and fini rmw context. (`#373 <https://github.com/ros2/rcl/issues/373>`_)
+* Updated to publish logs to Rosout. (`#350 <https://github.com/ros2/rcl/issues/350>`_)
+* Contributors: AAlon, Dirk Thomas, Jacob Perron, M. M, Michael Carroll, Michel Hidalgo, Mikael Arguedas, Nick Burek, RARvolt, Ross Desmond, Sachin Suresh Bhat, Shane Loretz, William Woodall, ivanpauno
 
 0.6.4 (2019-01-11)
 ------------------

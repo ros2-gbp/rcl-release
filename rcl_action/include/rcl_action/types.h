@@ -93,22 +93,23 @@ typedef int8_t rcl_action_goal_state_t;
 #define GOAL_STATE_ABORTED action_msgs__msg__GoalStatus__STATUS_ABORTED
 #define GOAL_STATE_NUM_STATES 7
 
+/// User friendly error messages for invalid trasntions
+// Description variables in types.c should be changed if enum values change
+extern const char * goal_state_descriptions[];
+extern const char * goal_event_descriptions[];
+
 /// Goal state transition events
 typedef enum rcl_action_goal_event_t
 {
   GOAL_EVENT_EXECUTE = 0,
-  GOAL_EVENT_CANCEL,
-  GOAL_EVENT_SET_SUCCEEDED,
-  GOAL_EVENT_SET_ABORTED,
-  GOAL_EVENT_SET_CANCELED,
+  GOAL_EVENT_CANCEL_GOAL,
+  GOAL_EVENT_SUCCEED,
+  GOAL_EVENT_ABORT,
+  GOAL_EVENT_CANCELED,
   GOAL_EVENT_NUM_EVENTS
 } rcl_action_goal_event_t;
 
-/// Return a rcl_action_goal_info_t with members set to `NULL`.
-/**
- * Should be called to get a null rcl_action_goal_info_t before passing to
- * rcl_action_goal_info_init().
- */
+/// Return a rcl_action_goal_info_t with members set to zero values.
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
 rcl_action_goal_info_t

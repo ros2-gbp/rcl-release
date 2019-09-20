@@ -18,8 +18,7 @@
 
 #include "rcl/rcl.h"
 
-#include "rosidl_generator_c/string_functions.h"
-#include "test_msgs/srv/primitives.h"
+#include "test_msgs/srv/basic_types.h"
 
 #include "./failing_allocator_functions.hpp"
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
@@ -59,6 +58,9 @@ public:
     delete this->node_ptr;
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     ret = rcl_shutdown(this->context_ptr);
+    EXPECT_EQ(ret, RCL_RET_OK);
+    ret = rcl_context_fini(this->context_ptr);
+    EXPECT_EQ(ret, RCL_RET_OK);
     delete this->context_ptr;
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   }
@@ -76,7 +78,7 @@ TEST_F(TestClientFixture, test_client_nominal) {
   rcl_client_options_t client_options = rcl_client_get_default_options();
 
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
-    test_msgs, srv, Primitives);
+    test_msgs, srv, BasicTypes);
   ret = rcl_client_init(&client, this->node_ptr, ts, topic_name, &client_options);
 
   // Check the return code of initialization and that the service name matches what's expected
@@ -89,8 +91,8 @@ TEST_F(TestClientFixture, test_client_nominal) {
   });
 
   // Initialize the client request.
-  test_msgs__srv__Primitives_Request req;
-  test_msgs__srv__Primitives_Request__init(&req);
+  test_msgs__srv__BasicTypes_Request req;
+  test_msgs__srv__BasicTypes_Request__init(&req);
   req.uint8_value = 1;
   req.uint32_value = 2;
 
@@ -99,6 +101,7 @@ TEST_F(TestClientFixture, test_client_nominal) {
   ret = rcl_send_request(&client, &req, &sequence_number);
   EXPECT_EQ(sequence_number, 1);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  test_msgs__srv__BasicTypes_Request__fini(&req);
 }
 
 
@@ -110,7 +113,7 @@ TEST_F(TestClientFixture, test_client_init_fini) {
   rcl_client_t client;
 
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
-    test_msgs, srv, Primitives);
+    test_msgs, srv, BasicTypes);
   const char * topic_name = "chatter";
   rcl_client_options_t default_client_options = rcl_client_get_default_options();
 
@@ -139,6 +142,8 @@ TEST_F(TestClientFixture, test_client_init_fini) {
   ret = rcl_client_init(&client, this->node_ptr, ts, topic_name, &default_client_options);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   EXPECT_TRUE(rcl_client_is_valid(&client));
+  ret = rcl_client_fini(&client, this->node_ptr);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
 
   // Try passing an invalid (uninitialized) node in init.

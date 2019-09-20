@@ -22,7 +22,7 @@
 
 #include "rcl/rcl.h"
 
-#include "test_msgs/srv/primitives.h"
+#include "test_msgs/srv/basic_types.h"
 
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
 #include "rcl/error_handling.h"
@@ -78,12 +78,14 @@ public:
 void
 wait_for_service_to_be_ready(
   rcl_service_t * service,
+  rcl_context_t * context,
   size_t max_tries,
   int64_t period_ms,
   bool & success)
 {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
-  rcl_ret_t ret = rcl_wait_set_init(&wait_set, 0, 0, 0, 0, 1, rcl_get_default_allocator());
+  rcl_ret_t ret =
+    rcl_wait_set_init(&wait_set, 0, 0, 0, 0, 1, 0, context, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     rcl_ret_t ret = rcl_wait_set_fini(&wait_set);
@@ -116,7 +118,7 @@ wait_for_service_to_be_ready(
 TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) {
   rcl_ret_t ret;
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
-    test_msgs, srv, Primitives);
+    test_msgs, srv, BasicTypes);
   const char * topic = "primitives";
   const char * expected_topic = "/primitives";
 
@@ -124,6 +126,8 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
   rcl_service_options_t service_options = rcl_service_get_default_options();
   ret = rcl_service_init(&service, this->node_ptr, ts, topic, &service_options);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  ret = rcl_service_fini(&service, this->node_ptr);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
   // Check if null service is valid
   EXPECT_FALSE(rcl_service_is_valid(nullptr));
@@ -163,33 +167,39 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
   // Initialize a request.
-  test_msgs__srv__Primitives_Request client_request;
-  test_msgs__srv__Primitives_Request__init(&client_request);
+  test_msgs__srv__BasicTypes_Request client_request;
+  test_msgs__srv__BasicTypes_Request__init(&client_request);
+  // TODO(clalancette): the C __init methods do not initialize all structure
+  // members, so the numbers in the fields not explicitly set is arbitrary.
+  // The CDR deserialization in Fast-CDR requires a 0 or 1 for bool fields,
+  // so we explicitly initialize that even though we don't use it.  This can be
+  // removed once the C __init methods initialize all members by default.
+  client_request.bool_value = false;
   client_request.uint8_value = 1;
   client_request.uint32_value = 2;
   int64_t sequence_number;
   ret = rcl_send_request(&client, &client_request, &sequence_number);
   EXPECT_EQ(sequence_number, 1);
-  test_msgs__srv__Primitives_Request__fini(&client_request);
+  test_msgs__srv__BasicTypes_Request__fini(&client_request);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
   bool success;
-  wait_for_service_to_be_ready(&service, 10, 100, success);
+  wait_for_service_to_be_ready(&service, context_ptr, 10, 100, success);
   ASSERT_TRUE(success);
 
   // This scope simulates the service responding in a different context so that we can
   // test take_request/send_response in a single-threaded, deterministic execution.
   {
     // Initialize a response.
-    test_msgs__srv__Primitives_Response service_response;
-    test_msgs__srv__Primitives_Response__init(&service_response);
+    test_msgs__srv__BasicTypes_Response service_response;
+    test_msgs__srv__BasicTypes_Response__init(&service_response);
     OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
-      test_msgs__srv__Primitives_Response__fini(&service_response);
+      test_msgs__srv__BasicTypes_Response__fini(&service_response);
     });
 
     // Initialize a separate instance of the request and take the pending request.
-    test_msgs__srv__Primitives_Request service_request;
-    test_msgs__srv__Primitives_Request__init(&service_request);
+    test_msgs__srv__BasicTypes_Request service_request;
+    test_msgs__srv__BasicTypes_Request__init(&service_request);
     rmw_request_id_t header;
     ret = rcl_take_request(&service, &header, &service_request);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -200,16 +210,18 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
     service_response.uint64_value = service_request.uint8_value + service_request.uint32_value;
     ret = rcl_send_response(&service, &header, &service_response);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+    test_msgs__srv__BasicTypes_Request__fini(&service_request);
   }
-  wait_for_service_to_be_ready(&service, 10, 100, success);
+  wait_for_service_to_be_ready(&service, context_ptr, 10, 100, success);
 
   // Initialize the response owned by the client and take the response.
-  test_msgs__srv__Primitives_Response client_response;
-  test_msgs__srv__Primitives_Response__init(&client_response);
+  test_msgs__srv__BasicTypes_Response client_response;
+  test_msgs__srv__BasicTypes_Response__init(&client_response);
 
   rmw_request_id_t header;
   ret = rcl_take_response(&client, &header, &client_response);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   EXPECT_EQ(client_response.uint64_value, 3ULL);
   EXPECT_EQ(header.sequence_number, 1);
+  test_msgs__srv__BasicTypes_Response__fini(&client_response);
 }

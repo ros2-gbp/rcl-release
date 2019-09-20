@@ -17,6 +17,10 @@
 #include <thread>
 #include <vector>
 
+#include "action_msgs/srv/cancel_goal.h"
+
+#include "osrf_testing_tools_cpp/scope_exit.hpp"
+
 #include "rcl_action/action_server.h"
 
 #include "rcl/error_handling.h"
@@ -135,11 +139,20 @@ TEST(TestActionServerInitFini, test_action_server_init_fini)
   ret = rcl_clock_fini(&clock);
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
+  // Finalize init_options
+  ret = rcl_init_options_fini(&init_options);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+
   // Finalize node
   ret = rcl_node_fini(&node);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
+  // Shutdown node
   ret = rcl_shutdown(&context);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+
+  // Finalize context
+  ret = rcl_context_fini(&context);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 }
 
@@ -153,6 +166,9 @@ protected:
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
     ret = rcl_init_options_init(&init_options, allocator);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+      EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
+    });
     context = rcl_get_zero_initialized_context();
     ret = rcl_init(0, nullptr, &init_options, &context);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -182,6 +198,8 @@ protected:
     ret = rcl_node_fini(&this->node);
     EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
     ret = rcl_shutdown(&context);
+    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+    ret = rcl_context_fini(&this->context);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   }
 
@@ -329,7 +347,7 @@ TEST_F(TestActionServer, test_action_clear_expired_goals)
   handles.push_back(*goal_handle);
   // Transition executing to aborted
   ASSERT_EQ(RCL_RET_OK, rcl_action_update_goal_state(goal_handle, GOAL_EVENT_EXECUTE));
-  ASSERT_EQ(RCL_RET_OK, rcl_action_update_goal_state(goal_handle, GOAL_EVENT_SET_ABORTED));
+  ASSERT_EQ(RCL_RET_OK, rcl_action_update_goal_state(goal_handle, GOAL_EVENT_ABORT));
   // Set time to something far in the future
   ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(&this->clock, RCUTILS_S_TO_NS(99999)));
   // Clear with valid arguments
@@ -376,6 +394,8 @@ TEST_F(TestActionServer, test_action_process_cancel_request)
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
   EXPECT_EQ(cancel_response.msg.goals_canceling.data, nullptr);
   EXPECT_EQ(cancel_response.msg.goals_canceling.size, 0u);
+  // A zero request means "cancel all goals", which succeeds if there's nothing to cancel
+  EXPECT_EQ(cancel_response.msg.return_code, action_msgs__srv__CancelGoal_Response__ERROR_NONE);
 }
 
 TEST_F(TestActionServer, test_action_server_get_goal_status_array)
@@ -537,6 +557,7 @@ TEST_F(TestActionServerCancelPolicy, test_action_process_cancel_request_all_goal
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
   EXPECT_NE(cancel_response.msg.goals_canceling.data, nullptr);
   ASSERT_EQ(cancel_response.msg.goals_canceling.size, (size_t)NUM_GOALS);
+  EXPECT_EQ(cancel_response.msg.return_code, action_msgs__srv__CancelGoal_Response__ERROR_NONE);
   rcl_action_goal_info_t * goal_info_out;
   for (int i = 0; i < NUM_GOALS; ++i) {
     goal_info_out = &cancel_response.msg.goals_canceling.data[i];
@@ -549,18 +570,60 @@ TEST_F(TestActionServerCancelPolicy, test_action_process_cancel_request_all_goal
 
 TEST_F(TestActionServerCancelPolicy, test_action_process_cancel_request_single_goal)
 {
-  // Request to cancel a specific goal
-  rcl_action_cancel_request_t cancel_request = rcl_action_get_zero_initialized_cancel_request();
-  init_test_uuid0(cancel_request.goal_info.goal_id.uuid);
-  rcl_action_cancel_response_t cancel_response = rcl_action_get_zero_initialized_cancel_response();
-  rcl_ret_t ret = rcl_action_process_cancel_request(
-    &this->action_server, &cancel_request, &cancel_response);
-  EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-  EXPECT_NE(cancel_response.msg.goals_canceling.data, nullptr);
-  ASSERT_EQ(cancel_response.msg.goals_canceling.size, 1u);
-  rcl_action_goal_info_t * goal_info = &cancel_response.msg.goals_canceling.data[0];
-  EXPECT_TRUE(uuidcmp(goal_info->goal_id.uuid, cancel_request.goal_info.goal_id.uuid));
-  EXPECT_EQ(RCL_RET_OK, rcl_action_cancel_response_fini(&cancel_response));
+  {
+    // Request to cancel a specific goal
+    rcl_action_cancel_request_t cancel_request = rcl_action_get_zero_initialized_cancel_request();
+    init_test_uuid0(cancel_request.goal_info.goal_id.uuid);
+    rcl_action_cancel_response_t cancel_response =
+      rcl_action_get_zero_initialized_cancel_response();
+    rcl_ret_t ret = rcl_action_process_cancel_request(
+      &this->action_server, &cancel_request, &cancel_response);
+    EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
+    EXPECT_NE(cancel_response.msg.goals_canceling.data, nullptr);
+    ASSERT_EQ(cancel_response.msg.goals_canceling.size, 1u);
+    EXPECT_EQ(cancel_response.msg.return_code, action_msgs__srv__CancelGoal_Response__ERROR_NONE);
+    rcl_action_goal_info_t * goal_info = &cancel_response.msg.goals_canceling.data[0];
+    EXPECT_TRUE(uuidcmp(goal_info->goal_id.uuid, cancel_request.goal_info.goal_id.uuid));
+    EXPECT_EQ(RCL_RET_OK, rcl_action_cancel_response_fini(&cancel_response));
+  }
+  {
+    // Request to cancel an invalid goal
+    rcl_action_cancel_request_t cancel_request = rcl_action_get_zero_initialized_cancel_request();
+    init_test_uuid1(cancel_request.goal_info.goal_id.uuid);
+    rcl_action_cancel_response_t cancel_response =
+      rcl_action_get_zero_initialized_cancel_response();
+    rcl_ret_t ret = rcl_action_process_cancel_request(
+      &this->action_server, &cancel_request, &cancel_response);
+    EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
+    EXPECT_EQ(cancel_response.msg.goals_canceling.data, nullptr);
+    EXPECT_EQ(cancel_response.msg.goals_canceling.size, 0u);
+    EXPECT_EQ(
+      cancel_response.msg.return_code,
+      action_msgs__srv__CancelGoal_Response__ERROR_UNKNOWN_GOAL_ID);
+    EXPECT_EQ(RCL_RET_OK, rcl_action_cancel_response_fini(&cancel_response));
+  }
+  {
+    // Request to cancel a terminated goal
+    // First, transition a goal handle to a terminal state
+    rcl_ret_t ret = rcl_action_update_goal_state(&this->handles[3], GOAL_EVENT_EXECUTE);
+    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+    ret = rcl_action_update_goal_state(&this->handles[3], GOAL_EVENT_SUCCEED);
+    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+    // Attempt to cancel the terminated goal
+    rcl_action_cancel_request_t cancel_request = rcl_action_get_zero_initialized_cancel_request();
+    cancel_request.goal_info.goal_id = this->goal_infos_out[3].goal_id;
+    rcl_action_cancel_response_t cancel_response =
+      rcl_action_get_zero_initialized_cancel_response();
+    ret = rcl_action_process_cancel_request(
+      &this->action_server, &cancel_request, &cancel_response);
+    EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
+    EXPECT_EQ(cancel_response.msg.goals_canceling.data, nullptr);
+    EXPECT_EQ(cancel_response.msg.goals_canceling.size, 0u);
+    EXPECT_EQ(
+      cancel_response.msg.return_code,
+      action_msgs__srv__CancelGoal_Response__ERROR_GOAL_TERMINATED);
+    EXPECT_EQ(RCL_RET_OK, rcl_action_cancel_response_fini(&cancel_response));
+  }
 }
 
 TEST_F(TestActionServerCancelPolicy, test_action_process_cancel_request_by_time)
@@ -575,6 +638,7 @@ TEST_F(TestActionServerCancelPolicy, test_action_process_cancel_request_by_time)
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
   EXPECT_NE(cancel_response.msg.goals_canceling.data, nullptr);
   ASSERT_EQ(cancel_response.msg.goals_canceling.size, time_index + 1);  // goals at indices [0, 7]
+  EXPECT_EQ(cancel_response.msg.return_code, action_msgs__srv__CancelGoal_Response__ERROR_NONE);
   rcl_action_goal_info_t * goal_info_out;
   for (size_t i = 0; i < cancel_response.msg.goals_canceling.size; ++i) {
     goal_info_out = &cancel_response.msg.goals_canceling.data[i];
@@ -600,6 +664,7 @@ TEST_F(TestActionServerCancelPolicy, test_action_process_cancel_request_by_time_
     &this->action_server, &cancel_request, &cancel_response);
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
   EXPECT_NE(cancel_response.msg.goals_canceling.data, nullptr);
+  EXPECT_EQ(cancel_response.msg.return_code, action_msgs__srv__CancelGoal_Response__ERROR_NONE);
   const size_t num_goals_canceling = cancel_response.msg.goals_canceling.size;
   ASSERT_EQ(num_goals_canceling, time_index + 2);  // goals at indices [0, 2] and 8
   rcl_action_goal_info_t * goal_info_out;
