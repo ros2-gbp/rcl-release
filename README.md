@@ -1,3 +1,30 @@
+## rcl (eloquent) - 0.8.0-1
+
+The packages in the `rcl` repository were released into the `eloquent` distro by running `/usr/bin/bloom-release --track eloquent --rosdistro eloquent rcl` on `Thu, 26 Sep 2019 19:14:33 -0000`
+
+These packages were released:
+- `rcl`
+- `rcl_action`
+- `rcl_lifecycle`
+- `rcl_yaml_param_parser`
+
+Version of package(s) in repository `rcl`:
+
+- upstream repository: https://github.com/ros2/rcl.git
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `0.8.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.8.0`
+- catkin_pkg version: `0.4.13`
+- rosdep version: `0.16.1`
+- rosdistro version: `0.7.4`
+- vcstools version: `0.1.42`
+
+
 ## rcl (dashing) - 0.7.7-1
 
 The packages in the `rcl` repository were released into the `dashing` distro by running `/usr/bin/bloom-release --rosdistro dashing rcl` on `Fri, 20 Sep 2019 20:48:51 -0000`
