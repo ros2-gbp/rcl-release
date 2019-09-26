@@ -2,16 +2,10 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.7.7 (2019-09-20)
+0.8.0 (2019-09-26)
 ------------------
-* reset error message before setting a new one, embed the original one (`#501 <https://github.com/ros2/rcl/issues/501>`_) (`#505 <https://github.com/ros2/rcl/issues/505>`_)
-* Contributors: Zachary Michaels
-
-0.7.6 (2019-08-01)
-------------------
-
-0.7.5 (2019-06-12)
-------------------
+* reset error message before setting a new one, embed the original one (`#501 <https://github.com/ros2/rcl/issues/501>`_)
+* Contributors: Dirk Thomas
 
 0.7.4 (2019-05-29)
 ------------------

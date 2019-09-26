@@ -2,14 +2,11 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.7.7 (2019-09-20)
+0.8.0 (2019-09-26)
 ------------------
-
-0.7.6 (2019-08-01)
-------------------
-
-0.7.5 (2019-06-12)
-------------------
+* Fix rcl_action test_graph (`#504 <https://github.com/ros2/rcl/issues/504>`_)
+* remove unused CMake code (`#475 <https://github.com/ros2/rcl/issues/475>`_)
+* Contributors: Mikael Arguedas, ivanpauno
 
 0.7.4 (2019-05-29)
 ------------------

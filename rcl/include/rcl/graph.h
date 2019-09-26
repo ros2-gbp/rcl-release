@@ -75,6 +75,9 @@ typedef rmw_names_and_types_t rcl_names_and_types_t;
  * \return `RCL_RET_OK` if the query was successful, or
  * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_NODE_INVALID_NAME` if the node name is invalid, or
+ * \return `RCL_RET_NODE_INVALID_NAMESPACE` if the node namespace is invalid, or
+ * \return `RCL_RET_NODE_NAME_NON_EXISTENT` if the node name wasn't found, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
@@ -122,6 +125,9 @@ rcl_get_publisher_names_and_types_by_node(
  * \return `RCL_RET_OK` if the query was successful, or
  * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_NODE_INVALID_NAME` if the node name is invalid, or
+ * \return `RCL_RET_NODE_INVALID_NAMESPACE` if the node namespace is invalid, or
+ * \return `RCL_RET_NODE_NAME_NON_EXISTENT` if the node name wasn't found, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
@@ -135,7 +141,7 @@ rcl_get_subscriber_names_and_types_by_node(
   const char * node_namespace,
   rcl_names_and_types_t * topic_names_and_types);
 
-/// Return a list of service names and types for associated with a node.
+/// Return a list of service names and types associated with a node.
 /**
  * The `node` parameter must point to a valid node.
  *
@@ -148,7 +154,7 @@ rcl_get_subscriber_names_and_types_by_node(
  * \see rcl_get_publisher_names_and_types_by_node for details on the `no_demangle` parameter.
  *
  * The returned names are not automatically remapped by this function.
- * Attempting to create clients or services using names returned by this function may not
+ * Attempting to create service clients using names returned by this function may not
  * result in the desired service name being used depending on the remap rules in use.
  *
  * <hr>
@@ -168,12 +174,63 @@ rcl_get_subscriber_names_and_types_by_node(
  * \return `RCL_RET_OK` if the query was successful, or
  * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_NODE_INVALID_NAME` if the node name is invalid, or
+ * \return `RCL_RET_NODE_INVALID_NAMESPACE` if the node namespace is invalid, or
+ * \return `RCL_RET_NODE_NAME_NON_EXISTENT` if the node name wasn't found, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t
 rcl_get_service_names_and_types_by_node(
+  const rcl_node_t * node,
+  rcl_allocator_t * allocator,
+  const char * node_name,
+  const char * node_namespace,
+  rcl_names_and_types_t * service_names_and_types);
+
+/// Return a list of service client names and types associated with a node.
+/**
+ * The `node` parameter must point to a valid node.
+ *
+ * The `service_names_and_types` parameter must be allocated and zero initialized.
+ * This function allocates memory for the returned list of names and types and so it is the
+ * callers responsibility to pass `service_names_and_types` to rcl_names_and_types_fini()
+ * when it is no longer needed.
+ * Failing to do so will result in leaked memory.
+ *
+ * \see rcl_get_publisher_names_and_types_by_node for details on the `no_demangle` parameter.
+ *
+ * The returned names are not automatically remapped by this function.
+ * Attempting to create service servers using names returned by this function may not
+ * result in the desired service name being used depending on the remap rules in use.
+ *
+ * <hr>
+ * Attribute          | Adherence
+ * ------------------ | -------------
+ * Allocates Memory   | Yes
+ * Thread-Safe        | No
+ * Uses Atomics       | No
+ * Lock-Free          | Maybe [1]
+ * <i>[1] implementation may need to protect the data structure with a lock</i>
+ *
+ * \param[in] node the handle to the node being used to query the ROS graph
+ * \param[in] allocator allocator to be used when allocating space for strings
+ * \param[in] node_name the node name of the services to return
+ * \param[in] node_namespace the node namespace of the services to return
+ * \param[out] service_names_and_types list of service client names and their types
+ * \return `RCL_RET_OK` if the query was successful, or
+ * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_NODE_INVALID_NAME` if the node name is invalid, or
+ * \return `RCL_RET_NODE_INVALID_NAMESPACE` if the node namespace is invalid, or
+ * \return `RCL_RET_NODE_NAME_NON_EXISTENT` if the node name wasn't found, or
+ * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ */
+RCL_PUBLIC
+RCL_WARN_UNUSED
+rcl_ret_t
+rcl_get_client_names_and_types_by_node(
   const rcl_node_t * node,
   rcl_allocator_t * allocator,
   const char * node_name,
@@ -212,6 +269,8 @@ rcl_get_service_names_and_types_by_node(
  * \return `RCL_RET_OK` if the query was successful, or
  * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_NODE_INVALID_NAME` if the node name is invalid, or
+ * \return `RCL_RET_NODE_INVALID_NAMESPACE` if the node namespace is invalid, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
