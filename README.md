@@ -1,3 +1,30 @@
+## rcl (eloquent) - 0.8.3-1
+
+The packages in the `rcl` repository were released into the `eloquent` distro by running `/usr/bin/bloom-release --ros-distro eloquent rcl` on `Fri, 08 Nov 2019 19:29:17 -0000`
+
+These packages were released:
+- `rcl`
+- `rcl_action`
+- `rcl_lifecycle`
+- `rcl_yaml_param_parser`
+
+Version of package(s) in repository `rcl`:
+
+- upstream repository: https://github.com/ros2/rcl.git
+- release repository: https://github.com/ros2-gbp/rcl-release.git
+- rosdistro version: `0.8.2-1`
+- old version: `0.8.2-1`
+- new version: `0.8.3-1`
+
+Versions of tools used:
+
+- bloom version: `0.9.0`
+- catkin_pkg version: `0.4.14`
+- rosdep version: `0.17.1`
+- rosdistro version: `0.7.5`
+- vcstools version: `0.1.42`
+
+
 ## rcl (eloquent) - 0.8.2-1
 
 The packages in the `rcl` repository were released into the `eloquent` distro by running `/usr/bin/bloom-release --ros-distro eloquent rcl` on `Thu, 24 Oct 2019 00:39:04 -0000`
