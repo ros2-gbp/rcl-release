@@ -1,0 +1,13 @@
+Source: ros-dashing-rcl
+Section: misc
+Priority: optional
+Maintainer: William Woodall <william@osrfoundation.org>
+Build-Depends: debhelper (>= 9.0.0), ros-dashing-ament-cmake-gtest, ros-dashing-ament-cmake-pytest, ros-dashing-ament-cmake-ros, ros-dashing-ament-lint-auto, ros-dashing-ament-lint-common, ros-dashing-launch, ros-dashing-launch-testing, ros-dashing-launch-testing-ament-cmake, ros-dashing-osrf-testing-tools-cpp, ros-dashing-rcl-interfaces, ros-dashing-rcl-logging-noop, ros-dashing-rcutils, ros-dashing-rmw, ros-dashing-rmw-implementation, ros-dashing-rmw-implementation-cmake, ros-dashing-rosidl-generator-c, ros-dashing-test-msgs, ros-dashing-tinydir-vendor, ros-dashing-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-dashing-rcl
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-dashing-ament-cmake, ros-dashing-rcl-interfaces, ros-dashing-rcl-logging-noop, ros-dashing-rcutils, ros-dashing-rmw, ros-dashing-rmw-implementation, ros-dashing-rosidl-default-runtime, ros-dashing-rosidl-generator-c, ros-dashing-tinydir-vendor, ros-dashing-ros-workspace
+Description: The ROS client library common implementation.
+ This package contains an API which builds on the ROS middleware API and is optionally built upon by the other ROS client libraries.
