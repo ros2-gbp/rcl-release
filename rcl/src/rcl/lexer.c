@@ -57,10 +57,8 @@ digraph remapping_lexer {
     T_WILD_MULTI
     T_EOF
     T_NONE
-    T_DOT
   node [shape = circle];
   S0 -> T_FORWARD_SLASH [ label = "/"];
-  S0 -> T_DOT [ label = "."];
   S0 -> S1 [ label = "\\"];
   S0 -> S2 [ label = "~"];
   S0 -> S3 [ label = "_" ];
@@ -157,7 +155,7 @@ typedef struct rcl_lexer_state_t
   /// Movement associated with taking else state
   const unsigned char else_movement;
   /// Transitions in the state machine (NULL value at end of array)
-  const rcl_lexer_transition_t transitions[12];
+  const rcl_lexer_transition_t transitions[11];
 } rcl_lexer_state_t;
 
 #define S0 0u
@@ -215,7 +213,6 @@ typedef struct rcl_lexer_state_t
 #define T_WILD_MULTI 50u
 #define T_EOF 51u
 #define T_NONE 52u
-#define T_DOT 53u
 
 // used to figure out if a state is terminal or not
 #define FIRST_TERMINAL T_TILDE_SLASH
@@ -232,7 +229,6 @@ static const rcl_lexer_state_t g_states[LAST_STATE + 1] =
     0u,
     {
       {T_FORWARD_SLASH, '/', '/'},
-      {T_DOT, '.', '.'},
       {S1, '\\', '\\'},
       {S2, '~', '~'},
       {S3, '_', '_'},
@@ -577,8 +573,6 @@ static const rcl_lexeme_t g_terminals[LAST_TERMINAL + 1] = {
   RCL_LEXEME_EOF,
   // 21
   RCL_LEXEME_NONE,
-  // 22
-  RCL_LEXEME_DOT
 };
 
 rcl_ret_t

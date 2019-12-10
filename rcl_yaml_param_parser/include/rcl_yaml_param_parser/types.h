@@ -14,7 +14,7 @@
 #ifndef RCL_YAML_PARAM_PARSER__TYPES_H_
 #define RCL_YAML_PARAM_PARSER__TYPES_H_
 
-#include "rcutils/allocator.h"
+#include "rcl/allocator.h"
 #include "rcutils/types/string_array.h"
 
 /// \typedef rcl_bool_array_t
@@ -81,7 +81,7 @@ typedef struct rcl_params_s
   char ** node_names;  ///< List of names of the node
   rcl_node_params_t * params;  ///<  Array of parameters
   size_t num_nodes;       ///< Number of nodes
-  rcutils_allocator_t allocator;  ///< Allocator used
+  rcl_allocator_t allocator;  ///< Allocator used
 } rcl_params_t;
 
 #endif  // RCL_YAML_PARAM_PARSER__TYPES_H_

@@ -30,7 +30,6 @@ extern "C"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/validate_full_topic_name.h"
-#include "tracetools/tracetools.h"
 
 #include "./common.h"
 
@@ -179,12 +178,6 @@ rcl_client_init(
   atomic_init(&client->impl->sequence_number, 0);
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Client initialized");
   ret = RCL_RET_OK;
-  TRACEPOINT(
-    rcl_client_init,
-    (const void *)client,
-    (const void *)node,
-    (const void *)client->impl->rmw_handle,
-    remapped_service_name);
   goto cleanup;
 fail:
   if (client->impl) {

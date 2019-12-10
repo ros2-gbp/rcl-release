@@ -29,7 +29,6 @@ extern "C"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/validate_full_topic_name.h"
-#include "tracetools/tracetools.h"
 
 typedef struct rcl_service_impl_t
 {
@@ -183,12 +182,6 @@ rcl_service_init(
   service->impl->options = *options;
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Service initialized");
   ret = RCL_RET_OK;
-  TRACEPOINT(
-    rcl_service_init,
-    (const void *)service,
-    (const void *)node,
-    (const void *)service->impl->rmw_handle,
-    remapped_service_name);
   goto cleanup;
 fail:
   if (service->impl) {

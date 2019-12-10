@@ -29,7 +29,6 @@ extern "C"
 #include "rcutils/logging_macros.h"
 #include "rcutils/stdatomic_helper.h"
 #include "rmw/error_handling.h"
-#include "tracetools/tracetools.h"
 
 static atomic_uint_least64_t __rcl_next_unique_id = ATOMIC_VAR_INIT(1);
 
@@ -83,6 +82,9 @@ rcl_init(
   // Zero initialize rmw context first so its validity can by checked in cleanup.
   context->impl->rmw_context = rmw_get_zero_initialized_context();
 
+  // Store the allocator.
+  context->impl->allocator = allocator;
+
   // Copy the options into the context for future reference.
   rcl_ret_t ret = rcl_init_options_copy(options, &(context->impl->init_options));
   if (RCL_RET_OK != ret) {
@@ -122,10 +124,7 @@ rcl_init(
   ret = rcl_logging_configure(&context->global_arguments, &allocator);
   if (RCL_RET_OK != ret) {
     fail_ret = ret;
-    RCUTILS_LOG_ERROR_NAMED(
-      ROS_PACKAGE_NAME,
-      "Failed to configure logging: %s",
-      rcutils_get_error_string().str);
+    RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Failed to configure logging. %i", fail_ret);
     goto fail;
   }
 
@@ -150,11 +149,6 @@ rcl_init(
     fail_ret = rcl_convert_rmw_ret_to_rcl_ret(rmw_ret);
     goto fail;
   }
-
-  // Store the allocator.
-  context->impl->allocator = allocator;
-
-  TRACEPOINT(rcl_init, (const void *)context);
 
   return RCL_RET_OK;
 fail:
