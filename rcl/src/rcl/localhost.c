@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCL__SUBSCRIPTION_IMPL_H_
-#define RCL__SUBSCRIPTION_IMPL_H_
+#include <rcl/localhost.h>
 
-#include "rmw/rmw.h"
+#include <stdlib.h>
+#include <string.h>
 
-#include "rcl/subscription.h"
+#include "rcutils/get_env.h"
 
-typedef struct rcl_subscription_impl_t
+const char * const RCL_LOCALHOST_ENV_VAR = "ROS_LOCALHOST_ONLY";
+
+bool
+rcl_localhost_only()
 {
-  rcl_subscription_options_t options;
-  rmw_qos_profile_t actual_qos;
-  rmw_subscription_t * rmw_handle;
-} rcl_subscription_impl_t;
-
-#endif  // RCL__SUBSCRIPTION_IMPL_H_
+  const char * ros_local_host_env_val = NULL;
+  return rcutils_get_env(RCL_LOCALHOST_ENV_VAR, &ros_local_host_env_val) == NULL &&
+         ros_local_host_env_val != NULL && strcmp(ros_local_host_env_val, "1") == 0;
+}
