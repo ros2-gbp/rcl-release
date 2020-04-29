@@ -1,3 +1,30 @@
+## rcl (foxy) - 0.9.0-1
+
+The packages in the `rcl` repository were released into the `foxy` distro by running `/usr/bin/bloom-release -r foxy rcl` on `Wed, 29 Apr 2020 16:44:28 -0000`
+
+These packages were released:
+- `rcl`
+- `rcl_action`
+- `rcl_lifecycle`
+- `rcl_yaml_param_parser`
+
+Version of package(s) in repository `rcl`:
+
+- upstream repository: https://github.com/ros2/rcl.git
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `0.9.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.9.3`
+- catkin_pkg version: `0.4.17`
+- rosdep version: `0.19.0`
+- rosdistro version: `0.8.1`
+- vcstools version: `0.1.42`
+
+
 ## rcl (eloquent) - 0.8.4-1
 
 The packages in the `rcl` repository were released into the `eloquent` distro by running `/usr/bin/bloom-release --rosdistro eloquent rcl -e` on `Fri, 17 Jan 2020 21:57:05 -0000`
