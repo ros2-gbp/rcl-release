@@ -4,17 +4,11 @@ project(rcl_action)
 
 find_package(ament_cmake_ros REQUIRED)
 
-find_package(rosidl_generator_c REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
-
-include_directories(
-  include
-  ${action_msgs_INCLUDE_DIRS}
-  ${rcl_INCLUDE_DIRS}
-)
+find_package(rosidl_runtime_c REQUIRED)
 
 # Default to C11
 if(NOT CMAKE_C_STANDARD)
@@ -49,12 +43,16 @@ add_library(${PROJECT_NAME}
   ${rcl_action_sources}
 )
 
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>")
+
 ament_target_dependencies(${PROJECT_NAME}
   "action_msgs"
   "rcl"
   "rcutils"
   "rmw"
-  "rosidl_generator_c"
+  "rosidl_runtime_c"
 )
 
 rcl_set_symbol_visibility_hidden(${PROJECT_NAME} LANGUAGE "C")
@@ -67,7 +65,7 @@ install(
   DESTINATION include
 )
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -205,10 +203,11 @@ endif()
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
+ament_export_targets(${PROJECT_NAME})
+ament_export_dependencies(action_msgs)
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(rcl)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rmw)
-ament_export_dependencies(action_msgs)
-ament_export_dependencies(rosidl_generator_c)
+ament_export_dependencies(rosidl_runtime_c)
 ament_package()

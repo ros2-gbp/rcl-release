@@ -153,8 +153,13 @@ rcl_node_init(
  * Destroys any automatically created infrastructure and deallocates memory.
  * After calling, the rcl_node_t can be safely deallocated.
  *
- * Any middleware primitives created by the user, e.g. publishers, services, etc.,
- * are invalid after deinitialization.
+ * All middleware primitives created by the user, e.g. publishers, services, etc,
+ * which were created from this node must be finalized using their respective
+ * `rcl_*_fini()` functions before this is called.
+ * \sa rcl_publisher_fini()
+ * \sa rcl_subscription_fini()
+ * \sa rcl_client_fini()
+ * \sa rcl_service_fini()
  *
  * <hr>
  * Attribute          | Adherence
@@ -336,7 +341,7 @@ rcl_node_get_options(const rcl_node_t * node);
  * This function returns the ROS domain ID that the node is in.
  *
  * This function should be used to determine what `domain_id` was used rather
- * than checking the domin_id field in the node options, because if
+ * than checking the domain_id field in the node options, because if
  * `RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID` is used when creating the node then
  * it is not changed after creation, but this function will return the actual
  * `domain_id` used.

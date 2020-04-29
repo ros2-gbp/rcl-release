@@ -9,11 +9,9 @@ find_package(rcl_yaml_param_parser REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rmw_implementation REQUIRED)
-find_package(rosidl_generator_c REQUIRED)
-find_package(tinydir_vendor REQUIRED)
+find_package(rosidl_runtime_c REQUIRED)
 find_package(tracetools REQUIRED)
 
-include_directories(include)
 include(cmake/rcl_set_symbol_visibility_hidden.cmake)
 include(cmake/get_default_rcl_logging_implementation.cmake)
 get_default_rcl_logging_implementation(RCL_LOGGING_IMPL)
@@ -37,6 +35,7 @@ set(${PROJECT_NAME}_sources
   src/rcl/client.c
   src/rcl/common.c
   src/rcl/context.c
+  src/rcl/domain_id.c
   src/rcl/event.c
   src/rcl/expand_topic_name.c
   src/rcl/graph.c
@@ -53,26 +52,29 @@ set(${PROJECT_NAME}_sources
   src/rcl/publisher.c
   src/rcl/remap.c
   src/rcl/rmw_implementation_identifier_check.c
+  src/rcl/security.c
   src/rcl/service.c
   src/rcl/subscription.c
   src/rcl/time.c
   src/rcl/timer.c
+  src/rcl/validate_enclave_name.c
   src/rcl/validate_topic_name.c
   src/rcl/wait.c
-  src/rcl/security_directory.c
 )
 
 add_library(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>")
 # specific order: dependents before dependencies
 ament_target_dependencies(${PROJECT_NAME}
   "rcl_interfaces"
   "rcl_yaml_param_parser"
-  "rmw_implementation"
-  "rmw"
   "rcutils"
-  "rosidl_generator_c"
+  "rmw"
+  "rmw_implementation"
   ${RCL_LOGGING_IMPL}
-  "tinydir_vendor"
+  "rosidl_runtime_c"
   "tracetools"
 )
 
@@ -82,7 +84,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "RCL_BUILDING_DLL")
 rcl_set_symbol_visibility_hidden(${PROJECT_NAME} LANGUAGE "C")
 
 install(
-  TARGETS ${PROJECT_NAME}
+  TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
@@ -96,6 +98,7 @@ set(rcl_lib_dir "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
+ament_export_targets(${PROJECT_NAME})
 
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(rcl_interfaces)
@@ -103,8 +106,8 @@ ament_export_dependencies(rcl_yaml_param_parser)
 ament_export_dependencies(rmw_implementation)
 ament_export_dependencies(rmw)
 ament_export_dependencies(rcutils)
-ament_export_dependencies(rosidl_generator_c)
 ament_export_dependencies(${RCL_LOGGING_IMPL})
+ament_export_dependencies(rosidl_runtime_c)
 ament_export_dependencies(tracetools)
 
 if(BUILD_TESTING)

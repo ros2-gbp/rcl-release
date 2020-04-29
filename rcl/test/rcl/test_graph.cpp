@@ -30,6 +30,7 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/graph.h"
+#include "rcl/logging.h"
 #include "rcl/rcl.h"
 
 #include "rcutils/logging_macros.h"
@@ -66,16 +67,22 @@ public:
   void SetUp()
   {
     rcl_ret_t ret;
+    rcl_allocator_t allocator = rcl_get_default_allocator();
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
     ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
       EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
     });
     this->old_context_ptr = new rcl_context_t;
     *this->old_context_ptr = rcl_get_zero_initialized_context();
     ret = rcl_init(0, nullptr, &init_options, this->old_context_ptr);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+    EXPECT_EQ(
+      RCL_RET_OK,
+      rcl_logging_configure(&this->old_context_ptr->global_arguments, &allocator)
+    ) << rcl_get_error_string().str;
     this->old_node_ptr = new rcl_node_t;
     *this->old_node_ptr = rcl_get_zero_initialized_node();
     const char * old_name = "old_node_name";
@@ -126,6 +133,7 @@ public:
     ret = rcl_context_fini(this->old_context_ptr);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     delete this->old_context_ptr;
+    EXPECT_EQ(RCL_RET_OK, rcl_logging_fini()) << rcl_get_error_string().str;
   }
 };
 
@@ -678,7 +686,8 @@ check_graph_state(
   bool expected_in_tnat,
   size_t number_of_tries)
 {
-  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME,
     "Expecting %zu publishers, %zu subscribers, and that the topic is%s in the graph.",
     expected_publisher_count,
     expected_subscriber_count,
@@ -716,7 +725,8 @@ check_graph_state(
       rcl_reset_error();
     }
 
-    RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
+    RCUTILS_LOG_INFO_NAMED(
+      ROS_PACKAGE_NAME,
       " Try %zu: %zu publishers, %zu subscribers, and that the topic is%s in the graph.",
       i + 1,
       publisher_count,
@@ -741,7 +751,8 @@ check_graph_state(
     ret = rcl_wait_set_add_guard_condition(wait_set_ptr, graph_guard_condition, nullptr);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(400);
-    RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
+    RCUTILS_LOG_INFO_NAMED(
+      ROS_PACKAGE_NAME,
       "  state wrong, waiting up to '%s' nanoseconds for graph changes... ",
       std::to_string(time_to_sleep.count()).c_str());
     ret = rcl_wait(wait_set_ptr, time_to_sleep.count());
@@ -764,9 +775,9 @@ check_graph_state(
 /**
  * Type define a get topics function.
  */
-typedef std::function<rcl_ret_t(const rcl_node_t *,
-    const char * node_name,
-    rcl_names_and_types_t *)> GetTopicsFunc;
+typedef std::function<
+    rcl_ret_t(const rcl_node_t *, const char * node_name, rcl_names_and_types_t *)
+> GetTopicsFunc;
 
 /**
  * Expect a certain number of topics on a given subsystem.
@@ -789,7 +800,8 @@ void expect_topics_types(
   if (expect) {
     EXPECT_EQ(num_topics, nat.names.size);
   } else {
-    RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Expected topics %zu, actual topics %zu", num_topics,
+    RCUTILS_LOG_DEBUG_NAMED(
+      ROS_PACKAGE_NAME, "Expected topics %zu, actual topics %zu", num_topics,
       nat.names.size);
   }
   ret = rcl_names_and_types_fini(&nat);
@@ -829,7 +841,8 @@ public:
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
     ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
       EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) <<
         rcl_get_error_string().str;
     });
@@ -842,35 +855,40 @@ public:
     *this->remote_context_ptr = rcl_get_zero_initialized_context();
     ret = rcl_init(0, nullptr, &init_options, this->remote_context_ptr);
 
-    ret = rcl_node_init(remote_node_ptr, remote_node_name, "", this->remote_context_ptr,
-        &node_options);
+    ret = rcl_node_init(
+      remote_node_ptr, remote_node_name, "", this->remote_context_ptr,
+      &node_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    sub_func = std::bind(rcl_get_subscriber_names_and_types_by_node,
-        std::placeholders::_1,
-        &this->allocator,
-        false,
-        std::placeholders::_2,
-        "/",
-        std::placeholders::_3);
-    pub_func = std::bind(rcl_get_publisher_names_and_types_by_node,
-        std::placeholders::_1,
-        &this->allocator,
-        false,
-        std::placeholders::_2,
-        "/",
-        std::placeholders::_3);
-    service_func = std::bind(rcl_get_service_names_and_types_by_node,
-        std::placeholders::_1,
-        &this->allocator,
-        std::placeholders::_2,
-        "/",
-        std::placeholders::_3);
-    client_func = std::bind(rcl_get_client_names_and_types_by_node,
-        std::placeholders::_1,
-        &this->allocator,
-        std::placeholders::_2,
-        "/",
-        std::placeholders::_3);
+    sub_func = std::bind(
+      rcl_get_subscriber_names_and_types_by_node,
+      std::placeholders::_1,
+      &this->allocator,
+      false,
+      std::placeholders::_2,
+      "/",
+      std::placeholders::_3);
+    pub_func = std::bind(
+      rcl_get_publisher_names_and_types_by_node,
+      std::placeholders::_1,
+      &this->allocator,
+      false,
+      std::placeholders::_2,
+      "/",
+      std::placeholders::_3);
+    service_func = std::bind(
+      rcl_get_service_names_and_types_by_node,
+      std::placeholders::_1,
+      &this->allocator,
+      std::placeholders::_2,
+      "/",
+      std::placeholders::_3);
+    client_func = std::bind(
+      rcl_get_client_names_and_types_by_node,
+      std::placeholders::_1,
+      &this->allocator,
+      std::placeholders::_2,
+      "/",
+      std::placeholders::_3);
     WaitForAllNodesAlive();
   }
 
@@ -896,7 +914,8 @@ public:
     rcl_ret_t ret;
     rcutils_string_array_t node_names = rcutils_get_zero_initialized_string_array();
     rcutils_string_array_t node_namespaces = rcutils_get_zero_initialized_string_array();
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
       ret = rcutils_string_array_fini(&node_names);
       ASSERT_EQ(RCUTILS_RET_OK, ret);
       ret = rcutils_string_array_fini(&node_namespaces);
@@ -916,8 +935,8 @@ public:
   /**
    * Verify the number of subsystems each node should have.
    *
-   * @param node_state expected state of node
-   * @param remote_node_state expected state of remote node
+   * \param node_state expected state of node
+   * \param remote_node_state expected state of remote node
    */
   void VerifySubsystemCount(
     const expected_node_state && node_state,
@@ -937,39 +956,49 @@ public:
       // verify each node contains the same node graph.
       for (auto node : node_vec) {
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking subscribers from node");
-        expect_topics_types(node, sub_func, node_state.subscribers,
+        expect_topics_types(
+          node, sub_func, node_state.subscribers,
           test_graph_node_name, is_expect, is_success);
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking services from node");
-        expect_topics_types(node, service_func, node_state.services,
+        expect_topics_types(
+          node, service_func, node_state.services,
           test_graph_node_name, is_expect, is_success);
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking clients from node");
-        expect_topics_types(node, client_func, node_state.clients,
+        expect_topics_types(
+          node, client_func, node_state.clients,
           test_graph_node_name, is_expect, is_success);
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking publishers from node");
-        expect_topics_types(node, pub_func, node_state.publishers,
+        expect_topics_types(
+          node, pub_func, node_state.publishers,
           test_graph_node_name, is_expect, is_success);
 
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking subscribers from remote node");
-        expect_topics_types(node, sub_func, remote_node_state.subscribers,
+        expect_topics_types(
+          node, sub_func, remote_node_state.subscribers,
           this->remote_node_name, is_expect, is_success);
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking publishers from remote node");
-        expect_topics_types(node, pub_func, remote_node_state.publishers,
+        expect_topics_types(
+          node, pub_func, remote_node_state.publishers,
           this->remote_node_name, is_expect, is_success);
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking services from remote node");
-        expect_topics_types(node, service_func, remote_node_state.services,
+        expect_topics_types(
+          node, service_func, remote_node_state.services,
           this->remote_node_name, is_expect, is_success);
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking clients from remote node");
-        expect_topics_types(node, client_func, remote_node_state.clients,
+        expect_topics_types(
+          node, client_func, remote_node_state.clients,
           this->remote_node_name, is_expect, is_success);
         if (!is_success) {
           ret = rcl_wait_set_clear(wait_set_ptr);
           ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
           ret =
-            rcl_wait_set_add_guard_condition(wait_set_ptr, rcl_node_get_graph_guard_condition(
-                node), NULL);
+            rcl_wait_set_add_guard_condition(
+            wait_set_ptr, rcl_node_get_graph_guard_condition(
+              node), NULL);
           ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
           std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(400);
-          RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
+          RCUTILS_LOG_DEBUG_NAMED(
+            ROS_PACKAGE_NAME,
             "  state wrong, waiting up to '%s' nanoseconds for graph changes... ",
             std::to_string(time_to_sleep.count()).c_str());
           ret = rcl_wait(wait_set_ptr, time_to_sleep.count());
@@ -1217,7 +1246,8 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_graph_guard_conditi
     ret = rcl_wait_set_add_guard_condition(this->wait_set_ptr, graph_guard_condition, NULL);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(400);
-    RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
+    RCUTILS_LOG_INFO_NAMED(
+      ROS_PACKAGE_NAME,
       "waiting up to '%s' nanoseconds for graph changes",
       std::to_string(time_to_sleep.count()).c_str());
     ret = rcl_wait(this->wait_set_ptr, time_to_sleep.count());
@@ -1242,7 +1272,8 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_rcl_service_server_
   rcl_client_options_t client_options = rcl_client_get_default_options();
   ret = rcl_client_init(&client, this->node_ptr, ts, service_name, &client_options);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     rcl_ret_t ret = rcl_client_fini(&client, this->node_ptr);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -1274,7 +1305,8 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_rcl_service_server_
         ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
         ret = rcl_wait_set_add_guard_condition(this->wait_set_ptr, graph_guard_condition, NULL);
         ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-        RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
+        RCUTILS_LOG_INFO_NAMED(
+          ROS_PACKAGE_NAME,
           "waiting up to '%s' nanoseconds for graph changes",
           std::to_string(time_to_sleep.count()).c_str());
         ret = rcl_wait(this->wait_set_ptr, time_to_sleep.count());
@@ -1309,7 +1341,8 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_rcl_service_server_
     rcl_service_options_t service_options = rcl_service_get_default_options();
     ret = rcl_service_init(&service, this->node_ptr, ts, service_name, &service_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
       rcl_ret_t ret = rcl_service_fini(&service, this->node_ptr);
       EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     });

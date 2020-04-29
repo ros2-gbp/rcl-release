@@ -12,19 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <rcl/localhost.h>
+#include "rcl/localhost.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "rcutils/get_env.h"
 
+#include "rcl/error_handling.h"
+#include "rcl/types.h"
+
 const char * const RCL_LOCALHOST_ENV_VAR = "ROS_LOCALHOST_ONLY";
 
-bool
-rcl_localhost_only()
+rcl_ret_t
+rcl_get_localhost_only(rmw_localhost_only_t * localhost_only)
 {
   const char * ros_local_host_env_val = NULL;
-  return rcutils_get_env(RCL_LOCALHOST_ENV_VAR, &ros_local_host_env_val) == NULL &&
-         ros_local_host_env_val != NULL && strcmp(ros_local_host_env_val, "1") == 0;
+  const char * get_env_error_str = NULL;
+
+  if (!localhost_only) {
+    return RCL_RET_INVALID_ARGUMENT;
+  }
+
+  get_env_error_str = rcutils_get_env(RCL_LOCALHOST_ENV_VAR, &ros_local_host_env_val);
+  if (NULL != get_env_error_str) {
+    RCL_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "Error getting env var '" RCUTILS_STRINGIFY(RCL_DOMAIN_ID_ENV_VAR) "': %s\n",
+      get_env_error_str);
+    return RCL_RET_ERROR;
+  }
+  *localhost_only = ros_local_host_env_val != NULL && strcmp(ros_local_host_env_val, "1") == 0;
+  return RCL_RET_OK;
 }

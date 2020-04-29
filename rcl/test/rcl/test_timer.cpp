@@ -35,7 +35,8 @@ public:
       rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
       ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
       ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-      OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+      OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+      {
         EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
       });
       this->context_ptr = new rcl_context_t;
@@ -61,6 +62,46 @@ public:
     ret = rcl_context_fini(this->context_ptr);
     delete this->context_ptr;
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  }
+};
+
+static uint8_t times_called = 0;
+static void callback_function(rcl_timer_t * timer, int64_t last_call)
+{
+  (void) timer;
+  (void) last_call;
+  times_called++;
+}
+
+class TestPreInitTimer : public TestTimerFixture
+{
+public:
+  rcl_clock_t clock;
+  rcl_allocator_t allocator;
+  rcl_timer_t timer;
+  rcl_timer_callback_t timer_callback_test = &callback_function;
+
+  void SetUp() override
+  {
+    TestTimerFixture::SetUp();
+    rcl_ret_t ret;
+    allocator = rcl_get_default_allocator();
+    timer = rcl_get_zero_initialized_timer();
+    ASSERT_EQ(
+      RCL_RET_OK,
+      rcl_clock_init(RCL_ROS_TIME, &clock, &allocator)) << rcl_get_error_string().str;
+
+    ret = rcl_timer_init(
+      &timer, &clock, this->context_ptr, RCL_S_TO_NS(1), timer_callback_test,
+      rcl_get_default_allocator());
+    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  }
+
+  void TearDown() override
+  {
+    EXPECT_EQ(RCL_RET_OK, rcl_timer_fini(&timer)) << rcl_get_error_string().str;
+    EXPECT_EQ(RCL_RET_OK, rcl_clock_fini(&clock)) << rcl_get_error_string().str;
+    TestTimerFixture::TearDown();
   }
 };
 
@@ -91,7 +132,8 @@ TEST_F(TestTimerFixture, test_two_timers) {
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   ret = rcl_wait_set_add_timer(&wait_set, &timer2, NULL);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     rcl_ret_t ret = rcl_timer_fini(&timer);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     ret = rcl_timer_fini(&timer2);
@@ -147,7 +189,8 @@ TEST_F(TestTimerFixture, test_two_timers_ready_before_timeout) {
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   ret = rcl_wait_set_add_timer(&wait_set, &timer2, NULL);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     rcl_ret_t ret = rcl_timer_fini(&timer);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     ret = rcl_timer_fini(&timer2);
@@ -197,7 +240,8 @@ TEST_F(TestTimerFixture, test_timer_not_ready) {
   ret = rcl_wait_set_add_timer(&wait_set, &timer, NULL);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     rcl_ret_t ret = rcl_timer_fini(&timer);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     ret = rcl_wait_set_fini(&wait_set);
@@ -245,7 +289,8 @@ TEST_F(TestTimerFixture, test_canceled_timer) {
   ret = rcl_wait_set_add_timer(&wait_set, &timer, NULL);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     rcl_ret_t ret = rcl_timer_fini(&timer);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     ret = rcl_wait_set_fini(&wait_set);
@@ -278,7 +323,8 @@ TEST_F(TestTimerFixture, test_rostime_time_until_next_call) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   ret = rcl_clock_init(RCL_ROS_TIME, &clock, &allocator);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     EXPECT_EQ(RCL_RET_OK, rcl_clock_fini(&clock)) << rcl_get_error_string().str;
   });
   ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(&clock)) << rcl_get_error_string().str;
@@ -287,7 +333,8 @@ TEST_F(TestTimerFixture, test_rostime_time_until_next_call) {
   ret = rcl_timer_init(
     &timer, &clock, this->context_ptr, sec_5, nullptr, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     EXPECT_EQ(RCL_RET_OK, rcl_timer_fini(&timer)) << rcl_get_error_string().str;
   });
 
@@ -316,7 +363,8 @@ TEST_F(TestTimerFixture, test_system_time_to_ros_time) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   ret = rcl_clock_init(RCL_ROS_TIME, &clock, &allocator);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     EXPECT_EQ(RCL_RET_OK, rcl_clock_fini(&clock)) << rcl_get_error_string().str;
   });
 
@@ -324,7 +372,8 @@ TEST_F(TestTimerFixture, test_system_time_to_ros_time) {
   ret = rcl_timer_init(
     &timer, &clock, this->context_ptr, sec_5, nullptr, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     EXPECT_EQ(RCL_RET_OK, rcl_timer_fini(&timer)) << rcl_get_error_string().str;
   });
 
@@ -354,7 +403,8 @@ TEST_F(TestTimerFixture, test_ros_time_to_system_time) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   ret = rcl_clock_init(RCL_ROS_TIME, &clock, &allocator);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     EXPECT_EQ(RCL_RET_OK, rcl_clock_fini(&clock)) << rcl_get_error_string().str;
   });
 
@@ -365,7 +415,8 @@ TEST_F(TestTimerFixture, test_ros_time_to_system_time) {
   ret = rcl_timer_init(
     &timer, &clock, this->context_ptr, sec_5, nullptr, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     EXPECT_EQ(RCL_RET_OK, rcl_timer_fini(&timer)) << rcl_get_error_string().str;
   });
 
@@ -398,7 +449,8 @@ TEST_F(TestTimerFixture, test_ros_time_backwards_jump) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   ret = rcl_clock_init(RCL_ROS_TIME, &clock, &allocator);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     EXPECT_EQ(RCL_RET_OK, rcl_clock_fini(&clock)) << rcl_get_error_string().str;
   });
 
@@ -409,7 +461,8 @@ TEST_F(TestTimerFixture, test_ros_time_backwards_jump) {
   ret = rcl_timer_init(
     &timer, &clock, this->context_ptr, sec_5, nullptr, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     EXPECT_EQ(RCL_RET_OK, rcl_timer_fini(&timer)) << rcl_get_error_string().str;
   });
 
@@ -441,7 +494,8 @@ TEST_F(TestTimerFixture, test_ros_time_wakes_wait) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   ASSERT_EQ(RCL_RET_OK, rcl_clock_init(RCL_ROS_TIME, &clock, &allocator)) <<
     rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     EXPECT_EQ(RCL_RET_OK, rcl_clock_fini(&clock)) << rcl_get_error_string().str;
   });
   ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(&clock, sec_1)) << rcl_get_error_string().str;
@@ -451,7 +505,8 @@ TEST_F(TestTimerFixture, test_ros_time_wakes_wait) {
   ret = rcl_timer_init(
     &timer, &clock, this->context_ptr, sec_1, nullptr, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     EXPECT_EQ(RCL_RET_OK, rcl_timer_fini(&timer)) << rcl_get_error_string().str;
   });
 
@@ -496,4 +551,11 @@ TEST_F(TestTimerFixture, test_ros_time_wakes_wait) {
   auto finish = std::chrono::steady_clock::now();
   EXPECT_TRUE(timer_was_ready);
   EXPECT_LT(finish - start, std::chrono::milliseconds(100));
+}
+
+TEST_F(TestPreInitTimer, test_timer_get_allocator) {
+  const rcl_allocator_t * allocator_returned = rcl_timer_get_allocator(&timer);
+  EXPECT_TRUE(rcutils_allocator_is_valid(allocator_returned));
+
+  EXPECT_EQ(NULL, rcl_timer_get_allocator(nullptr));
 }

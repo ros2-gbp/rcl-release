@@ -23,8 +23,10 @@ extern "C"
 #include "rcl/allocator.h"
 #include "rcl/arguments.h"
 
+#include "rcl/domain_id.h"
+
 /// Constant which indicates that the default domain id should be used.
-#define RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID SIZE_MAX
+#define RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID RCL_DEFAULT_DOMAIN_ID
 
 /// Structure which encapsulates the options for creating a rcl_node_t.
 typedef struct rcl_node_options_t
@@ -57,6 +59,9 @@ typedef struct rcl_node_options_t
 
   /// Command line arguments that apply only to this node.
   rcl_arguments_t arguments;
+
+  /// Flag to enable rosout for this node
+  bool enable_rosout;
 } rcl_node_options_t;
 
 /// Return the default node options in a rcl_node_options_t.

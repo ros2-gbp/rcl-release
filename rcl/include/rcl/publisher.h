@@ -20,7 +20,7 @@ extern "C"
 {
 #endif
 
-#include "rosidl_generator_c/message_type_support_struct.h"
+#include "rosidl_runtime_c/message_type_support_struct.h"
 
 #include "rcl/macros.h"
 #include "rcl/node.h"
@@ -74,7 +74,7 @@ rcl_get_zero_initialized_publisher(void);
  * For C, a macro can be used (for example `std_msgs/String`):
  *
  * ```c
- * #include <rosidl_generator_c/message_type_support_struct.h>
+ * #include <rosidl_runtime_c/message_type_support_struct.h>
  * #include <std_msgs/msg/string.h>
  * const rosidl_message_type_support_t * string_ts =
  *   ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String);
@@ -105,7 +105,7 @@ rcl_get_zero_initialized_publisher(void);
  *
  * ```c
  * #include <rcl/rcl.h>
- * #include <rosidl_generator_c/message_type_support_struct.h>
+ * #include <rosidl_runtime_c/message_type_support_struct.h>
  * #include <std_msgs/msg/string.h>
  *
  * rcl_node_t node = rcl_get_zero_initialized_node();
@@ -172,7 +172,7 @@ rcl_publisher_init(
  * Lock-Free          | Yes
  *
  * \param[inout] publisher handle to the publisher to be finalized
- * \param[in] node handle to the node used to create the publisher
+ * \param[in] node a valid (not finalized) handle to the node used to create the publisher
  * \return `RCL_RET_OK` if publisher was finalized successfully, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
  * \return `RCL_RET_PUBLISHER_INVALID` if the publisher is invalid, or
@@ -599,7 +599,7 @@ rcl_publisher_is_valid_except_context(const rcl_publisher_t * publisher);
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rmw_ret_t
+rcl_ret_t
 rcl_publisher_get_subscription_count(
   const rcl_publisher_t * publisher,
   size_t * subscription_count);

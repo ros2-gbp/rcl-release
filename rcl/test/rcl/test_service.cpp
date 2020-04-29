@@ -46,7 +46,8 @@ public:
       rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
       ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
       ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-      OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+      OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+      {
         EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
       });
       this->context_ptr = new rcl_context_t;
@@ -87,7 +88,8 @@ wait_for_service_to_be_ready(
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 0, 0, 0, 1, 0, context, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     rcl_ret_t ret = rcl_wait_set_fini(&wait_set);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -147,7 +149,8 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
 
   // Check that the service name matches what we assigned.
   EXPECT_EQ(strcmp(rcl_service_get_service_name(&service), expected_topic), 0);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     rcl_ret_t ret = rcl_service_fini(&service, this->node_ptr);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -156,7 +159,8 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
   rcl_client_options_t client_options = rcl_client_get_default_options();
   ret = rcl_client_init(&client, this->node_ptr, ts, topic, &client_options);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     rcl_ret_t ret = rcl_client_fini(&client, this->node_ptr);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -193,22 +197,23 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
     // Initialize a response.
     test_msgs__srv__BasicTypes_Response service_response;
     test_msgs__srv__BasicTypes_Response__init(&service_response);
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
       test_msgs__srv__BasicTypes_Response__fini(&service_response);
     });
 
     // Initialize a separate instance of the request and take the pending request.
     test_msgs__srv__BasicTypes_Request service_request;
     test_msgs__srv__BasicTypes_Request__init(&service_request);
-    rmw_request_id_t header;
-    ret = rcl_take_request(&service, &header, &service_request);
+    rmw_service_info_t header;
+    ret = rcl_take_request_with_info(&service, &header, &service_request);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
     EXPECT_EQ(1, service_request.uint8_value);
     EXPECT_EQ(2UL, service_request.uint32_value);
     // Simulate a response callback by summing the request and send the response..
     service_response.uint64_value = service_request.uint8_value + service_request.uint32_value;
-    ret = rcl_send_response(&service, &header, &service_response);
+    ret = rcl_send_response(&service, &header.request_id, &service_response);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     test_msgs__srv__BasicTypes_Request__fini(&service_request);
   }
@@ -218,10 +223,22 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
   test_msgs__srv__BasicTypes_Response client_response;
   test_msgs__srv__BasicTypes_Response__init(&client_response);
 
-  rmw_request_id_t header;
-  ret = rcl_take_response(&client, &header, &client_response);
+  rmw_service_info_t header;
+  ret = rcl_take_response_with_info(&client, &header, &client_response);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   EXPECT_EQ(client_response.uint64_value, 3ULL);
-  EXPECT_EQ(header.sequence_number, 1);
+  EXPECT_EQ(header.request_id.sequence_number, 1);
+#ifdef RMW_TIMESTAMPS_SUPPORTED
+  EXPECT_NE(0u, header.source_timestamp);
+#ifdef RMW_RECEIVED_TIMESTAMP_SUPPORTED
+  EXPECT_NE(0u, header.received_timestamp);
+#else
+  EXPECT_EQ(0u, header.received_timestamp);
+#endif
+#else
+  EXPECT_EQ(0u, header.source_timestamp);
+  EXPECT_EQ(0u, header.received_timestamp);
+#endif
+
   test_msgs__srv__BasicTypes_Response__fini(&client_response);
 }
