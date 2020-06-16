@@ -1,0 +1,177 @@
+ros-rolling-rcl-yaml-param-parser (1.1.5-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Wed, 03 Jun 2020 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.1.4-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Tue, 02 Jun 2020 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.1.3-2focal) focal; urgency=high
+
+  * Add Security Vulnerability Policy pointing to REP-2006 (#661 <https://github.com/ros2/rcl/issues/661>)
+  * Contributors: Chris Lalancette
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Mon, 01 Jun 2020 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.1.2-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Thu, 28 May 2020 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.1.1-2focal) focal; urgency=high
+
+  * Increase rcl_yaml_param_parser test coverage (#656 <https://github.com/ros2/rcl/issues/656>)
+  * Contributors: Stephen Brawner
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Tue, 26 May 2020 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.1.0-2focal) focal; urgency=high
+
+  * Update Quality Declaration for 1.0 (#647 <https://github.com/ros2/rcl/issues/647>)
+  * Contributors: brawner
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 22 May 2020 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.0.0-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Tue, 12 May 2020 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.9.1-2focal) focal; urgency=high
+
+  * Included features (#644 <https://github.com/ros2/rcl/issues/644>)
+  * Quality Declarations for rcl_action, rcl_lifecycle, yaml_parser (#641 <https://github.com/ros2/rcl/issues/641>)
+  * Contributors: Alejandro Hernández Cordero, brawner
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 08 May 2020 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.9.0-2focal) focal; urgency=high
+
+  * Added rcl yaml param parser doxyfile (#634 <https://github.com/ros2/rcl/issues/634>)
+  * Fixed rcl_yaml_param_parser package description (#637 <https://github.com/ros2/rcl/issues/637>)
+  * Fix usage to not expose underlying yaml (#630 <https://github.com/ros2/rcl/issues/630>)
+  * Export targets in a addition to include directories / libraries (#621 <https://github.com/ros2/rcl/issues/621>)
+  * Remove usage of undefined CMake variable (#620 <https://github.com/ros2/rcl/issues/620>)
+  * Fix memory leaks (#564 <https://github.com/ros2/rcl/issues/564>)
+  * Code style only: wrap after open parenthesis if not in one line (#565 <https://github.com/ros2/rcl/issues/565>)
+  * Contributors: Alejandro Hernández Cordero, Dirk Thomas, y-okumura-isp
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Wed, 29 Apr 2020 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.8.3-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 08 Nov 2019 05:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.8.2-2focal) focal; urgency=high
+
+  * Specify test working directory (#529 <https://github.com/ros2/rcl/issues/529>)
+  * Remove the maximum string size. (#524 <https://github.com/ros2/rcl/issues/524>)
+  * Contributors: Chris Lalancette, Dan Rose
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Wed, 23 Oct 2019 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.8.1-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Tue, 08 Oct 2019 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.8.0-2focal) focal; urgency=high
+
+  * Enable incremental parameter yaml file parsing. (#507 <https://github.com/ros2/rcl/issues/507>)
+  * Support parameter overrides and remap rules flags on command line (#483 <https://github.com/ros2/rcl/issues/483>)
+  * Increase MAX_STRING_SIZE (#487 <https://github.com/ros2/rcl/issues/487>)
+  * include actual size in error message (#490 <https://github.com/ros2/rcl/issues/490>)
+  * Avoid C4703 error on UWP (#282 <https://github.com/ros2/rcl/issues/282>)
+  * [YAML Parser] Support parameter value parsing (#471 <https://github.com/ros2/rcl/issues/471>)
+  * [YAML Parser] Depend on rcutils only (#470 <https://github.com/ros2/rcl/issues/470>)
+  * Accept quoted int or float values as strings (#464 <https://github.com/ros2/rcl/issues/464>)
+  * Fix memory corruption when maximum number of parameters is exceeded (#456 <https://github.com/ros2/rcl/issues/456>)
+  * Contributors: Dirk Thomas, Esteve Fernandez, Jacob Perron, Michel Hidalgo, hyunseok-yang, ivanpauno
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Thu, 26 Sep 2019 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.7.4-2focal) focal; urgency=high
+
+  * Allow empty strings if they are quoted. (#450 <https://github.com/ros2/rcl/issues/450>)
+  * Contributors: Ralf Anton Beier
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Wed, 29 May 2019 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.7.3-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Mon, 20 May 2019 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.7.2-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Wed, 08 May 2019 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.7.1-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Mon, 29 Apr 2019 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.7.0-2focal) focal; urgency=high
+
+  * Corrected bool reading from yaml files. (#415 <https://github.com/ros2/rcl/issues/415>)
+  * Added launch along with launch_testing as test dependencies. (#393 <https://github.com/ros2/rcl/issues/393>)
+  * Set symbol visibility to hidden for rcl. (#391 <https://github.com/ros2/rcl/issues/391>)
+  * Contributors: Michel Hidalgo, Sachin Suresh Bhat, ivanpauno
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Sun, 14 Apr 2019 04:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.6.4-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 11 Jan 2019 05:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.6.3-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Thu, 13 Dec 2018 05:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.6.2-2focal) focal; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Thu, 13 Dec 2018 05:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.6.1-2focal) focal; urgency=high
+
+  * No changes.
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 07 Dec 2018 05:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.6.0-2focal) focal; urgency=high
+
+  * Updated to use new error handling API from rcutils (#314 <https://github.com/ros2/rcl/issues/314>)
+  * Fixed FQN=//node_name when ns is / (#299 <https://github.com/ros2/rcl/issues/299>)
+  * Fixed documentation issues (#288 <https://github.com/ros2/rcl/issues/288>)
+  * Fixed to deallocate ret_val to avoid memory leak (#278 <https://github.com/ros2/rcl/issues/278>)
+  * Contributors: Chris Ye, William Woodall, dhood
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 16 Nov 2018 05:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.5.0-2focal) focal; urgency=high
+
+  * Added functions to parse YAML parameter files. (#235 <https://github.com/ros2/rcl/issues/235>)
+  * Contributors: Shane Loretz, William Woodall, anup-pem, dhood
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Mon, 25 Jun 2018 04:00:00 -0000
+
+
