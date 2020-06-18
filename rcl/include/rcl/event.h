@@ -39,6 +39,7 @@ typedef enum rcl_subscription_event_type_t
   RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED,
   RCL_SUBSCRIPTION_LIVELINESS_CHANGED,
   RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS,
+  RCL_SUBSCRIPTION_MESSAGE_LOST,
 } rcl_subscription_event_type_t;
 
 /// rmw struct.
@@ -109,7 +110,7 @@ rcl_subscription_event_init(
 /**
  * Take an event from the event handle.
  *
- * \param[in] event_handle event object to take from
+ * \param[in] event event object to take from
  * \param[in, out] event_info event info object to write taken data into
  * \return `RCL_RET_OK` if successful, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
