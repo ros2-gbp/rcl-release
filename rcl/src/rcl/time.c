@@ -171,8 +171,11 @@ rcl_ros_clock_fini(
     return RCL_RET_ERROR;
   }
   rcl_clock_generic_fini(clock);
-  clock->allocator.deallocate(clock->data, clock->allocator.state);
-  clock->data = NULL;
+  if (!clock->data) {
+    RCL_SET_ERROR_MSG("clock data invalid");
+    return RCL_RET_ERROR;
+  }
+  clock->allocator.deallocate((rcl_ros_clock_storage_t *)clock->data, clock->allocator.state);
   return RCL_RET_OK;
 }
 
@@ -290,8 +293,10 @@ rcl_enable_ros_time_override(rcl_clock_t * clock)
     return RCL_RET_ERROR;
   }
   rcl_ros_clock_storage_t * storage = (rcl_ros_clock_storage_t *)clock->data;
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    storage, "Clock storage is not initialized, cannot enable override.", return RCL_RET_ERROR);
+  if (!storage) {
+    RCL_SET_ERROR_MSG("Clock storage is not initialized, cannot enable override.");
+    return RCL_RET_ERROR;
+  }
   if (!storage->active) {
     rcl_time_jump_t time_jump;
     time_jump.delta.nanoseconds = 0;
@@ -311,9 +316,12 @@ rcl_disable_ros_time_override(rcl_clock_t * clock)
     RCL_SET_ERROR_MSG("Clock is not of type RCL_ROS_TIME, cannot disable override.");
     return RCL_RET_ERROR;
   }
-  rcl_ros_clock_storage_t * storage = (rcl_ros_clock_storage_t *)clock->data;
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    storage, "Clock storage is not initialized, cannot enable override.", return RCL_RET_ERROR);
+  rcl_ros_clock_storage_t * storage = \
+    (rcl_ros_clock_storage_t *)clock->data;
+  if (!storage) {
+    RCL_SET_ERROR_MSG("Clock storage is not initialized, cannot disable override.");
+    return RCL_RET_ERROR;
+  }
   if (storage->active) {
     rcl_time_jump_t time_jump;
     time_jump.delta.nanoseconds = 0;
@@ -336,9 +344,12 @@ rcl_is_enabled_ros_time_override(
     RCL_SET_ERROR_MSG("Clock is not of type RCL_ROS_TIME, cannot query override state.");
     return RCL_RET_ERROR;
   }
-  rcl_ros_clock_storage_t * storage = (rcl_ros_clock_storage_t *)clock->data;
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    storage, "Clock storage is not initialized, cannot enable override.", return RCL_RET_ERROR);
+  rcl_ros_clock_storage_t * storage = \
+    (rcl_ros_clock_storage_t *)clock->data;
+  if (!storage) {
+    RCL_SET_ERROR_MSG("Clock storage is not initialized, cannot query override state.");
+    return RCL_RET_ERROR;
+  }
   *is_enabled = storage->active;
   return RCL_RET_OK;
 }
@@ -353,10 +364,8 @@ rcl_set_ros_time_override(
     RCL_SET_ERROR_MSG("Clock is not of type RCL_ROS_TIME, cannot set time override.");
     return RCL_RET_ERROR;
   }
-  rcl_ros_clock_storage_t * storage = (rcl_ros_clock_storage_t *)clock->data;
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    storage, "Clock storage is not initialized, cannot enable override.", return RCL_RET_ERROR);
   rcl_time_jump_t time_jump;
+  rcl_ros_clock_storage_t * storage = (rcl_ros_clock_storage_t *)clock->data;
   if (storage->active) {
     time_jump.clock_change = RCL_ROS_TIME_NO_CHANGE;
     rcl_time_point_value_t current_time;
@@ -444,12 +453,12 @@ rcl_clock_remove_jump_callback(
   }
 
   // Shrink size of the callback array
-  if (--(clock->num_jump_callbacks) == 0) {
+  if (clock->num_jump_callbacks == 1) {
     clock->allocator.deallocate(clock->jump_callbacks, clock->allocator.state);
     clock->jump_callbacks = NULL;
   } else {
     rcl_jump_callback_info_t * callbacks = clock->allocator.reallocate(
-      clock->jump_callbacks, sizeof(rcl_jump_callback_info_t) * clock->num_jump_callbacks,
+      clock->jump_callbacks, sizeof(rcl_jump_callback_info_t) * (clock->num_jump_callbacks - 1),
       clock->allocator.state);
     if (NULL == callbacks) {
       RCL_SET_ERROR_MSG("Failed to shrink jump callbacks");
@@ -457,5 +466,6 @@ rcl_clock_remove_jump_callback(
     }
     clock->jump_callbacks = callbacks;
   }
+  --(clock->num_jump_callbacks);
   return RCL_RET_OK;
 }
