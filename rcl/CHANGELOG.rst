@@ -2,15 +2,39 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.1.6 (2020-07-07)
+2.0.0 (2020-07-09)
 ------------------
-* Keep domain id if ROS_DOMAIN_ID is invalid (`#689 <https://github.com/ros2/rcl/issues/689>`_) (`#694 <https://github.com/ros2/rcl/issues/694>`_)
-* Use RCL_RET\_* codes only (`#686 <https://github.com/ros2/rcl/issues/686>`_) (`#693 <https://github.com/ros2/rcl/issues/693>`_)
-* Add check for invalid output in rcl_node_options_copy (`#671 <https://github.com/ros2/rcl/issues/671>`_)
+* Implement a generic way to change logging levels (`#664 <https://github.com/ros2/rcl/issues/664>`_)
+* Remove domain_id and localhost_only from node_options (`#708 <https://github.com/ros2/rcl/issues/708>`_)
+* Add coverage tests (`#703 <https://github.com/ros2/rcl/issues/703>`_)
+* Add bad arguments tests for coverage (`#698 <https://github.com/ros2/rcl/issues/698>`_)
+* Remove unused internal prototypes (`#699 <https://github.com/ros2/rcl/issues/699>`_)
+* Update quality declaration and coverage (`#674 <https://github.com/ros2/rcl/issues/674>`_)
+* Add setter and getter for domain_id in rcl_init_options_t (`#678 <https://github.com/ros2/rcl/issues/678>`_)
+* Remove unused pytest dependency from rcl. (`#695 <https://github.com/ros2/rcl/issues/695>`_)
+* Fix link to latest API docs (`#692 <https://github.com/ros2/rcl/issues/692>`_)
+* Keep domain id if ROS_DOMAIN_ID is invalid. (`#689 <https://github.com/ros2/rcl/issues/689>`_)
+* Remove unused check context.c (`#691 <https://github.com/ros2/rcl/issues/691>`_)
+* Add check rcl_node_options_copy invalid out (`#671 <https://github.com/ros2/rcl/issues/671>`_)
+* Update tracetools' QL to 2 in rcl's QD (`#690 <https://github.com/ros2/rcl/issues/690>`_)
+* Improve subscription coverage (`#681 <https://github.com/ros2/rcl/issues/681>`_)
+* Improve rcl timer test coverage (`#680 <https://github.com/ros2/rcl/issues/680>`_)
+* Improve wait sets test coverage (`#683 <https://github.com/ros2/rcl/issues/683>`_)
+* Contributors: Alejandro Hernández Cordero, Chen Lihui, Chris Lalancette, Christophe Bedard, Ivan Santiago Paunovic, Jorge Perez, Michel Hidalgo, tomoya
+
+1.2.0 (2020-06-18)
+------------------
+* Improve rcl init test coverage. (`#684 <https://github.com/ros2/rcl/issues/684>`_)
+* Improve clock test coverage. (`#685 <https://github.com/ros2/rcl/issues/685>`_)
+* Add message lost event (`#673 <https://github.com/ros2/rcl/issues/673>`_)
+* Minor fixes to rcl clock implementation. (`#688 <https://github.com/ros2/rcl/issues/688>`_)
+* Improve enclave validation test coverage. (`#682 <https://github.com/ros2/rcl/issues/682>`_)
+* Use RCL_RET\_* codes only. (`#686 <https://github.com/ros2/rcl/issues/686>`_)
+* Fixed doxygen warnings (`#677 <https://github.com/ros2/rcl/issues/677>`_)
 * Add tests for rcl package (`#668 <https://github.com/ros2/rcl/issues/668>`_)
-* Fixed doxygen warnings (`#677 <https://github.com/ros2/rcl/issues/677>`_) (`#696 <https://github.com/ros2/rcl/issues/696>`_)
-* Print RCL_LOCALHOST_ENV_VAR if error happens via rcutils_get_env (`#672 <https://github.com/ros2/rcl/issues/672>`_)
-* Contributors: Alejandro Hernández Cordero, Jorge Perez, Michel Hidalgo, tomoya
+* Remove logging_external_interface.h, provided by rcl_logging_interface package now (`#676 <https://github.com/ros2/rcl/issues/676>`_)
+* Print RCL_LOCALHOST_ENV_VAR if error happens via rcutils_get_env. (`#672 <https://github.com/ros2/rcl/issues/672>`_)
+* Contributors: Alejandro Hernández Cordero, Chris Lalancette, Ivan Santiago Paunovic, Jorge Perez, Michel Hidalgo, tomoya
 
 1.1.5 (2020-06-03)
 ------------------
