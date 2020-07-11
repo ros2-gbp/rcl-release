@@ -30,7 +30,7 @@ macro(get_default_rcl_logging_implementation var)
   elseif(NOT "$ENV{RCL_LOGGING_IMPLEMENTATION}" STREQUAL "")
     set(_logging_implementation "$ENV{RCL_LOGGING_IMPLEMENTATION}")
   else()
-    set(_logging_implementation rcl_logging_spdlog)
+    set(_logging_implementation rcl_logging_noop)
   endif()
 
   # persist implementation decision in cache

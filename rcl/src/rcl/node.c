@@ -26,14 +26,10 @@ extern "C"
 
 #include "rcl/arguments.h"
 #include "rcl/error_handling.h"
-#include "rcl/init_options.h"
-#include "rcl/localhost.h"
-#include "rcl/logging.h"
 #include "rcl/logging_rosout.h"
 #include "rcl/rcl.h"
 #include "rcl/remap.h"
-#include "rcl/security.h"
-
+#include "rcl/security_directory.h"
 #include "rcutils/filesystem.h"
 #include "rcutils/find.h"
 #include "rcutils/format_string.h"
@@ -43,15 +39,17 @@ extern "C"
 #include "rcutils/repl_str.h"
 #include "rcutils/snprintf.h"
 #include "rcutils/strdup.h"
-
 #include "rmw/error_handling.h"
-#include "rmw/security_options.h"
+#include "rmw/node_security_options.h"
 #include "rmw/rmw.h"
 #include "rmw/validate_namespace.h"
 #include "rmw/validate_node_name.h"
-#include "tracetools/tracetools.h"
 
+#include "./common.h"
 #include "./context_impl.h"
+
+#define ROS_SECURITY_STRATEGY_VAR_NAME "ROS_SECURITY_STRATEGY"
+#define ROS_SECURITY_ENABLE_VAR_NAME "ROS_SECURITY_ENABLE"
 
 typedef struct rcl_node_impl_t
 {
@@ -121,12 +119,14 @@ rcl_node_init(
   const rcl_node_options_t * options)
 {
   size_t domain_id = 0;
+  const char * ros_domain_id;
   const rmw_guard_condition_t * rmw_graph_guard_condition = NULL;
   rcl_guard_condition_options_t graph_guard_condition_options =
     rcl_guard_condition_get_default_options();
   rcl_ret_t ret;
   rcl_ret_t fail_ret = RCL_RET_ERROR;
   char * remapped_node_name = NULL;
+  char * node_secure_root = NULL;
 
   // Check options and allocator first, so allocator can be used for errors.
   RCL_CHECK_ARGUMENT_FOR_NULL(options, RCL_RET_INVALID_ARGUMENT);
@@ -253,16 +253,74 @@ rcl_node_init(
   RCL_CHECK_FOR_NULL_WITH_MSG(
     node->impl->logger_name, "creating logger name failed", goto fail);
 
-  ret = rcl_init_options_get_domain_id(rcl_context_get_init_options(context), &domain_id);
-  if (RCL_RET_OK != ret) {
+  // node rmw_node_handle
+  if (node->impl->options.domain_id == RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID) {
+    // Find the domain ID set by the environment.
+    ret = rcl_impl_getenv("ROS_DOMAIN_ID", &ros_domain_id);
+    if (ret != RCL_RET_OK) {
+      goto fail;
+    }
+    if (ros_domain_id) {
+      unsigned long number = strtoul(ros_domain_id, NULL, 0);  // NOLINT(runtime/int)
+      if (number == ULONG_MAX) {
+        RCL_SET_ERROR_MSG("failed to interpret ROS_DOMAIN_ID as integral number");
+        goto fail;
+      }
+      domain_id = (size_t)number;
+    }
+  } else {
+    domain_id = node->impl->options.domain_id;
+  }
+  // actual domain id
+  node->impl->actual_domain_id = domain_id;
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Using domain ID of '%zu'", domain_id);
+
+  const char * ros_security_enable = NULL;
+  const char * ros_enforce_security = NULL;
+
+  if (rcutils_get_env(ROS_SECURITY_ENABLE_VAR_NAME, &ros_security_enable)) {
+    RCL_SET_ERROR_MSG(
+      "Environment variable " RCUTILS_STRINGIFY(ROS_SECURITY_ENABLE_VAR_NAME)
+      " could not be read");
+    ret = RCL_RET_ERROR;
     goto fail;
   }
-  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Using domain ID of '%zu'", domain_id);
-  node->impl->actual_domain_id = domain_id;
 
+  bool use_security = (0 == strcmp(ros_security_enable, "true"));
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME, "Using security: %s", use_security ? "true" : "false");
+
+  if (rcutils_get_env(ROS_SECURITY_STRATEGY_VAR_NAME, &ros_enforce_security)) {
+    RCL_SET_ERROR_MSG(
+      "Environment variable " RCUTILS_STRINGIFY(ROS_SECURITY_STRATEGY_VAR_NAME)
+      " could not be read");
+    ret = RCL_RET_ERROR;
+    goto fail;
+  }
+
+  rmw_node_security_options_t node_security_options =
+    rmw_get_zero_initialized_node_security_options();
+  node_security_options.enforce_security = (0 == strcmp(ros_enforce_security, "Enforce")) ?
+    RMW_SECURITY_ENFORCEMENT_ENFORCE : RMW_SECURITY_ENFORCEMENT_PERMISSIVE;
+
+  if (!use_security) {
+    node_security_options.enforce_security = RMW_SECURITY_ENFORCEMENT_PERMISSIVE;
+  } else {  // if use_security
+    // File discovery magic here
+    node_secure_root = rcl_get_secure_root(name, local_namespace_, allocator);
+    if (node_secure_root) {
+      RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME, "Found security directory: %s", node_secure_root);
+      node_security_options.security_root_path = node_secure_root;
+    } else {
+      if (RMW_SECURITY_ENFORCEMENT_ENFORCE == node_security_options.enforce_security) {
+        ret = RCL_RET_ERROR;
+        goto cleanup;
+      }
+    }
+  }
   node->impl->rmw_node_handle = rmw_create_node(
     &(node->context->impl->rmw_context),
-    name, local_namespace_);
+    name, local_namespace_, domain_id, &node_security_options);
 
   RCL_CHECK_FOR_NULL_WITH_MSG(
     node->impl->rmw_node_handle, rmw_get_error_string().str, goto fail);
@@ -290,31 +348,19 @@ rcl_node_init(
   }
   // The initialization for the rosout publisher requires the node to be in initialized to a point
   // that it can create new topic publishers
-  if (rcl_logging_rosout_enabled() && node->impl->options.enable_rosout) {
-    ret = rcl_logging_rosout_init_publisher_for_node(node);
-    if (ret != RCL_RET_OK) {
-      // error message already set
-      goto fail;
-    }
+  ret = rcl_logging_rosout_init_publisher_for_node(node);
+  if (ret != RCL_RET_OK) {
+    // error message already set
+    goto fail;
   }
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Node initialized");
   ret = RCL_RET_OK;
-  TRACEPOINT(
-    rcl_node_init,
-    (const void *)node,
-    (const void *)rcl_node_get_rmw_handle(node),
-    rcl_node_get_name(node),
-    rcl_node_get_namespace(node));
   goto cleanup;
 fail:
   if (node->impl) {
-    if (rcl_logging_rosout_enabled() &&
-      node->impl->options.enable_rosout &&
-      node->impl->logger_name)
-    {
+    if (node->impl->logger_name) {
       ret = rcl_logging_rosout_fini_publisher_for_node(node);
-      RCUTILS_LOG_ERROR_EXPRESSION_NAMED(
-        (ret != RCL_RET_OK && ret != RCL_RET_NOT_INIT),
+      RCUTILS_LOG_ERROR_EXPRESSION_NAMED((ret != RCL_RET_OK && ret != RCL_RET_NOT_INIT),
         ROS_PACKAGE_NAME, "Failed to fini publisher for node: %i", ret);
       allocator->deallocate((char *)node->impl->logger_name, allocator->state);
     }
@@ -363,6 +409,7 @@ cleanup:
   if (NULL != remapped_node_name) {
     allocator->deallocate(remapped_node_name, allocator->state);
   }
+  allocator->deallocate(node_secure_root, allocator->state);
   return ret;
 }
 
@@ -377,13 +424,10 @@ rcl_node_fini(rcl_node_t * node)
   }
   rcl_allocator_t allocator = node->impl->options.allocator;
   rcl_ret_t result = RCL_RET_OK;
-  rcl_ret_t rcl_ret = RCL_RET_OK;
-  if (rcl_logging_rosout_enabled() && node->impl->options.enable_rosout) {
-    rcl_ret = rcl_logging_rosout_fini_publisher_for_node(node);
-    if (rcl_ret != RCL_RET_OK && rcl_ret != RCL_RET_NOT_INIT) {
-      RCL_SET_ERROR_MSG("Unable to fini publisher for node.");
-      result = RCL_RET_ERROR;
-    }
+  rcl_ret_t rcl_ret = rcl_logging_rosout_fini_publisher_for_node(node);
+  if (rcl_ret != RCL_RET_OK && rcl_ret != RCL_RET_NOT_INIT) {
+    RCL_SET_ERROR_MSG("Unable to fini publisher for node.");
+    result = RCL_RET_ERROR;
   }
   rmw_ret_t rmw_ret = rmw_destroy_node(node->impl->rmw_node_handle);
   if (rmw_ret != RMW_RET_OK) {
@@ -480,6 +524,19 @@ rcl_node_get_domain_id(const rcl_node_t * node, size_t * domain_id)
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(domain_id, RCL_RET_INVALID_ARGUMENT);
   *domain_id = node->impl->actual_domain_id;
+  return RCL_RET_OK;
+}
+
+rcl_ret_t
+rcl_node_assert_liveliness(const rcl_node_t * node)
+{
+  if (!rcl_node_is_valid(node)) {
+    return RCL_RET_NODE_INVALID;  // error already set
+  }
+  if (rmw_node_assert_liveliness(node->impl->rmw_node_handle) != RMW_RET_OK) {
+    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
+    return RCL_RET_ERROR;
+  }
   return RCL_RET_OK;
 }
 

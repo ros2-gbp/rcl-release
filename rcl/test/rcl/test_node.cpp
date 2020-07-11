@@ -90,11 +90,9 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
   });
-  EXPECT_EQ(RCL_RET_OK, rcl_init_options_set_domain_id(&init_options, 42));
   rcl_context_t invalid_context = rcl_get_zero_initialized_context();
   ret = rcl_init(0, nullptr, &init_options, &invalid_context);
   ASSERT_EQ(RCL_RET_OK, ret);  // Shutdown later after invalid node.
@@ -104,22 +102,33 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   const char * namespace_ = "/ns";
   const char * fq_name = "/ns/test_rcl_node_accessors_node";
   rcl_node_options_t default_options = rcl_node_get_default_options();
+  default_options.domain_id = 42;  // Set the domain id to something explicit.
   ret = rcl_node_init(&invalid_node, name, namespace_, &invalid_context, &default_options);
-  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  if (is_windows && is_opensplice) {
+    // On Windows with OpenSplice, setting the domain id is not expected to work.
+    ASSERT_NE(RCL_RET_OK, ret);
+    // So retry with the default domain id setting (uses the environment as is).
+    default_options.domain_id = rcl_node_get_default_options().domain_id;
+    ret = rcl_node_init(&invalid_node, name, namespace_, &invalid_context, &default_options);
+    ASSERT_EQ(RCL_RET_OK, ret);
+  } else {
+    // This is the normal check (not windows and windows if not opensplice)
+    ASSERT_EQ(RCL_RET_OK, ret);
+  }
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     osrf_testing_tools_cpp::memory_tools::disable_monitoring_in_all_threads();
     rcl_ret_t ret = rcl_node_fini(&invalid_node);
-    EXPECT_EQ(RCL_RET_OK, rcl_context_fini(&invalid_context)) << rcl_get_error_string().str;
     EXPECT_EQ(RCL_RET_OK, ret);
   });
   ret = rcl_shutdown(&invalid_context);  // Shutdown to invalidate the node.
   ASSERT_EQ(RCL_RET_OK, ret);
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    EXPECT_EQ(RCL_RET_OK, rcl_context_fini(&invalid_context)) << rcl_get_error_string().str;
+  });
   rcl_context_t context = rcl_get_zero_initialized_context();
   ret = rcl_init(0, nullptr, &init_options, &context);
   ASSERT_EQ(RCL_RET_OK, ret);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     osrf_testing_tools_cpp::memory_tools::disable_monitoring_in_all_threads();
     ASSERT_EQ(RCL_RET_OK, rcl_shutdown(&context));
     ASSERT_EQ(RCL_RET_OK, rcl_context_fini(&context));
@@ -130,8 +139,7 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   rcl_node_t node = rcl_get_zero_initialized_node();
   ret = rcl_node_init(&node, name, namespace_, &context, &default_options);
   ASSERT_EQ(RCL_RET_OK, ret);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     osrf_testing_tools_cpp::memory_tools::disable_monitoring_in_all_threads();
     rcl_ret_t ret = rcl_node_fini(&node);
     EXPECT_EQ(RCL_RET_OK, ret);
@@ -167,8 +175,7 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   actual_node_name = rcl_node_get_name(&invalid_node);
   EXPECT_STREQ(name, actual_node_name);
   rcl_reset_error();
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
+  EXPECT_NO_MEMORY_OPERATIONS({
     actual_node_name = rcl_node_get_name(&node);
   });
   EXPECT_TRUE(actual_node_name ? true : false);
@@ -186,8 +193,7 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   actual_node_namespace = rcl_node_get_namespace(&invalid_node);
   EXPECT_STREQ(namespace_, actual_node_namespace);
   rcl_reset_error();
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
+  EXPECT_NO_MEMORY_OPERATIONS({
     actual_node_namespace = rcl_node_get_namespace(&node);
   });
   EXPECT_STREQ(namespace_, actual_node_namespace);
@@ -202,8 +208,7 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   actual_fq_node_name = rcl_node_get_fully_qualified_name(&invalid_node);
   EXPECT_STREQ(fq_name, actual_fq_node_name);
   rcl_reset_error();
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
+  EXPECT_NO_MEMORY_OPERATIONS({
     actual_fq_node_name = rcl_node_get_fully_qualified_name(&node);
   });
   EXPECT_STREQ(fq_name, actual_fq_node_name);
@@ -221,8 +226,7 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
     EXPECT_EQ("ns." + std::string(name), std::string(actual_node_logger_name));
   }
   rcl_reset_error();
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
+  EXPECT_NO_MEMORY_OPERATIONS({
     actual_node_logger_name = rcl_node_get_logger_name(&node);
   });
   EXPECT_NE(actual_node_logger_name, nullptr);
@@ -241,15 +245,16 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   EXPECT_NE(nullptr, actual_options);
   if (actual_options) {
     EXPECT_EQ(default_options.allocator.allocate, actual_options->allocator.allocate);
+    EXPECT_EQ(default_options.domain_id, actual_options->domain_id);
   }
   rcl_reset_error();
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
+  EXPECT_NO_MEMORY_OPERATIONS({
     actual_options = rcl_node_get_options(&node);
   });
   EXPECT_NE(nullptr, actual_options);
   if (actual_options) {
     EXPECT_EQ(default_options.allocator.allocate, actual_options->allocator.allocate);
+    EXPECT_EQ(default_options.domain_id, actual_options->domain_id);
   }
   // Test rcl_node_get_domain_id().
   size_t actual_domain_id;
@@ -264,12 +269,14 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   ret = rcl_node_get_domain_id(&invalid_node, &actual_domain_id);
   EXPECT_EQ(RCL_RET_OK, ret);
   rcl_reset_error();
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
+  EXPECT_NO_MEMORY_OPERATIONS({
     ret = rcl_node_get_domain_id(&node, &actual_domain_id);
   });
   EXPECT_EQ(RCL_RET_OK, ret);
-  EXPECT_EQ(42u, actual_domain_id);
+  if (RCL_RET_OK == ret && (!is_windows || !is_opensplice)) {
+    // Can only expect the domain id to be 42 if not windows or not opensplice.
+    EXPECT_EQ(42u, actual_domain_id);
+  }
   // Test rcl_node_get_rmw_handle().
   rmw_node_t * node_handle;
   node_handle = rcl_node_get_rmw_handle(nullptr);
@@ -281,8 +288,7 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   node_handle = rcl_node_get_rmw_handle(&invalid_node);
   EXPECT_NE(nullptr, node_handle);
   rcl_reset_error();
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
+  EXPECT_NO_MEMORY_OPERATIONS({
     node_handle = rcl_node_get_rmw_handle(&node);
   });
   EXPECT_NE(nullptr, node_handle);
@@ -297,8 +303,7 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   instance_id = rcl_node_get_rcl_instance_id(&invalid_node);
   EXPECT_EQ(0u, instance_id);
   rcl_reset_error();
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
+  EXPECT_NO_MEMORY_OPERATIONS({
     instance_id = rcl_node_get_rcl_instance_id(&node);
   });
   EXPECT_NE(0u, instance_id);
@@ -313,8 +318,7 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   graph_guard_condition = rcl_node_get_graph_guard_condition(&invalid_node);
   EXPECT_NE(nullptr, graph_guard_condition);
   rcl_reset_error();
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
+  EXPECT_NO_MEMORY_OPERATIONS({
     graph_guard_condition = rcl_node_get_graph_guard_condition(&node);
   });
   EXPECT_NE(nullptr, graph_guard_condition);
@@ -338,14 +342,12 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_life_cycle)
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
   });
   ret = rcl_init(0, nullptr, &init_options, &context);
   ASSERT_EQ(RCL_RET_OK, ret);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     ASSERT_EQ(RCL_RET_OK, rcl_shutdown(&context));
     ASSERT_EQ(RCL_RET_OK, rcl_context_fini(&context));
   });
@@ -412,6 +414,19 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_life_cycle)
   EXPECT_EQ(RCL_RET_OK, ret);
   ret = rcl_node_fini(&node);
   EXPECT_EQ(RCL_RET_OK, ret);
+  // Try with a specific domain id.
+  rcl_node_options_t options_with_custom_domain_id = rcl_node_get_default_options();
+  options_with_custom_domain_id.domain_id = 42;
+  ret = rcl_node_init(&node, name, namespace_, &context, &options_with_custom_domain_id);
+  if (is_windows && is_opensplice) {
+    // A custom domain id is not expected to work on Windows with Opensplice.
+    EXPECT_NE(RCL_RET_OK, ret);
+  } else {
+    // This is the normal check.
+    EXPECT_EQ(RCL_RET_OK, ret);
+    ret = rcl_node_fini(&node);
+    EXPECT_EQ(RCL_RET_OK, ret);
+  }
 }
 
 /* Tests the node name restrictions enforcement.
@@ -423,15 +438,13 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_name_restri
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
   });
   rcl_context_t context = rcl_get_zero_initialized_context();
   ret = rcl_init(0, nullptr, &init_options, &context);
   ASSERT_EQ(RCL_RET_OK, ret);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     ASSERT_EQ(RCL_RET_OK, rcl_shutdown(&context));
     ASSERT_EQ(RCL_RET_OK, rcl_context_fini(&context));
   });
@@ -491,15 +504,13 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_namespace_r
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
   });
   rcl_context_t context = rcl_get_zero_initialized_context();
   ret = rcl_init(0, nullptr, &init_options, &context);
   ASSERT_EQ(RCL_RET_OK, ret);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     ASSERT_EQ(RCL_RET_OK, rcl_shutdown(&context));
     ASSERT_EQ(RCL_RET_OK, rcl_context_fini(&context));
   });
@@ -597,15 +608,13 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_names) {
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
   });
   rcl_context_t context = rcl_get_zero_initialized_context();
   ret = rcl_init(0, nullptr, &init_options, &context);
   ASSERT_EQ(RCL_RET_OK, ret);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     ASSERT_EQ(RCL_RET_OK, rcl_shutdown(&context));
     ASSERT_EQ(RCL_RET_OK, rcl_context_fini(&context));
   });
@@ -716,55 +725,4 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_names) {
     rcl_ret_t ret = rcl_node_fini(&node);
     EXPECT_EQ(RCL_RET_OK, ret);
   }
-}
-
-/* Tests the node_options functionality
- */
-TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_options) {
-  rcl_node_options_t default_options = rcl_node_get_default_options();
-  rcl_node_options_t not_ini_options = rcl_node_get_default_options();
-
-  EXPECT_TRUE(default_options.use_global_arguments);
-  EXPECT_TRUE(default_options.enable_rosout);
-  EXPECT_TRUE(rcutils_allocator_is_valid(&(default_options.allocator)));
-
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_node_options_copy(nullptr, &default_options));
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_node_options_copy(&default_options, nullptr));
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_node_options_copy(&default_options, &default_options));
-
-  const char * argv[] = {
-    "process_name", "--ros-args", "/foo/bar:=", "-r", "bar:=/fiz/buz", "}bar:=fiz", "--", "arg"};
-  int argc = sizeof(argv) / sizeof(const char *);
-  EXPECT_EQ(
-    RCL_RET_OK,
-    rcl_parse_arguments(argc, argv, default_options.allocator, &(default_options.arguments)));
-  default_options.use_global_arguments = false;
-  default_options.enable_rosout = false;
-  EXPECT_EQ(RCL_RET_OK, rcl_node_options_copy(&default_options, &not_ini_options));
-  EXPECT_FALSE(not_ini_options.use_global_arguments);
-  EXPECT_FALSE(not_ini_options.enable_rosout);
-  EXPECT_EQ(
-    rcl_arguments_get_count_unparsed(&(default_options.arguments)),
-    rcl_arguments_get_count_unparsed(&(not_ini_options.arguments)));
-  EXPECT_EQ(
-    rcl_arguments_get_count_unparsed_ros(&(default_options.arguments)),
-    rcl_arguments_get_count_unparsed_ros(&(not_ini_options.arguments)));
-
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_node_options_fini(nullptr));
-  EXPECT_EQ(RCL_RET_OK, rcl_node_options_fini(&default_options));
-  EXPECT_EQ(RCL_RET_OK, rcl_node_options_fini(&not_ini_options));
-}
-
-/* Tests special case node_options
- */
-TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_options_fail) {
-  rcl_node_options_t prev_ini_options = rcl_node_get_default_options();
-  const char * argv[] = {"--ros-args"};
-  int argc = sizeof(argv) / sizeof(const char *);
-  EXPECT_EQ(
-    RCL_RET_OK,
-    rcl_parse_arguments(argc, argv, rcl_get_default_allocator(), &prev_ini_options.arguments));
-
-  rcl_node_options_t default_options = rcl_node_get_default_options();
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_node_options_copy(&default_options, &prev_ini_options));
 }

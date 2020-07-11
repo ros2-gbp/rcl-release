@@ -18,7 +18,6 @@ extern "C"
 #endif
 
 #include "rcl_action/action_client.h"
-#include "./action_client_impl.h"
 
 #include "rcl_action/default_qos.h"
 #include "rcl_action/names.h"
@@ -38,6 +37,23 @@ extern "C"
 #include "rmw/qos_profiles.h"
 #include "rmw/types.h"
 
+
+typedef struct rcl_action_client_impl_t
+{
+  rcl_client_t goal_client;
+  rcl_client_t cancel_client;
+  rcl_client_t result_client;
+  rcl_subscription_t feedback_subscription;
+  rcl_subscription_t status_subscription;
+  rcl_action_client_options_t options;
+  char * action_name;
+  // Wait set records
+  size_t wait_set_goal_client_index;
+  size_t wait_set_cancel_client_index;
+  size_t wait_set_result_client_index;
+  size_t wait_set_feedback_subscription_index;
+  size_t wait_set_status_subscription_index;
+} rcl_action_client_impl_t;
 
 rcl_action_client_t
 rcl_action_get_zero_initialized_client(void)
@@ -94,10 +110,11 @@ rcl_action_get_zero_initialized_client(void)
     } \
     goto fail; \
   } \
-  rcl_subscription_options_t Type ## _topic_subscription_options = \
-    rcl_subscription_get_default_options(); \
-  Type ## _topic_subscription_options.qos = options->Type ## _topic_qos; \
-  Type ## _topic_subscription_options.allocator = allocator; \
+  rcl_subscription_options_t Type ## _topic_subscription_options = { \
+    .qos = options->Type ## _topic_qos, \
+    .ignore_local_publications = false, \
+    .allocator = allocator \
+  }; \
   action_client->impl->Type ## _subscription = rcl_get_zero_initialized_subscription(); \
   ret = rcl_subscription_init( \
     &action_client->impl->Type ## _subscription, \
@@ -263,13 +280,6 @@ rcl_action_server_is_available(
 
   ret = rcl_subscription_get_publisher_count(
     &(client->impl->feedback_subscription), &number_of_publishers);
-  if (RCL_RET_OK != ret) {
-    return ret;  // error is already set
-  }
-  *is_available = *is_available && (number_of_publishers != 0);
-
-  ret = rcl_subscription_get_publisher_count(
-    &(client->impl->status_subscription), &number_of_publishers);
   if (RCL_RET_OK != ret) {
     return ret;  // error is already set
   }

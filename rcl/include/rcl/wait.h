@@ -109,7 +109,6 @@ rcl_get_zero_initialized_wait_set(void);
  * \param[in] number_of_timers non-zero size of the timers set
  * \param[in] number_of_clients non-zero size of the clients set
  * \param[in] number_of_services non-zero size of the services set
- * \param[in] number_of_events non-zero size of the events set
  * \param[in] context the context that the wait set should be associated with
  * \param[in] allocator the allocator to use when allocating space in the sets
  * \return `RCL_RET_OK` if the wait set is initialized successfully, or
@@ -117,7 +116,6 @@ rcl_get_zero_initialized_wait_set(void);
  * \return `RCL_RET_NOT_INIT` if the given context is invalid, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
  * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_WAIT_SET_INVALID` if the wait set is not destroyed properly, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
@@ -157,7 +155,6 @@ rcl_wait_set_init(
  * \param[inout] wait_set the wait set struct to be finalized.
  * \return `RCL_RET_OK` if the finalization was successful, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_WAIT_SET_INVALID` if the wait set is not destroyed properly, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
@@ -182,7 +179,6 @@ rcl_wait_set_fini(rcl_wait_set_t * wait_set);
  * \param[out] allocator the rcl_allocator_t struct to which the result is copied
  * \return `RCL_RET_OK` if the allocator was successfully retrieved, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_WAIT_SET_INVALID` if the wait set is invalid, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
@@ -284,7 +280,6 @@ rcl_wait_set_clear(rcl_wait_set_t * wait_set);
  * \param[in] timers_size a size for the new timers set
  * \param[in] clients_size a size for the new clients set
  * \param[in] services_size a size for the new services set
- * \param[in] events_size a size for the new events set
  * \return `RCL_RET_OK` if resized successfully, or
  * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
  * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
@@ -463,29 +458,6 @@ RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t
 rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout);
-
-/// Return `true` if the wait set is valid, else `false`.
-/**
- * A wait set is invalid if:
- *   - the implementation is `NULL` (rcl_wait_set_init not called or failed)
- *   - the wait set has been finalized with rcl_wait_set_fini
- *
- * Also return `false` if the wait set pointer is `NULL`.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] wait_set the rcl_wait_set_t to be validated
- * \return `true` if the wait_set is valid, otherwise `false`.
- */
-RCL_PUBLIC
-bool
-rcl_wait_set_is_valid(const rcl_wait_set_t * wait_set);
 
 #ifdef __cplusplus
 }

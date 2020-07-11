@@ -3,8 +3,6 @@ find_package(launch_testing_ament_cmake REQUIRED)
 
 find_package(test_msgs REQUIRED)
 
-find_package(rcpputils REQUIRED)
-find_package(rcutils REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 
 find_package(osrf_testing_tools_cpp REQUIRED)
@@ -51,21 +49,15 @@ function(test_target_function)
     AMENT_DEPENDENCIES ${rmw_implementation}
   )
 
-  # TODO(hidmic): re-enable timer tests against RTI Connext once
-  #               https://github.com/ros2/rcl/issues/687 is resolved
-  set(AMENT_GTEST_ARGS "")
-  if(rmw_implementation STREQUAL "rmw_connext_cpp")
-    message(STATUS "Skipping test_timer${target_suffix} test.")
-    set(AMENT_GTEST_ARGS "SKIP_TEST")
-  endif()
-
-  rcl_add_custom_gtest(test_timer${target_suffix}
-    SRCS rcl/test_timer.cpp
-    ENV ${rmw_implementation_env_var}
+  rcl_add_custom_gtest(test_common${target_suffix}
+    SRCS rcl/test_common.cpp
+    ENV
+      ${rmw_implementation_env_var}
+      EMPTY_TEST=
+      NORMAL_TEST=foo
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
+    LIBRARIES ${PROJECT_NAME}
     AMENT_DEPENDENCIES ${rmw_implementation}
-    ${AMENT_GTEST_ARGS}
   )
 
   rcl_add_custom_gtest(test_context${target_suffix}
@@ -116,22 +108,6 @@ function(test_target_function)
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
     AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
-    TIMEOUT 120
-    ${AMENT_GTEST_ARGS}
-  )
-
-  set(AMENT_GTEST_ARGS "")
-  # TODO(mm318): why rmw_connext tests run much slower than rmw_fastrtps and rmw_opensplice tests
-  if(rmw_implementation STREQUAL "rmw_connext_cpp")
-    message(STATUS "Increasing test_info_by_topic${target_suffix} test timeout.")
-    set(AMENT_GTEST_ARGS TIMEOUT 120)
-  endif()
-  rcl_add_custom_gtest(test_info_by_topic${target_suffix}
-    SRCS rcl/test_info_by_topic.cpp
-    ENV ${rmw_implementation_env_var}
-    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
     ${AMENT_GTEST_ARGS}
   )
 
@@ -171,16 +147,13 @@ function(test_target_function)
     SRCS rcl/test_arguments.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
-    AMENT_DEPENDENCIES "osrf_testing_tools_cpp" "rcpputils"
+    LIBRARIES ${PROJECT_NAME}
   )
 
   rcl_add_custom_gtest(test_remap${target_suffix}
     SRCS rcl/test_remap.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
     LIBRARIES ${PROJECT_NAME}
     AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
   )
@@ -206,13 +179,12 @@ function(test_target_function)
     SRCS rcl/test_publisher.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
     LIBRARIES ${PROJECT_NAME}
     AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   rcl_add_custom_gtest(test_service${target_suffix}
-    SRCS rcl/test_service.cpp rcl/wait_for_entity_helpers.cpp
+    SRCS rcl/test_service.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
@@ -220,33 +192,12 @@ function(test_target_function)
   )
 
   rcl_add_custom_gtest(test_subscription${target_suffix}
-    SRCS rcl/test_subscription.cpp rcl/wait_for_entity_helpers.cpp
+    SRCS rcl/test_subscription.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
     AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
-  if(rmw_implementation STREQUAL "rmw_fastrtps_cpp" OR
-    rmw_implementation STREQUAL "rmw_fastrtps_dynamic_cpp")
-    message(STATUS "Enabling message timestamp test for ${rmw_implementation}")
-    target_compile_definitions(test_subscription${target_suffix}
-      PUBLIC "RMW_TIMESTAMPS_SUPPORTED=1" "RMW_RECEIVED_TIMESTAMP_SUPPORTED=1")
-    target_compile_definitions(test_service${target_suffix}
-      PUBLIC "RMW_TIMESTAMPS_SUPPORTED=1" "RMW_RECEIVED_TIMESTAMP_SUPPORTED=1")
-  else()
-    if(rmw_implementation STREQUAL "rmw_cyclonedds_cpp")
-      message(STATUS "Enabling only source timestamp test for ${rmw_implementation}")
-      target_compile_definitions(test_subscription${target_suffix}
-        PUBLIC "RMW_TIMESTAMPS_SUPPORTED=1")
-      target_compile_definitions(test_service${target_suffix}
-        PUBLIC "RMW_TIMESTAMPS_SUPPORTED=1")
-      # TODO(tfoote) Disable this tests on CI as it's being flakey
-      # This should be removed when https://github.com/ros2/rmw_cyclonedds/issues/185 is resolved.
-      ament_add_test_label(test_service${target_suffix} xfail)
-    else()
-      message(STATUS "Disabling message timestamp test for ${rmw_implementation}")
-    endif()
-  endif()
 
   rcl_add_custom_gtest(test_events${target_suffix}
     SRCS rcl/test_events.cpp
@@ -264,14 +215,6 @@ function(test_target_function)
     AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
   )
 
-  rcl_add_custom_gtest(test_logging_rosout${target_suffix}
-    SRCS rcl/test_logging_rosout.cpp
-    ENV ${rmw_implementation_env_var}
-    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME}
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "rcl_interfaces"
-  )
-
   rcl_add_custom_gtest(test_namespace${target_suffix}
     SRCS test_namespace.cpp
     ENV ${rmw_implementation_env_var}
@@ -283,13 +226,13 @@ function(test_target_function)
   # Launch tests
 
   rcl_add_custom_executable(service_fixture${target_suffix}
-    SRCS rcl/service_fixture.cpp rcl/wait_for_entity_helpers.cpp
+    SRCS rcl/service_fixture.cpp
     LIBRARIES ${PROJECT_NAME}
     AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   rcl_add_custom_executable(client_fixture${target_suffix}
-    SRCS rcl/client_fixture.cpp rcl/wait_for_entity_helpers.cpp
+    SRCS rcl/client_fixture.cpp
     LIBRARIES ${PROJECT_NAME}
     AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
@@ -340,24 +283,6 @@ target_link_libraries(test_rmw_impl_id_check_exe ${PROJECT_NAME})
 
 call_for_each_rmw_implementation(test_target)
 
-rcl_add_custom_gtest(test_validate_enclave_name
-  SRCS rcl/test_validate_enclave_name.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME}
-)
-
-rcl_add_custom_gtest(test_domain_id
-  SRCS rcl/test_domain_id.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME}
-)
-
-rcl_add_custom_gtest(test_localhost
-  SRCS rcl/test_localhost.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME}
-)
-
 rcl_add_custom_gtest(test_validate_topic_name
   SRCS rcl/test_validate_topic_name.cpp
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
@@ -370,22 +295,15 @@ rcl_add_custom_gtest(test_expand_topic_name
   LIBRARIES ${PROJECT_NAME}
 )
 
-rcl_add_custom_gtest(test_security
-  SRCS rcl/test_security.cpp
+rcl_add_custom_gtest(test_timer${target_suffix}
+  SRCS rcl/test_timer.cpp
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
   LIBRARIES ${PROJECT_NAME}
   AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
 )
 
-rcl_add_custom_gtest(test_common
-  SRCS rcl/test_common.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/common.c
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-  LIBRARIES ${PROJECT_NAME}
-)
-
-rcl_add_custom_gtest(test_log_level
-  SRCS rcl/test_log_level.cpp
+rcl_add_custom_gtest(test_security_directory
+  SRCS rcl/test_security_directory.cpp
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
   LIBRARIES ${PROJECT_NAME}
   AMENT_DEPENDENCIES "osrf_testing_tools_cpp"

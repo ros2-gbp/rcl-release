@@ -45,7 +45,7 @@ extern "C"
  * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
-RCL_PUBLIC
+RCL_LOCAL
 RCL_WARN_UNUSED
 rcl_ret_t
 rcl_logging_rosout_init(
@@ -67,7 +67,7 @@ rcl_logging_rosout_init(
  * \return `RCL_RET_OK` if the rcl_logging_rosout feature was successfully unitialized, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
-RCL_PUBLIC
+RCL_LOCAL
 RCL_WARN_UNUSED
 rcl_ret_t
 rcl_logging_rosout_fini();
@@ -93,8 +93,9 @@ rcl_logging_rosout_fini();
  * Lock-Free          | Yes
  *
  * \param[in] node a valid rcl_node_t that the publisher will be created on
- * \return `RCL_RET_OK` if the logging publisher was created successfully, or
- * \return `RCL_RET_NODE_INVALID` if the argument is invalid, or
+ * \return `RCL_RET_OK` if the publisher was created successfully, or
+ * \return `RCL_RET_ALREADY_INIT` if the publisher has already exists, or
+ * \return `RCL_RET_NODE_INVALID` if any arguments are invalid, or
  * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
@@ -119,7 +120,7 @@ rcl_logging_rosout_init_publisher_for_node(
  * Lock-Free          | Yes
  *
  * \param[in] node a valid rcl_node_t that the publisher will be created on
- * \return `RCL_RET_OK` if the logging publisher was finalized successfully, or
+ * \return `RCL_RET_OK` if the publisher was created successfully, or
  * \return `RCL_RET_NODE_INVALID` if any arguments are invalid, or
  * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
  * \return `RCL_RET_ERROR` if an unspecified error occurs.

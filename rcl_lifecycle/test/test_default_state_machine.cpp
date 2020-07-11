@@ -45,8 +45,7 @@ public:
       rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
       ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
       ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-      OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-      {
+      OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
         EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
       });
       this->context_ptr = new rcl_context_t;
@@ -113,13 +112,7 @@ TEST_F(TestDefaultStateMachine, zero_init) {
 TEST_F(TestDefaultStateMachine, default_init) {
   rcl_lifecycle_state_machine_t state_machine = rcl_lifecycle_get_zero_initialized_state_machine();
 
-  // Because this init method is so complex, the succession of failures caused by a null
-  // allocator will result in several error messages overwriting themselves.
-  auto ret = rcl_lifecycle_init_default_state_machine(&state_machine, nullptr);
-  EXPECT_EQ(RCL_RET_ERROR, ret);
-  rcutils_reset_error();
-
-  ret = rcl_lifecycle_init_default_state_machine(&state_machine, this->allocator);
+  auto ret = rcl_lifecycle_init_default_state_machine(&state_machine, this->allocator);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
   ret = rcl_lifecycle_state_machine_fini(&state_machine, this->node_ptr, this->allocator);
@@ -193,8 +186,7 @@ TEST_F(TestDefaultStateMachine, default_sequence) {
     lifecycle_msgs__msg__State__TRANSITION_STATE_SHUTTINGDOWN,
     lifecycle_msgs__msg__State__PRIMARY_STATE_FINALIZED);
 
-  EXPECT_EQ(
-    RCL_RET_OK,
+  EXPECT_EQ(RCL_RET_OK,
     rcl_lifecycle_state_machine_fini(&state_machine, this->node_ptr, this->allocator));
 }
 
@@ -261,8 +253,7 @@ TEST_F(TestDefaultStateMachine, wrong_default_sequence) {
 
       EXPECT_EQ(RCL_RET_ERROR, rcl_lifecycle_trigger_transition_by_id(&state_machine, *it, false));
       rcl_reset_error();
-      EXPECT_EQ(
-        state_machine.current_state->id,
+      EXPECT_EQ(state_machine.current_state->id,
         lifecycle_msgs__msg__State__TRANSITION_STATE_CONFIGURING);
     }
   }
@@ -282,8 +273,7 @@ TEST_F(TestDefaultStateMachine, wrong_default_sequence) {
       RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME, "applying key %u", *it);
       EXPECT_EQ(RCL_RET_ERROR, rcl_lifecycle_trigger_transition_by_id(&state_machine, *it, false));
       rcl_reset_error();
-      EXPECT_EQ(
-        state_machine.current_state->id,
+      EXPECT_EQ(state_machine.current_state->id,
         lifecycle_msgs__msg__State__PRIMARY_STATE_INACTIVE);
     }
   }
@@ -302,8 +292,7 @@ TEST_F(TestDefaultStateMachine, wrong_default_sequence) {
 
       EXPECT_EQ(RCL_RET_ERROR, rcl_lifecycle_trigger_transition_by_id(&state_machine, *it, false));
       rcl_reset_error();
-      EXPECT_EQ(
-        state_machine.current_state->id,
+      EXPECT_EQ(state_machine.current_state->id,
         lifecycle_msgs__msg__State__TRANSITION_STATE_ACTIVATING);
     }
   }
@@ -322,8 +311,7 @@ TEST_F(TestDefaultStateMachine, wrong_default_sequence) {
 
       EXPECT_EQ(RCL_RET_ERROR, rcl_lifecycle_trigger_transition_by_id(&state_machine, *it, false));
       rcl_reset_error();
-      EXPECT_EQ(
-        state_machine.current_state->id,
+      EXPECT_EQ(state_machine.current_state->id,
         lifecycle_msgs__msg__State__PRIMARY_STATE_ACTIVE);
     }
   }
@@ -342,8 +330,7 @@ TEST_F(TestDefaultStateMachine, wrong_default_sequence) {
 
       EXPECT_EQ(RCL_RET_ERROR, rcl_lifecycle_trigger_transition_by_id(&state_machine, *it, false));
       rcl_reset_error();
-      EXPECT_EQ(
-        state_machine.current_state->id,
+      EXPECT_EQ(state_machine.current_state->id,
         lifecycle_msgs__msg__State__TRANSITION_STATE_DEACTIVATING);
     }
   }
@@ -368,8 +355,7 @@ TEST_F(TestDefaultStateMachine, wrong_default_sequence) {
 
       EXPECT_EQ(RCL_RET_ERROR, rcl_lifecycle_trigger_transition_by_id(&state_machine, *it, false));
       rcl_reset_error();
-      EXPECT_EQ(
-        state_machine.current_state->id,
+      EXPECT_EQ(state_machine.current_state->id,
         lifecycle_msgs__msg__State__TRANSITION_STATE_CLEANINGUP);
     }
   }
@@ -394,8 +380,7 @@ TEST_F(TestDefaultStateMachine, wrong_default_sequence) {
 
       EXPECT_EQ(RCL_RET_ERROR, rcl_lifecycle_trigger_transition_by_id(&state_machine, *it, false));
       rcl_reset_error();
-      EXPECT_EQ(
-        state_machine.current_state->id,
+      EXPECT_EQ(state_machine.current_state->id,
         lifecycle_msgs__msg__State__TRANSITION_STATE_SHUTTINGDOWN);
     }
   }
@@ -410,14 +395,12 @@ TEST_F(TestDefaultStateMachine, wrong_default_sequence) {
     for (auto it = transition_ids.begin(); it != transition_ids.end(); ++it) {
       EXPECT_EQ(RCL_RET_ERROR, rcl_lifecycle_trigger_transition_by_id(&state_machine, *it, false));
       rcl_reset_error();
-      EXPECT_EQ(
-        state_machine.current_state->id,
+      EXPECT_EQ(state_machine.current_state->id,
         lifecycle_msgs__msg__State__PRIMARY_STATE_FINALIZED);
     }
   }
 
-  EXPECT_EQ(
-    RCL_RET_OK,
+  EXPECT_EQ(RCL_RET_OK,
     rcl_lifecycle_state_machine_fini(&state_machine, this->node_ptr, this->allocator));
 }
 
@@ -490,8 +473,7 @@ TEST_F(TestDefaultStateMachine, default_in_a_loop) {
     lifecycle_msgs__msg__State__TRANSITION_STATE_SHUTTINGDOWN,
     lifecycle_msgs__msg__State__PRIMARY_STATE_FINALIZED);
 
-  EXPECT_EQ(
-    RCL_RET_OK,
+  EXPECT_EQ(RCL_RET_OK,
     rcl_lifecycle_state_machine_fini(&state_machine, this->node_ptr, this->allocator));
 }
 
@@ -607,8 +589,7 @@ TEST_F(TestDefaultStateMachine, default_sequence_failure) {
     lifecycle_msgs__msg__State__TRANSITION_STATE_SHUTTINGDOWN,
     lifecycle_msgs__msg__State__PRIMARY_STATE_FINALIZED);
 
-  EXPECT_EQ(
-    RCL_RET_OK,
+  EXPECT_EQ(RCL_RET_OK,
     rcl_lifecycle_state_machine_fini(&state_machine, this->node_ptr, this->allocator));
 }
 
@@ -755,8 +736,7 @@ TEST_F(TestDefaultStateMachine, default_sequence_error_resolved) {
     lifecycle_msgs__msg__State__TRANSITION_STATE_ERRORPROCESSING,
     lifecycle_msgs__msg__State__PRIMARY_STATE_UNCONFIGURED);
 
-  EXPECT_EQ(
-    RCL_RET_OK,
+  EXPECT_EQ(RCL_RET_OK,
     rcl_lifecycle_state_machine_fini(&state_machine, this->node_ptr, this->allocator));
 }
 
@@ -787,8 +767,7 @@ TEST_F(TestDefaultStateMachine, default_sequence_error_unresolved) {
       lifecycle_msgs__msg__State__TRANSITION_STATE_ERRORPROCESSING,
       lifecycle_msgs__msg__State__PRIMARY_STATE_FINALIZED);
 
-    EXPECT_EQ(
-      RCL_RET_OK,
+    EXPECT_EQ(RCL_RET_OK,
       rcl_lifecycle_state_machine_fini(&state_machine, this->node_ptr, this->allocator));
   }
 
@@ -828,8 +807,7 @@ TEST_F(TestDefaultStateMachine, default_sequence_error_unresolved) {
       lifecycle_msgs__msg__State__TRANSITION_STATE_ERRORPROCESSING,
       lifecycle_msgs__msg__State__PRIMARY_STATE_FINALIZED);
 
-    EXPECT_EQ(
-      RCL_RET_OK,
+    EXPECT_EQ(RCL_RET_OK,
       rcl_lifecycle_state_machine_fini(&state_machine, this->node_ptr, this->allocator));
   }
 }

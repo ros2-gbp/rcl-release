@@ -36,10 +36,8 @@
 # define CLASSNAME(NAME, SUFFIX) NAME
 #endif
 
-void * bad_malloc(size_t, void *)
-{
-  return NULL;
-}
+const bool is_opensplice =
+  std::string(rmw_get_implementation_identifier()).find("rmw_opensplice") == 0;
 
 class CLASSNAME (TestActionGraphFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
@@ -53,7 +51,6 @@ public:
   rcl_node_t zero_node;
   const char * test_graph_node_name = "test_action_graph_node";
   const char * test_graph_old_node_name = "test_action_graph_old_node_name";
-  const char * test_graph_unknown_node_name = "test_action_graph_unknown_node_name";
 
   void SetUp()
   {
@@ -64,8 +61,7 @@ public:
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
     ret = rcl_init_options_init(&init_options, this->allocator);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-    {
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
       EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
     });
     this->old_context = rcl_get_zero_initialized_context();
@@ -136,28 +132,22 @@ TEST_F(
   rcl_reset_error();
   // Invalid node name
   ret = rcl_action_get_client_names_and_types_by_node(
-    &this->node, &this->allocator, "_!test_this_is_not_a_valid_name", "", &nat);
-  EXPECT_EQ(RCL_RET_NODE_INVALID_NAME, ret) << rcl_get_error_string().str;
+    &this->node, &this->allocator, "_test_this_Isnot_a_valid_name", "", &nat);
+  EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
   rcl_reset_error();
   // Non-existent node
-  ret = rcl_action_get_client_names_and_types_by_node(
-    &this->node, &this->allocator, this->test_graph_unknown_node_name, "", &nat);
-  EXPECT_EQ(RCL_RET_NODE_NAME_NON_EXISTENT, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
+  // Note, Opensplice successfully reports graph information about finalized nodes
+  if (!is_opensplice) {
+    ret = rcl_action_get_client_names_and_types_by_node(
+      &this->node, &this->allocator, this->test_graph_old_node_name, "", &nat);
+    EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+    rcl_reset_error();
+  }
   // Invalid names and types
   ret = rcl_action_get_client_names_and_types_by_node(
     &this->node, &this->allocator, this->test_graph_node_name, "", nullptr);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-
-  // Failing allocator
-  rcl_allocator_t bad_allocator = rcl_get_default_allocator();
-  bad_allocator.allocate = bad_malloc;
-  ret = rcl_action_get_client_names_and_types_by_node(
-    &this->node, &bad_allocator, this->test_graph_node_name, "", nullptr);
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-
   // Valid call
   ret = rcl_action_get_client_names_and_types_by_node(
     &this->node, &this->allocator, this->test_graph_node_name, "", &nat);
@@ -198,14 +188,17 @@ TEST_F(
   rcl_reset_error();
   // Invalid node name
   ret = rcl_action_get_server_names_and_types_by_node(
-    &this->node, &this->allocator, "_!test_this_is_not_a_valid_name", "", &nat);
-  EXPECT_EQ(RCL_RET_NODE_INVALID_NAME, ret) << rcl_get_error_string().str;
+    &this->node, &this->allocator, "_test_this_Isnot_a_valid_name", "", &nat);
+  EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
   rcl_reset_error();
   // Non-existent node
-  ret = rcl_action_get_server_names_and_types_by_node(
-    &this->node, &this->allocator, this->test_graph_unknown_node_name, "", &nat);
-  EXPECT_EQ(RCL_RET_NODE_NAME_NON_EXISTENT, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
+  // Note, Opensplice successfully reports graph information about finalized nodes
+  if (!is_opensplice) {
+    ret = rcl_action_get_server_names_and_types_by_node(
+      &this->node, &this->allocator, this->test_graph_old_node_name, "", &nat);
+    EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+    rcl_reset_error();
+  }
   // Invalid names and types
   ret = rcl_action_get_server_names_and_types_by_node(
     &this->node, &this->allocator, this->test_graph_node_name, "", nullptr);
@@ -259,9 +252,8 @@ TEST_F(
 /**
  * Type define a get actions function.
  */
-typedef std::function<
-    rcl_ret_t(const rcl_node_t *, rcl_names_and_types_t *)
-> GetActionsFunc;
+typedef std::function<rcl_ret_t(const rcl_node_t *,
+    rcl_names_and_types_t *)> GetActionsFunc;
 
 /**
  * Extend the TestActionGraphFixture with a multi-node fixture for node discovery and node-graph
@@ -284,8 +276,7 @@ public:
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
     ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-    {
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
       EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) <<
         rcl_get_error_string().str;
     });
@@ -300,25 +291,22 @@ public:
       &this->remote_node, this->remote_node_name, "", &this->remote_context, &node_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
-    action_func = std::bind(
-      rcl_action_get_names_and_types,
-      std::placeholders::_1,
-      &this->allocator,
-      std::placeholders::_2);
-    clients_by_node_func = std::bind(
-      rcl_action_get_client_names_and_types_by_node,
-      std::placeholders::_1,
-      &this->allocator,
-      this->remote_node_name,
-      "",
-      std::placeholders::_2);
-    servers_by_node_func = std::bind(
-      rcl_action_get_server_names_and_types_by_node,
-      std::placeholders::_1,
-      &this->allocator,
-      this->remote_node_name,
-      "",
-      std::placeholders::_2);
+    action_func = std::bind(rcl_action_get_names_and_types,
+        std::placeholders::_1,
+        &this->allocator,
+        std::placeholders::_2);
+    clients_by_node_func = std::bind(rcl_action_get_client_names_and_types_by_node,
+        std::placeholders::_1,
+        &this->allocator,
+        this->remote_node_name,
+        "",
+        std::placeholders::_2);
+    servers_by_node_func = std::bind(rcl_action_get_server_names_and_types_by_node,
+        std::placeholders::_1,
+        &this->allocator,
+        this->remote_node_name,
+        "",
+        std::placeholders::_2);
     WaitForAllNodesAlive();
   }
 
@@ -341,8 +329,7 @@ public:
     rcl_ret_t ret;
     rcutils_string_array_t node_names = rcutils_get_zero_initialized_string_array();
     rcutils_string_array_t node_namespaces = rcutils_get_zero_initialized_string_array();
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-    {
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
       ret = rcutils_string_array_fini(&node_names);
       ASSERT_EQ(RCUTILS_RET_OK, ret);
       ret = rcutils_string_array_fini(&node_namespaces);
@@ -400,8 +387,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_names_and_types) {
     client_action_name,
     &action_client_options);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_action_client_fini(&action_client, &this->remote_node)) <<
       rcl_get_error_string().str;
   });
@@ -425,8 +411,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_names_and_types) {
   rcl_clock_t clock;
   ret = rcl_clock_init(RCL_STEADY_TIME, &clock, &this->allocator);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_clock_fini(&clock)) << rcl_get_error_string().str;
   });
   const char * server_action_name = "/test_action_get_names_and_types_server_action_name";
@@ -439,8 +424,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_names_and_types) {
     server_action_name,
     &action_server_options);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_action_server_fini(&action_server, &this->remote_node)) <<
       rcl_get_error_string().str;
   });
@@ -476,8 +460,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_server_names_and_types_b
     this->action_name,
     &action_client_options);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_action_client_fini(&action_client, &this->remote_node)) <<
       rcl_get_error_string().str;
   });
@@ -496,8 +479,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_server_names_and_types_b
   rcl_clock_t clock;
   ret = rcl_clock_init(RCL_STEADY_TIME, &clock, &this->allocator);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_clock_fini(&clock)) << rcl_get_error_string().str;
   });
   rcl_action_server_options_t action_server_options = rcl_action_server_get_default_options();
@@ -509,8 +491,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_server_names_and_types_b
     this->action_name,
     &action_server_options);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_action_server_fini(&action_server, &this->remote_node)) <<
       rcl_get_error_string().str;
   });
@@ -537,8 +518,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_client_names_and_types_b
   rcl_clock_t clock;
   ret = rcl_clock_init(RCL_STEADY_TIME, &clock, &this->allocator);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_clock_fini(&clock)) << rcl_get_error_string().str;
   });
   rcl_action_server_options_t action_server_options = rcl_action_server_get_default_options();
@@ -550,8 +530,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_client_names_and_types_b
     this->action_name,
     &action_server_options);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_action_server_fini(&action_server, &this->remote_node)) <<
       rcl_get_error_string().str;
   });
@@ -576,8 +555,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_client_names_and_types_b
     this->action_name,
     &action_client_options);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     EXPECT_EQ(RCL_RET_OK, rcl_action_client_fini(&action_client, &this->remote_node)) <<
       rcl_get_error_string().str;
   });

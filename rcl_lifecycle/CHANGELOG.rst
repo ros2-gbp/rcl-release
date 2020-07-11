@@ -2,75 +2,22 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.0.0 (2020-07-09)
-------------------
-* Update quality declaration and coverage (`#674 <https://github.com/ros2/rcl/issues/674>`_)
-* Contributors: Alejandro Hernández Cordero
-
-1.2.0 (2020-06-18)
+0.7.9 (2020-07-10)
 ------------------
 
-1.1.5 (2020-06-03)
+0.7.8 (2019-12-10)
 ------------------
 
-1.1.4 (2020-06-02)
+0.7.7 (2019-09-20)
+------------------
+* reset error message before setting a new one, embed the original one (`#501 <https://github.com/ros2/rcl/issues/501>`_) (`#505 <https://github.com/ros2/rcl/issues/505>`_)
+* Contributors: Zachary Michaels
+
+0.7.6 (2019-08-01)
 ------------------
 
-1.1.3 (2020-06-01)
+0.7.5 (2019-06-12)
 ------------------
-* Add Security Vulnerability Policy pointing to REP-2006 (`#661 <https://github.com/ros2/rcl/issues/661>`_)
-* Contributors: Chris Lalancette
-
-1.1.2 (2020-05-28)
-------------------
-* Allow transition start and goal states to be null (`#662 <https://github.com/ros2/rcl/issues/662>`_)
-* Contributors: Karsten Knese
-
-1.1.1 (2020-05-26)
-------------------
-* Increase rcl_lifecycle test coverage and add more safety checks (`#649 <https://github.com/ros2/rcl/issues/649>`_)
-* Contributors: Stephen Brawner
-
-1.1.0 (2020-05-22)
-------------------
-* Update Quality Declaration for 1.0 (`#647 <https://github.com/ros2/rcl/issues/647>`_)
-* Contributors: brawner
-
-1.0.0 (2020-05-12)
-------------------
-
-0.9.1 (2020-05-08)
-------------------
-* Included features (`#644 <https://github.com/ros2/rcl/issues/644>`_)
-* Quality Declarations for rcl_action, rcl_lifecycle, yaml_parser (`#641 <https://github.com/ros2/rcl/issues/641>`_)
-* Contributors: Alejandro Hernández Cordero, Stephen Brawner
-
-0.9.0 (2020-04-29)
-------------------
-* Added rcl_lifecycle Doxyfile (`#633 <https://github.com/ros2/rcl/issues/633>`_)
-* Export targets in a addition to include directories / libraries (`#635 <https://github.com/ros2/rcl/issues/635>`_)
-* Added documentation (`#622 <https://github.com/ros2/rcl/issues/622>`_)
-* Fixed argument name in rcl_lifecycle.h (`#626 <https://github.com/ros2/rcl/issues/626>`_)
-* Rename rosidl_generator_c namespace to rosidl_runtime_c (`#616 <https://github.com/ros2/rcl/issues/616>`_)
-* Changed rosidl_generator_c/cpp to rosidl_runtime_c/cpp (`#588 <https://github.com/ros2/rcl/issues/588>`_)
-* Removed rmw_implementation from package.xml (`#575 <https://github.com/ros2/rcl/issues/575>`_)
-* Code style only: wrap after open parenthesis if not in one line (`#565 <https://github.com/ros2/rcl/issues/565>`_)
-* Free valid_transitions for all states (`#537 <https://github.com/ros2/rcl/issues/537>`_)
-* Contributors: Alejandro Hernández Cordero, Dirk Thomas, Víctor Mayoral Vilches
-
-0.8.3 (2019-11-08)
-------------------
-
-0.8.2 (2019-10-23)
-------------------
-
-0.8.1 (2019-10-08)
-------------------
-
-0.8.0 (2019-09-26)
-------------------
-* reset error message before setting a new one, embed the original one (`#501 <https://github.com/ros2/rcl/issues/501>`_)
-* Contributors: Dirk Thomas
 
 0.7.4 (2019-05-29)
 ------------------

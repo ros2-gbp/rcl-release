@@ -127,50 +127,6 @@ RCL_WARN_UNUSED
 rcl_ret_t
 rcl_init_options_fini(rcl_init_options_t * init_options);
 
-/// Return the domain_id stored in the init options.
-/**
- * Get the domain id from the specified rcl_init_options_t object.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] init_options object from which the domain id should be retrieved.
- * \param[out] domain_id domain id to be set in init_options object.
- * \return `RCL_RET_OK` if successful, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_init_options_get_domain_id(const rcl_init_options_t * init_options, size_t * domain_id);
-
-/// Set a domain id in the init options provided.
-/**
- * Store the domain id in the specified init_options object.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] init_options objects in which to set the specified domain id.
- * \param[in] domain_id domain id to be set in init_options object.
- * \return `RCL_RET_OK` if successful, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_init_options_set_domain_id(rcl_init_options_t * init_options, size_t domain_id);
-
 /// Return the rmw init options which are stored internally.
 /**
  * This function can fail and return `NULL` if:
@@ -188,38 +144,13 @@ rcl_init_options_set_domain_id(rcl_init_options_t * init_options, size_t domain_
  * Lock-Free          | Yes
  *
  * \param[in] init_options object from which the rmw init options should be retrieved
- * \return pointer to the the rcl init options, or
+ * \return pointer to the the rmw init options, or
  * \return `NULL` if there was an error
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rmw_init_options_t *
 rcl_init_options_get_rmw_init_options(rcl_init_options_t * init_options);
-
-/// Return the allocator stored in the init_options.
-/**
- * This function can fail and return `NULL` if:
- *   - init_options is NULL
- *   - init_options is invalid, e.g. init_options->impl is NULL
- *
- * If NULL is returned an error message will have been set.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] init_options object from which the allocator should be retrieved
- * \return pointer to the rcl allocator, or
- * \return `NULL` if there was an error
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-const rcl_allocator_t *
-rcl_init_options_get_allocator(const rcl_init_options_t * init_options);
 
 #ifdef __cplusplus
 }
