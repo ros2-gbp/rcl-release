@@ -20,6 +20,7 @@ extern "C"
 #include "rcl/node_options.h"
 
 #include "rcl/arguments.h"
+#include "rcl/domain_id.h"
 #include "rcl/error_handling.h"
 #include "rcl/logging_rosout.h"
 
@@ -28,8 +29,8 @@ rcl_node_get_default_options()
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
   static rcl_node_options_t default_options = {
-    .domain_id = RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID,
     .use_global_arguments = true,
+    .enable_rosout = true,
   };
   // Must set the allocator after because it is not a compile time constant.
   default_options.allocator = rcl_get_default_allocator();
@@ -48,9 +49,13 @@ rcl_node_options_copy(
     RCL_SET_ERROR_MSG("Attempted to copy options into itself");
     return RCL_RET_INVALID_ARGUMENT;
   }
-  options_out->domain_id = options->domain_id;
+  if (NULL != options_out->arguments.impl) {
+    RCL_SET_ERROR_MSG("Options out must be zero initialized");
+    return RCL_RET_INVALID_ARGUMENT;
+  }
   options_out->allocator = options->allocator;
   options_out->use_global_arguments = options->use_global_arguments;
+  options_out->enable_rosout = options->enable_rosout;
   if (NULL != options->arguments.impl) {
     rcl_ret_t ret = rcl_arguments_copy(&(options->arguments), &(options_out->arguments));
     return ret;

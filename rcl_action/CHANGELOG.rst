@@ -2,22 +2,83 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.7.9 (2020-07-10)
+2.1.0 (2020-07-22)
 ------------------
-* Fixed doxygen warnings. (`#702 <https://github.com/ros2/rcl/issues/702>`_)
+* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_)
+* Address issue 716 by zero initializing pointers and freeing memory (`#717 <https://github.com/ros2/rcl/issues/717>`_)
+* Contributors: Alejandro Hernández Cordero, brawner
+
+2.0.0 (2020-07-09)
+------------------
+* Update quality declaration and coverage (`#674 <https://github.com/ros2/rcl/issues/674>`_)
 * Contributors: Alejandro Hernández Cordero
 
-0.7.8 (2019-12-10)
+1.2.0 (2020-06-18)
+------------------
+* Fixed doxygen warnings (`#677 <https://github.com/ros2/rcl/issues/677>`_)
+* Contributors: Alejandro Hernández Cordero
+
+1.1.5 (2020-06-03)
 ------------------
 
-0.7.7 (2019-09-20)
+1.1.4 (2020-06-02)
 ------------------
 
-0.7.6 (2019-08-01)
+1.1.3 (2020-06-01)
+------------------
+* Add Security Vulnerability Policy pointing to REP-2006 (`#661 <https://github.com/ros2/rcl/issues/661>`_)
+* Address unused parameter warnings (`#666 <https://github.com/ros2/rcl/issues/666>`_)
+* Increase test coverage of rcl_action (`#663 <https://github.com/ros2/rcl/issues/663>`_)
+* Contributors: Chris Lalancette, Stephen Brawner
+
+1.1.2 (2020-05-28)
 ------------------
 
-0.7.5 (2019-06-12)
+1.1.1 (2020-05-26)
 ------------------
+
+1.1.0 (2020-05-22)
+------------------
+* Update Quality Declaration for 1.0 (`#647 <https://github.com/ros2/rcl/issues/647>`_)
+* Contributors: Stephen Brawner
+
+1.0.0 (2020-05-12)
+------------------
+
+0.9.1 (2020-05-08)
+------------------
+* Included features (`#644 <https://github.com/ros2/rcl/issues/644>`_)
+* Quality Declarations for rcl_action, rcl_lifecycle, yaml_parser (`#641 <https://github.com/ros2/rcl/issues/641>`_)
+* Contributors: Alejandro Hernández Cordero, Stephen Brawner
+
+0.9.0 (2020-04-29)
+------------------
+* Export targets in a addition to include directories / libraries (`#632 <https://github.com/ros2/rcl/issues/632>`_)
+* Rename rosidl_generator_c namespace to rosidl_runtime_c (`#616 <https://github.com/ros2/rcl/issues/616>`_)
+* Rename rosidl_generator_cpp namespace to rosidl_runtime_cpp (`#615 <https://github.com/ros2/rcl/issues/615>`_)
+* Changed rosidl_generator_c/cpp to rosidl_runtime_c/cpp (`#588 <https://github.com/ros2/rcl/issues/588>`_)
+* Changed build_depend and build_depend_export dependencies to depend (`#577 <https://github.com/ros2/rcl/issues/577>`_)
+* Code style only: wrap after open parenthesis if not in one line (`#565 <https://github.com/ros2/rcl/issues/565>`_)
+* Check if action status publisher is ready (`#541 <https://github.com/ros2/rcl/issues/541>`_)
+* Contributors: Alejandro Hernández Cordero, Dirk Thomas, Tomoya Fujita
+
+0.8.3 (2019-11-08)
+------------------
+
+0.8.2 (2019-10-23)
+------------------
+* Correct action server documentation (`#519 <https://github.com/ros2/rcl/issues/519>`_)
+* Add mechanism to pass rmw impl specific payloads during pub/sub creation (`#513 <https://github.com/ros2/rcl/issues/513>`_)
+* Contributors: Jacob Perron, William Woodall
+
+0.8.1 (2019-10-08)
+------------------
+
+0.8.0 (2019-09-26)
+------------------
+* Fix rcl_action test_graph (`#504 <https://github.com/ros2/rcl/issues/504>`_)
+* remove unused CMake code (`#475 <https://github.com/ros2/rcl/issues/475>`_)
+* Contributors: Mikael Arguedas, ivanpauno
 
 0.7.4 (2019-05-29)
 ------------------

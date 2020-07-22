@@ -30,6 +30,7 @@ extern "C"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/validate_full_topic_name.h"
+#include "tracetools/tracetools.h"
 
 #include "./common.h"
 
@@ -178,6 +179,12 @@ rcl_client_init(
   atomic_init(&client->impl->sequence_number, 0);
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Client initialized");
   ret = RCL_RET_OK;
+  TRACEPOINT(
+    rcl_client_init,
+    (const void *)client,
+    (const void *)node,
+    (const void *)client->impl->rmw_handle,
+    remapped_service_name);
   goto cleanup;
 fail:
   if (client->impl) {
@@ -282,9 +289,9 @@ rcl_send_request(const rcl_client_t * client, const void * ros_request, int64_t 
 }
 
 rcl_ret_t
-rcl_take_response(
+rcl_take_response_with_info(
   const rcl_client_t * client,
-  rmw_request_id_t * request_header,
+  rmw_service_info_t * request_header,
   void * ros_response)
 {
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Client taking service response");
@@ -296,6 +303,8 @@ rcl_take_response(
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_response, RCL_RET_INVALID_ARGUMENT);
 
   bool taken = false;
+  request_header->source_timestamp = 0;
+  request_header->received_timestamp = 0;
   if (rmw_take_response(
       client->impl->rmw_handle, request_header, ros_response, &taken) != RMW_RET_OK)
   {
@@ -308,6 +317,19 @@ rcl_take_response(
     return RCL_RET_CLIENT_TAKE_FAILED;
   }
   return RCL_RET_OK;
+}
+
+rcl_ret_t
+rcl_take_response(
+  const rcl_client_t * client,
+  rmw_request_id_t * request_header,
+  void * ros_response)
+{
+  rmw_service_info_t header;
+  header.request_id = *request_header;
+  rcl_ret_t ret = rcl_take_response_with_info(client, &header, ros_response);
+  *request_header = header.request_id;
+  return ret;
 }
 
 bool

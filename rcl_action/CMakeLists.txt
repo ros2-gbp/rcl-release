@@ -4,18 +4,11 @@ project(rcl_action)
 
 find_package(ament_cmake_ros REQUIRED)
 
-find_package(rosidl_generator_c REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
-find_package(rmw_implementation_cmake REQUIRED)
-
-include_directories(
-  include
-  ${action_msgs_INCLUDE_DIRS}
-  ${rcl_INCLUDE_DIRS}
-)
+find_package(rosidl_runtime_c REQUIRED)
 
 # Default to C11
 if(NOT CMAKE_C_STANDARD)
@@ -50,12 +43,16 @@ add_library(${PROJECT_NAME}
   ${rcl_action_sources}
 )
 
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>")
+
 ament_target_dependencies(${PROJECT_NAME}
   "action_msgs"
   "rcl"
   "rcutils"
   "rmw"
-  "rosidl_generator_c"
+  "rosidl_runtime_c"
 )
 
 rcl_set_symbol_visibility_hidden(${PROJECT_NAME} LANGUAGE "C")
@@ -68,7 +65,7 @@ install(
   DESTINATION include
 )
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -88,6 +85,7 @@ if(BUILD_TESTING)
   if(TARGET test_action_client)
     target_include_directories(test_action_client PUBLIC
       include
+      src
     )
     target_link_libraries(test_action_client
       ${PROJECT_NAME}
@@ -110,12 +108,9 @@ if(BUILD_TESTING)
     ament_add_gtest(
       "${target}${target_suffix}" ${ARGN}
       TIMEOUT 60
-      APPEND_LIBRARY_DIRS "${append_library_dirs}"
       ENV
       RCL_ASSERT_RMW_ID_MATCHES=${rmw_implementation}
       RMW_IMPLEMENTATION=${rmw_implementation}
-      ROS_SECURITY_ROOT_DIRECTORY="${VALID_ROS_SECURITY_ROOT_DIRECTORY}"
-      PATH="${TEST_PATH}"
     )
     if(TARGET ${target}${target_suffix})
       target_compile_definitions(${target}${target_suffix}
@@ -135,19 +130,6 @@ if(BUILD_TESTING)
   endfunction()
 
   macro(targets)
-    set(ENV_PATH "$ENV{PATH}")
-    file(TO_CMAKE_PATH "${ENV_PATH}" ENV_PATH)
-    set(TEST_PATH "${ENV_PATH}")
-    if(rmw_implementation STREQUAL "rmw_connext_cpp")
-      if(UNIX AND NOT APPLE)
-        set(RTI_BIN_PATH "$ENV{RTI_OPENSSL_BIN}")
-        file(TO_CMAKE_PATH "${RTI_BIN_PATH}" RTI_BIN_PATH)
-        set(TEST_PATH "${RTI_BIN_PATH};${ENV_PATH}")
-        if(NOT WIN32)
-          string(REPLACE ";" ":" TEST_PATH "${TEST_PATH}")
-        endif()
-      endif()
-    endif()
     custom_test_c(test_action_communication
       "test/rcl_action/test_action_communication.cpp")
     custom_test_c(test_action_interaction
@@ -165,6 +147,7 @@ if(BUILD_TESTING)
   if(TARGET test_action_server)
     target_include_directories(test_action_server PUBLIC
       include
+      src
     )
     target_link_libraries(test_action_server
       ${PROJECT_NAME}
@@ -185,7 +168,7 @@ if(BUILD_TESTING)
     target_link_libraries(test_goal_handle
       ${PROJECT_NAME}
     )
-    ament_target_dependencies(test_action_server "rcl")
+    ament_target_dependencies(test_goal_handle "rcl")
   endif()
   ament_add_gtest(test_goal_state_machine
     test/rcl_action/test_goal_state_machine.cpp
@@ -194,7 +177,7 @@ if(BUILD_TESTING)
     target_link_libraries(test_goal_state_machine
       ${PROJECT_NAME}
     )
-    ament_target_dependencies(test_action_server "rcl")
+    ament_target_dependencies(test_goal_state_machine  "osrf_testing_tools_cpp" "rcl")
   endif()
   ament_add_gtest(test_types
     test/rcl_action/test_types.cpp
@@ -206,7 +189,7 @@ if(BUILD_TESTING)
     target_link_libraries(test_types
       ${PROJECT_NAME}
     )
-    ament_target_dependencies(test_action_server "rcl")
+    ament_target_dependencies(test_types "rcl")
   endif()
   ament_add_gtest(test_names
     test/rcl_action/test_names.cpp
@@ -215,17 +198,34 @@ if(BUILD_TESTING)
     target_link_libraries(test_names
       ${PROJECT_NAME}
     )
-    ament_target_dependencies(test_action_server "rcl")
+    ament_target_dependencies(test_names "rcl")
+  endif()
+  ament_add_gtest(test_wait
+    test/rcl_action/test_wait.cpp
+  )
+  if(TARGET test_wait)
+    target_link_libraries(test_wait
+      ${PROJECT_NAME}
+    )
+    target_include_directories(test_wait PUBLIC
+      src
+    )
+    ament_target_dependencies(test_wait
+      "osrf_testing_tools_cpp"
+      "rcl"
+      "test_msgs"
+    )
   endif()
 endif()
 
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
+ament_export_targets(${PROJECT_NAME})
+ament_export_dependencies(action_msgs)
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(rcl)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rmw)
-ament_export_dependencies(action_msgs)
-ament_export_dependencies(rosidl_generator_c)
+ament_export_dependencies(rosidl_runtime_c)
 ament_package()

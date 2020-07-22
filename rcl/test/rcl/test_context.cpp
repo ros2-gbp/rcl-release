@@ -45,7 +45,8 @@ TEST_F(CLASSNAME(TestContextFixture, RMW_IMPLEMENTATION), nominal) {
   ASSERT_EQ(ret, RCL_RET_OK);
   ret = rcl_init(0, nullptr, &init_options, &context);
   ASSERT_EQ(ret, RCL_RET_OK);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_shutdown(&context);
     EXPECT_EQ(ret, RCL_RET_OK);
     ret = rcl_context_fini(&context);
@@ -54,14 +55,16 @@ TEST_F(CLASSNAME(TestContextFixture, RMW_IMPLEMENTATION), nominal) {
 
   // test rcl_context_get_init_options
   const rcl_init_options_t * init_options_ptr;
-  EXPECT_NO_MEMORY_OPERATIONS({
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
     init_options_ptr = rcl_context_get_init_options(nullptr);
   });
   EXPECT_EQ(init_options_ptr, nullptr);
   EXPECT_TRUE(rcl_error_is_set());
   rcl_reset_error();
 
-  EXPECT_NO_MEMORY_OPERATIONS({
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
     init_options_ptr = rcl_context_get_init_options(&context);
   });
   EXPECT_NE(init_options_ptr, nullptr) << rcl_get_error_string().str;
@@ -69,29 +72,55 @@ TEST_F(CLASSNAME(TestContextFixture, RMW_IMPLEMENTATION), nominal) {
 
   // test rcl_context_get_instance_id
   rcl_context_instance_id_t instance_id;
-  EXPECT_NO_MEMORY_OPERATIONS({
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
     instance_id = rcl_context_get_instance_id(nullptr);
   });
   EXPECT_EQ(instance_id, 0UL);
   EXPECT_TRUE(rcl_error_is_set());
   rcl_reset_error();
 
-  EXPECT_NO_MEMORY_OPERATIONS({
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
     instance_id = rcl_context_get_instance_id(&context);
   });
   EXPECT_NE(instance_id, 0UL) << rcl_get_error_string().str;
   rcl_reset_error();
 
+  // test rcl_context_get_domain_id
+  size_t domain_id;
+
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
+    EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_context_get_domain_id(&context, nullptr));
+  });
+  EXPECT_TRUE(rcl_error_is_set());
+  rcl_reset_error();
+
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
+    EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_context_get_domain_id(nullptr, &domain_id));
+  });
+  EXPECT_TRUE(rcl_error_is_set());
+  rcl_reset_error();
+
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
+    EXPECT_EQ(RCL_RET_OK, rcl_context_get_domain_id(&context, &domain_id));
+  });
+
   // test rcl_context_is_valid
   bool is_valid;
-  EXPECT_NO_MEMORY_OPERATIONS({
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
     is_valid = rcl_context_is_valid(nullptr);
   });
   EXPECT_FALSE(is_valid);
   EXPECT_TRUE(rcl_error_is_set());
   rcl_reset_error();
 
-  EXPECT_NO_MEMORY_OPERATIONS({
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
     is_valid = rcl_context_is_valid(&context);
   });
   EXPECT_TRUE(is_valid) << rcl_get_error_string().str;
@@ -99,14 +128,16 @@ TEST_F(CLASSNAME(TestContextFixture, RMW_IMPLEMENTATION), nominal) {
 
   // test rcl_context_get_rmw_context
   rmw_context_t * rmw_context_ptr;
-  EXPECT_NO_MEMORY_OPERATIONS({
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
     rmw_context_ptr = rcl_context_get_rmw_context(nullptr);
   });
   EXPECT_EQ(rmw_context_ptr, nullptr);
   EXPECT_TRUE(rcl_error_is_set());
   rcl_reset_error();
 
-  EXPECT_NO_MEMORY_OPERATIONS({
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
     rmw_context_ptr = rcl_context_get_rmw_context(&context);
   });
   EXPECT_NE(rmw_context_ptr, nullptr) << rcl_get_error_string().str;
@@ -114,4 +145,31 @@ TEST_F(CLASSNAME(TestContextFixture, RMW_IMPLEMENTATION), nominal) {
 
   ret = rcl_init_options_fini(&init_options);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+}
+
+TEST_F(CLASSNAME(TestContextFixture, RMW_IMPLEMENTATION), bad_fini) {
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_context_fini(nullptr));
+  rcl_reset_error();
+
+  rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
+  rcl_ret_t ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
+  });
+
+  rcl_context_t context = rcl_get_zero_initialized_context();
+  ret = rcl_init(0, nullptr, &init_options, &context);
+  EXPECT_EQ(RCL_RET_OK, ret);
+
+  ret = rcl_context_fini(&context);
+  EXPECT_EQ(ret, RCL_RET_INVALID_ARGUMENT);
+  rcl_reset_error();
+
+  ret = rcl_shutdown(&context);
+  EXPECT_EQ(ret, RCL_RET_OK);
+
+  ret = rcl_context_fini(&context);
+  EXPECT_EQ(ret, RCL_RET_OK);
 }

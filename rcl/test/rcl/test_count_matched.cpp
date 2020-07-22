@@ -80,7 +80,8 @@ void check_state(
     ret = rcl_wait_set_add_guard_condition(wait_set_ptr, graph_guard_condition, NULL);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(200);
-    RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
+    RCUTILS_LOG_INFO_NAMED(
+      ROS_PACKAGE_NAME,
       "  state wrong, waiting up to '%s' nanoseconds for graph changes... ",
       std::to_string(time_to_sleep.count()).c_str());
     ret = rcl_wait(wait_set_ptr, time_to_sleep.count());
@@ -112,6 +113,8 @@ public:
     this->context_ptr = new rcl_context_t;
     *this->context_ptr = rcl_get_zero_initialized_context();
     ret = rcl_init(0, nullptr, &init_options, this->context_ptr);
+    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+    ret = rcl_init_options_fini(&init_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     this->node_ptr = new rcl_node_t;
     *this->node_ptr = rcl_get_zero_initialized_node();
@@ -185,9 +188,18 @@ TEST_F(CLASSNAME(TestCountFixture, RMW_IMPLEMENTATION), test_count_matched_funct
 
   check_state(wait_set_ptr, nullptr, &sub, graph_guard_condition, -1, 0, 9);
   check_state(wait_set_ptr, nullptr, &sub2, graph_guard_condition, -1, 0, 9);
+
+  ret = rcl_subscription_fini(&sub, this->node_ptr);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+
+  ret = rcl_subscription_fini(&sub2, this->node_ptr);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
 }
 
-TEST_F(CLASSNAME(TestCountFixture, RMW_IMPLEMENTATION),
+TEST_F(
+  CLASSNAME(TestCountFixture, RMW_IMPLEMENTATION),
   test_count_matched_functions_mismatched_qos) {
   std::string topic_name("/test_count_matched_functions_mismatched_qos__");
   rcl_ret_t ret;
@@ -238,6 +250,14 @@ TEST_F(CLASSNAME(TestCountFixture, RMW_IMPLEMENTATION),
   // Even multiple subscribers should not match
   check_state(wait_set_ptr, &pub, &sub, graph_guard_condition, 0, 0, 9);
   check_state(wait_set_ptr, &pub, &sub2, graph_guard_condition, 0, 0, 9);
+
+  ret = rcl_subscription_fini(&sub, this->node_ptr);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+
+  ret = rcl_subscription_fini(&sub2, this->node_ptr);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
 
   ret = rcl_publisher_fini(&pub, this->node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;

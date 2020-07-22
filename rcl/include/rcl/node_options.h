@@ -23,8 +23,10 @@ extern "C"
 #include "rcl/allocator.h"
 #include "rcl/arguments.h"
 
+#include "rcl/domain_id.h"
+
 /// Constant which indicates that the default domain id should be used.
-#define RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID SIZE_MAX
+#define RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID RCL_DEFAULT_DOMAIN_ID
 
 /// Structure which encapsulates the options for creating a rcl_node_t.
 typedef struct rcl_node_options_t
@@ -36,19 +38,6 @@ typedef struct rcl_node_options_t
   /// If true, no parameter infrastructure will be setup.
   // bool no_parameters;
 
-  /// If set, then this value overrides the ROS_DOMAIN_ID environment variable.
-  /**
-   * It defaults to RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID, which will cause the
-   * node to use the ROS domain ID set in the ROS_DOMAIN_ID environment
-   * variable, or on some systems 0 if the environment variable is not set.
-   *
-   * \todo TODO(wjwwood):
-   *   Should we put a limit on the ROS_DOMAIN_ID value, that way we can have
-   *   a safe value for the default RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID?
-   *   (currently max size_t)
-   */
-  size_t domain_id;
-
   /// Custom allocator used for internal allocations.
   rcl_allocator_t allocator;
 
@@ -57,6 +46,9 @@ typedef struct rcl_node_options_t
 
   /// Command line arguments that apply only to this node.
   rcl_arguments_t arguments;
+
+  /// Flag to enable rosout for this node
+  bool enable_rosout;
 } rcl_node_options_t;
 
 /// Return the default node options in a rcl_node_options_t.
@@ -66,6 +58,7 @@ typedef struct rcl_node_options_t
  * - domain_id = RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID
  * - allocator = rcl_get_default_allocator()
  * - use_global_arguments = true
+ * - enable_rosout = true
  * - arguments = rcl_get_zero_initialized_arguments()
  */
 RCL_PUBLIC

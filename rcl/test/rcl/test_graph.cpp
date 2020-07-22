@@ -30,6 +30,7 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/graph.h"
+#include "rcl/logging.h"
 #include "rcl/rcl.h"
 
 #include "rcutils/logging_macros.h"
@@ -66,16 +67,22 @@ public:
   void SetUp()
   {
     rcl_ret_t ret;
+    rcl_allocator_t allocator = rcl_get_default_allocator();
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
     ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
       EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
     });
     this->old_context_ptr = new rcl_context_t;
     *this->old_context_ptr = rcl_get_zero_initialized_context();
     ret = rcl_init(0, nullptr, &init_options, this->old_context_ptr);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+    EXPECT_EQ(
+      RCL_RET_OK,
+      rcl_logging_configure(&this->old_context_ptr->global_arguments, &allocator)
+    ) << rcl_get_error_string().str;
     this->old_node_ptr = new rcl_node_t;
     *this->old_node_ptr = rcl_get_zero_initialized_node();
     const char * old_name = "old_node_name";
@@ -126,6 +133,7 @@ public:
     ret = rcl_context_fini(this->old_context_ptr);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     delete this->old_context_ptr;
+    EXPECT_EQ(RCL_RET_OK, rcl_logging_fini()) << rcl_get_error_string().str;
   }
 };
 
@@ -141,7 +149,7 @@ TEST_F(
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_allocator_t zero_allocator = static_cast<rcl_allocator_t>(
     rcutils_get_zero_initialized_allocator());
-  rcl_names_and_types_t tnat {};
+  rcl_names_and_types_t tnat = rcl_get_zero_initialized_names_and_types();
   rcl_node_t zero_node = rcl_get_zero_initialized_node();
   // invalid node
   ret = rcl_get_topic_names_and_types(nullptr, &allocator, false, &tnat);
@@ -164,6 +172,11 @@ TEST_F(
   ret = rcl_get_topic_names_and_types(this->node_ptr, &allocator, false, nullptr);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
   rcl_reset_error();
+  tnat.names.size = 1;
+  ret = rcl_get_topic_names_and_types(this->node_ptr, &allocator, false, &tnat);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  tnat.names.size = 0;
   // invalid argument to rcl_destroy_topic_names_and_types
   ret = rcl_names_and_types_fini(nullptr);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
@@ -187,7 +200,7 @@ TEST_F(
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_allocator_t zero_allocator = static_cast<rcl_allocator_t>(
     rcutils_get_zero_initialized_allocator());
-  rcl_names_and_types_t tnat {};
+  rcl_names_and_types_t tnat = rcl_get_zero_initialized_names_and_types();
   rcl_node_t zero_node = rcl_get_zero_initialized_node();
   // invalid node
   ret = rcl_get_service_names_and_types(nullptr, &allocator, &tnat);
@@ -210,6 +223,11 @@ TEST_F(
   ret = rcl_get_service_names_and_types(this->node_ptr, &allocator, nullptr);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
   rcl_reset_error();
+  tnat.names.size = 1;
+  ret = rcl_get_service_names_and_types(this->node_ptr, &allocator, &tnat);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  tnat.names.size = 0;
   // invalid argument to rcl_destroy_service_names_and_types
   ret = rcl_names_and_types_fini(nullptr);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
@@ -274,8 +292,8 @@ TEST_F(
   rcl_allocator_t zero_allocator = static_cast<rcl_allocator_t>(
     rcutils_get_zero_initialized_allocator());
   rcl_node_t zero_node = rcl_get_zero_initialized_node();
-  const char * unknown_node_name = "/test_rcl_get_publisher_names_and_types_by_node";
-  // const char * unknown_node_ns = "/test/namespace";
+  const char * unknown_node_name = "test_rcl_get_publisher_names_and_types_by_node";
+  const char * unknown_node_ns = "/test/namespace";
   rcl_names_and_types_t nat = rcl_get_zero_initialized_names_and_types();
   // invalid node
   ret = rcl_get_publisher_names_and_types_by_node(
@@ -311,38 +329,45 @@ TEST_F(
   // test valid strings with invalid node names
   ret = rcl_get_publisher_names_and_types_by_node(
     this->node_ptr, &allocator, false, "", "", &nat);
-  EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAME, ret) << rcl_get_error_string().str;
   rcl_reset_error();
   ret = rcl_get_publisher_names_and_types_by_node(
-    this->node_ptr, &allocator, false, "_InvalidNodeName", "", &nat);
-  EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+    this->node_ptr, &allocator, false, "_!InvalidNodeName", "", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAME, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  // TODO(jacobperron): This succeeds, but should fail due to invalid namespace
-  // ret = rcl_get_publisher_names_and_types_by_node(
-  //   this->node_ptr, &allocator, false, this->test_graph_node_name, "_!invalidNs", &nat);
-  // EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
-  // rcl_reset_error();
+  ret = rcl_get_publisher_names_and_types_by_node(
+    this->node_ptr, &allocator, false, this->test_graph_node_name, "_!invalidNs", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAMESPACE, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
   // invalid names and types
   ret = rcl_get_publisher_names_and_types_by_node(
     this->node_ptr, &allocator, false, this->test_graph_node_name, "", nullptr);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
   rcl_reset_error();
+  nat.names.size = 1;
+  ret = rcl_get_publisher_names_and_types_by_node(
+    this->node_ptr, &allocator, false, this->test_graph_node_name, "", &nat);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  nat.names.size = 0;
   // unknown node name
   ret = rcl_get_publisher_names_and_types_by_node(
     this->node_ptr, &allocator, false, unknown_node_name, "", &nat);
-  EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+  EXPECT_EQ(RCL_RET_NODE_NAME_NON_EXISTENT, ret) << rcl_get_error_string().str;
   rcl_reset_error();
   // unknown node namespace
-  // TODO(jacobperron): This succeeds, but should fail due to invalid namespace
-  // ret = rcl_get_publisher_names_and_types_by_node(
-  //   this->node_ptr, &allocator, false, this->test_graph_node_name, unknown_node_ns, &nat);
-  // EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
-  // rcl_reset_error();
+  ret = rcl_get_publisher_names_and_types_by_node(
+    this->node_ptr, &allocator, false, this->test_graph_node_name, unknown_node_ns, &nat);
+  EXPECT_EQ(RCL_RET_NODE_NAME_NON_EXISTENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
   // valid call
   ret = rcl_get_publisher_names_and_types_by_node(
     this->node_ptr, &allocator, false, this->test_graph_node_name, "", &nat);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
+
+  ret = rcl_names_and_types_fini(&nat);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 }
 
 /* Test the rcl_get_subscriber_names_and_types_by_node function.
@@ -358,8 +383,8 @@ TEST_F(
   rcl_allocator_t zero_allocator = static_cast<rcl_allocator_t>(
     rcutils_get_zero_initialized_allocator());
   rcl_node_t zero_node = rcl_get_zero_initialized_node();
-  const char * unknown_node_name = "/test_rcl_get_subscriber_names_and_types_by_node";
-  // const char * unknown_node_ns = "/test/namespace";
+  const char * unknown_node_name = "test_rcl_get_subscriber_names_and_types_by_node";
+  const char * unknown_node_ns = "/test/namespace";
   rcl_names_and_types_t nat = rcl_get_zero_initialized_names_and_types();
   // invalid node
   ret = rcl_get_subscriber_names_and_types_by_node(
@@ -395,33 +420,37 @@ TEST_F(
   // test valid strings with invalid node names
   ret = rcl_get_subscriber_names_and_types_by_node(
     this->node_ptr, &allocator, false, "", "", &nat);
-  EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAME, ret) << rcl_get_error_string().str;
   rcl_reset_error();
   ret = rcl_get_subscriber_names_and_types_by_node(
-    this->node_ptr, &allocator, false, "_InvalidNodeName", "", &nat);
-  EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+    this->node_ptr, &allocator, false, "_!InvalidNodeName", "", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAME, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  // TODO(jacobperron): This succeeds, but should fail due to invalid namespace
-  // ret = rcl_get_subscriber_names_and_types_by_node(
-  //   this->node_ptr, &allocator, false, this->test_graph_node_name, "_!invalidNs", &nat);
-  // EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
-  // rcl_reset_error();
+  ret = rcl_get_subscriber_names_and_types_by_node(
+    this->node_ptr, &allocator, false, this->test_graph_node_name, "_!invalidNs", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAMESPACE, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
   // invalid names and types
   ret = rcl_get_subscriber_names_and_types_by_node(
     this->node_ptr, &allocator, false, this->test_graph_node_name, "", nullptr);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
   rcl_reset_error();
+  nat.names.size = 1;
+  ret = rcl_get_subscriber_names_and_types_by_node(
+    this->node_ptr, &allocator, false, this->test_graph_node_name, "", &nat);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  nat.names.size = 0;
   // unknown node name
   ret = rcl_get_subscriber_names_and_types_by_node(
     this->node_ptr, &allocator, false, unknown_node_name, "", &nat);
-  EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+  EXPECT_EQ(RCL_RET_NODE_NAME_NON_EXISTENT, ret) << rcl_get_error_string().str;
   rcl_reset_error();
   // unknown node namespace
-  // TODO(jacobperron): This succeeds, but should fail due to invalid namespace
-  // ret = rcl_get_subscriber_names_and_types_by_node(
-  //   this->node_ptr, &allocator, false, this->test_graph_node_name, unknown_node_ns, &nat);
-  // EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
-  // rcl_reset_error();
+  ret = rcl_get_subscriber_names_and_types_by_node(
+    this->node_ptr, &allocator, false, this->test_graph_node_name, unknown_node_ns, &nat);
+  EXPECT_EQ(RCL_RET_NODE_NAME_NON_EXISTENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
   // valid call
   ret = rcl_get_subscriber_names_and_types_by_node(
     this->node_ptr, &allocator, false, this->test_graph_node_name, "", &nat);
@@ -442,8 +471,8 @@ TEST_F(
   rcl_allocator_t zero_allocator = static_cast<rcl_allocator_t>(
     rcutils_get_zero_initialized_allocator());
   rcl_node_t zero_node = rcl_get_zero_initialized_node();
-  const char * unknown_node_name = "/test_rcl_get_service_names_and_types_by_node";
-  // const char * unknown_node_ns = "/test/namespace";
+  const char * unknown_node_name = "test_rcl_get_service_names_and_types_by_node";
+  const char * unknown_node_ns = "/test/namespace";
   rcl_names_and_types_t nat = rcl_get_zero_initialized_names_and_types();
   // invalid node
   ret = rcl_get_service_names_and_types_by_node(
@@ -479,35 +508,128 @@ TEST_F(
   // test valid strings with invalid node names
   ret = rcl_get_service_names_and_types_by_node(
     this->node_ptr, &allocator, "", "", &nat);
-  EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAME, ret) << rcl_get_error_string().str;
   rcl_reset_error();
   ret = rcl_get_service_names_and_types_by_node(
-    this->node_ptr, &allocator, "_InvalidNodeName", "", &nat);
-  EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+    this->node_ptr, &allocator, "_!InvalidNodeName", "", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAME, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  // TODO(jacobperron): This succeeds, but should fail due to invalid namespace
-  // ret = rcl_get_service_names_and_types_by_node(
-  //   this->node_ptr, &allocator, false, this->test_graph_node_name, "_!invalidNs", &nat);
-  // EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
-  // rcl_reset_error();
+  ret = rcl_get_service_names_and_types_by_node(
+    this->node_ptr, &allocator, this->test_graph_node_name, "_!invalidNs", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAMESPACE, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
   // invalid names and types
   ret = rcl_get_service_names_and_types_by_node(
     this->node_ptr, &allocator, this->test_graph_node_name, "", nullptr);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
   rcl_reset_error();
+  nat.names.size = 1;
+  ret = rcl_get_service_names_and_types_by_node(
+    this->node_ptr, &allocator, this->test_graph_node_name, "", &nat);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  nat.names.size = 0;
   // unknown node name
   ret = rcl_get_service_names_and_types_by_node(
     this->node_ptr, &allocator, unknown_node_name, "", &nat);
-  EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+  EXPECT_EQ(RCL_RET_NODE_NAME_NON_EXISTENT, ret) << rcl_get_error_string().str;
   rcl_reset_error();
   // unknown node namespace
-  // TODO(jacobperron): This succeeds, but should fail due to invalid namespace
-  // ret = rcl_get_service_names_and_types_by_node(
-  //   this->node_ptr, &allocator, this->test_graph_node_name, unknown_node_ns, &nat);
-  // EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
-  // rcl_reset_error();
+  ret = rcl_get_service_names_and_types_by_node(
+    this->node_ptr, &allocator, this->test_graph_node_name, unknown_node_ns, &nat);
+  EXPECT_EQ(RCL_RET_NODE_NAME_NON_EXISTENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
   // valid call
   ret = rcl_get_service_names_and_types_by_node(
+    this->node_ptr, &allocator, this->test_graph_node_name, "", &nat);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+}
+
+/* Test the rcl_get_client_names_and_types_by_node function.
+ *
+ * This does not test content of the response.
+ */
+TEST_F(
+  CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION),
+  test_rcl_get_client_names_and_types_by_node
+) {
+  rcl_ret_t ret;
+  rcl_allocator_t allocator = rcl_get_default_allocator();
+  rcl_allocator_t zero_allocator = static_cast<rcl_allocator_t>(
+    rcutils_get_zero_initialized_allocator());
+  rcl_node_t zero_node = rcl_get_zero_initialized_node();
+  const char * unknown_node_name = "test_rcl_get_client_names_and_types_by_node";
+  const char * unknown_node_ns = "/test/namespace";
+
+  rcl_names_and_types_t nat = rcl_get_zero_initialized_names_and_types();
+  // invalid node
+  ret = rcl_get_client_names_and_types_by_node(
+    nullptr, &allocator, this->test_graph_node_name, "", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  ret = rcl_get_client_names_and_types_by_node(
+    &zero_node, &allocator, this->test_graph_node_name, "", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  ret = rcl_get_client_names_and_types_by_node(
+    this->old_node_ptr, &allocator, this->test_graph_node_name, "", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  // invalid allocator
+  ret = rcl_get_client_names_and_types_by_node(
+    this->node_ptr, nullptr, this->test_graph_node_name, "", &nat);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  ret = rcl_get_client_names_and_types_by_node(
+    this->node_ptr, &zero_allocator, this->test_graph_node_name, "", &nat);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  // invalid names
+  ret = rcl_get_client_names_and_types_by_node(
+    this->node_ptr, &allocator, nullptr, "", &nat);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  ret = rcl_get_client_names_and_types_by_node(
+    this->node_ptr, &allocator, this->test_graph_node_name, nullptr, &nat);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  // test valid strings with invalid node names
+  ret = rcl_get_client_names_and_types_by_node(
+    this->node_ptr, &allocator, "", "", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAME, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  ret = rcl_get_client_names_and_types_by_node(
+    this->node_ptr, &allocator, "_!InvalidNodeName", "", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAME, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  ret = rcl_get_client_names_and_types_by_node(
+    this->node_ptr, &allocator, this->test_graph_node_name, "_!invalidNs", &nat);
+  EXPECT_EQ(RCL_RET_NODE_INVALID_NAMESPACE, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  // invalid names and types
+  ret = rcl_get_client_names_and_types_by_node(
+    this->node_ptr, &allocator, this->test_graph_node_name, "", nullptr);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  nat.names.size = 1;
+  ret = rcl_get_client_names_and_types_by_node(
+    this->node_ptr, &allocator, this->test_graph_node_name, "", &nat);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  nat.names.size = 0;
+  // unknown node name
+  ret = rcl_get_client_names_and_types_by_node(
+    this->node_ptr, &allocator, unknown_node_name, "", &nat);
+  EXPECT_EQ(RCL_RET_NODE_NAME_NON_EXISTENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  // unknown node namespace
+  ret = rcl_get_client_names_and_types_by_node(
+    this->node_ptr, &allocator, this->test_graph_node_name, unknown_node_ns, &nat);
+  EXPECT_EQ(RCL_RET_NODE_NAME_NON_EXISTENT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  // valid call
+  ret = rcl_get_client_names_and_types_by_node(
     this->node_ptr, &allocator, this->test_graph_node_name, "", &nat);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
@@ -598,7 +720,8 @@ check_graph_state(
   bool expected_in_tnat,
   size_t number_of_tries)
 {
-  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME,
     "Expecting %zu publishers, %zu subscribers, and that the topic is%s in the graph.",
     expected_publisher_count,
     expected_subscriber_count,
@@ -636,7 +759,8 @@ check_graph_state(
       rcl_reset_error();
     }
 
-    RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
+    RCUTILS_LOG_INFO_NAMED(
+      ROS_PACKAGE_NAME,
       " Try %zu: %zu publishers, %zu subscribers, and that the topic is%s in the graph.",
       i + 1,
       publisher_count,
@@ -661,7 +785,8 @@ check_graph_state(
     ret = rcl_wait_set_add_guard_condition(wait_set_ptr, graph_guard_condition, nullptr);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(400);
-    RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
+    RCUTILS_LOG_INFO_NAMED(
+      ROS_PACKAGE_NAME,
       "  state wrong, waiting up to '%s' nanoseconds for graph changes... ",
       std::to_string(time_to_sleep.count()).c_str());
     ret = rcl_wait(wait_set_ptr, time_to_sleep.count());
@@ -684,9 +809,9 @@ check_graph_state(
 /**
  * Type define a get topics function.
  */
-typedef std::function<rcl_ret_t(const rcl_node_t *,
-    const char * node_name,
-    rcl_names_and_types_t *)> GetTopicsFunc;
+typedef std::function<
+    rcl_ret_t(const rcl_node_t *, const char * node_name, rcl_names_and_types_t *)
+> GetTopicsFunc;
 
 /**
  * Expect a certain number of topics on a given subsystem.
@@ -709,7 +834,8 @@ void expect_topics_types(
   if (expect) {
     EXPECT_EQ(num_topics, nat.names.size);
   } else {
-    RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Expected topics %zu, actual topics %zu", num_topics,
+    RCUTILS_LOG_DEBUG_NAMED(
+      ROS_PACKAGE_NAME, "Expected topics %zu, actual topics %zu", num_topics,
       nat.names.size);
   }
   ret = rcl_names_and_types_fini(&nat);
@@ -725,6 +851,7 @@ struct expected_node_state
   size_t publishers;
   size_t subscribers;
   size_t services;
+  size_t clients;
 };
 
 /**
@@ -737,7 +864,7 @@ public:
   std::string topic_name = "/test_node_info_functions__";
   rcl_node_t * remote_node_ptr;
   rcl_allocator_t allocator = rcl_get_default_allocator();
-  GetTopicsFunc sub_func, pub_func, service_func;
+  GetTopicsFunc sub_func, pub_func, service_func, client_func;
   rcl_context_t * remote_context_ptr;
 
   void SetUp() override
@@ -748,7 +875,8 @@ public:
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
     ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
       EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) <<
         rcl_get_error_string().str;
     });
@@ -761,29 +889,40 @@ public:
     *this->remote_context_ptr = rcl_get_zero_initialized_context();
     ret = rcl_init(0, nullptr, &init_options, this->remote_context_ptr);
 
-    ret = rcl_node_init(remote_node_ptr, remote_node_name, "", this->remote_context_ptr,
-        &node_options);
+    ret = rcl_node_init(
+      remote_node_ptr, remote_node_name, "", this->remote_context_ptr,
+      &node_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    sub_func = std::bind(rcl_get_subscriber_names_and_types_by_node,
-        std::placeholders::_1,
-        &this->allocator,
-        false,
-        std::placeholders::_2,
-        "/",
-        std::placeholders::_3);
-    pub_func = std::bind(rcl_get_publisher_names_and_types_by_node,
-        std::placeholders::_1,
-        &this->allocator,
-        false,
-        std::placeholders::_2,
-        "/",
-        std::placeholders::_3);
-    service_func = std::bind(rcl_get_service_names_and_types_by_node,
-        std::placeholders::_1,
-        &this->allocator,
-        std::placeholders::_2,
-        "/",
-        std::placeholders::_3);
+    sub_func = std::bind(
+      rcl_get_subscriber_names_and_types_by_node,
+      std::placeholders::_1,
+      &this->allocator,
+      false,
+      std::placeholders::_2,
+      "/",
+      std::placeholders::_3);
+    pub_func = std::bind(
+      rcl_get_publisher_names_and_types_by_node,
+      std::placeholders::_1,
+      &this->allocator,
+      false,
+      std::placeholders::_2,
+      "/",
+      std::placeholders::_3);
+    service_func = std::bind(
+      rcl_get_service_names_and_types_by_node,
+      std::placeholders::_1,
+      &this->allocator,
+      std::placeholders::_2,
+      "/",
+      std::placeholders::_3);
+    client_func = std::bind(
+      rcl_get_client_names_and_types_by_node,
+      std::placeholders::_1,
+      &this->allocator,
+      std::placeholders::_2,
+      "/",
+      std::placeholders::_3);
     WaitForAllNodesAlive();
   }
 
@@ -809,7 +948,8 @@ public:
     rcl_ret_t ret;
     rcutils_string_array_t node_names = rcutils_get_zero_initialized_string_array();
     rcutils_string_array_t node_namespaces = rcutils_get_zero_initialized_string_array();
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
       ret = rcutils_string_array_fini(&node_names);
       ASSERT_EQ(RCUTILS_RET_OK, ret);
       ret = rcutils_string_array_fini(&node_namespaces);
@@ -829,8 +969,8 @@ public:
   /**
    * Verify the number of subsystems each node should have.
    *
-   * @param node_state expected state of node
-   * @param remote_node_state expected state of remote node
+   * \param node_state expected state of node
+   * \param remote_node_state expected state of remote node
    */
   void VerifySubsystemCount(
     const expected_node_state && node_state,
@@ -850,33 +990,49 @@ public:
       // verify each node contains the same node graph.
       for (auto node : node_vec) {
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking subscribers from node");
-        expect_topics_types(node, sub_func, node_state.subscribers,
+        expect_topics_types(
+          node, sub_func, node_state.subscribers,
           test_graph_node_name, is_expect, is_success);
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking services from node");
-        expect_topics_types(node, service_func, node_state.services,
+        expect_topics_types(
+          node, service_func, node_state.services,
+          test_graph_node_name, is_expect, is_success);
+        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking clients from node");
+        expect_topics_types(
+          node, client_func, node_state.clients,
           test_graph_node_name, is_expect, is_success);
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking publishers from node");
-        expect_topics_types(node, pub_func, node_state.publishers,
+        expect_topics_types(
+          node, pub_func, node_state.publishers,
           test_graph_node_name, is_expect, is_success);
 
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking subscribers from remote node");
-        expect_topics_types(node, sub_func, remote_node_state.subscribers,
+        expect_topics_types(
+          node, sub_func, remote_node_state.subscribers,
           this->remote_node_name, is_expect, is_success);
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking publishers from remote node");
-        expect_topics_types(node, pub_func, remote_node_state.publishers,
+        expect_topics_types(
+          node, pub_func, remote_node_state.publishers,
           this->remote_node_name, is_expect, is_success);
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking services from remote node");
-        expect_topics_types(node, service_func, remote_node_state.services,
+        expect_topics_types(
+          node, service_func, remote_node_state.services,
+          this->remote_node_name, is_expect, is_success);
+        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Checking clients from remote node");
+        expect_topics_types(
+          node, client_func, remote_node_state.clients,
           this->remote_node_name, is_expect, is_success);
         if (!is_success) {
           ret = rcl_wait_set_clear(wait_set_ptr);
           ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
           ret =
-            rcl_wait_set_add_guard_condition(wait_set_ptr, rcl_node_get_graph_guard_condition(
-                node), NULL);
+            rcl_wait_set_add_guard_condition(
+            wait_set_ptr, rcl_node_get_graph_guard_condition(
+              node), NULL);
           ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
           std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(400);
-          RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
+          RCUTILS_LOG_DEBUG_NAMED(
+            ROS_PACKAGE_NAME,
             "  state wrong, waiting up to '%s' nanoseconds for graph changes... ",
             std::to_string(time_to_sleep.count()).c_str());
           ret = rcl_wait(wait_set_ptr, time_to_sleep.count());
@@ -914,19 +1070,19 @@ TEST_F(NodeGraphMultiNodeFixture, test_node_info_subscriptions)
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
 
-  VerifySubsystemCount(expected_node_state{1, 1, 0}, expected_node_state{1, 1, 0});
+  VerifySubsystemCount(expected_node_state{1, 1, 0, 0}, expected_node_state{1, 1, 0, 0});
 
   // Destroy the node's subscriber
   ret = rcl_subscription_fini(&sub, this->node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  VerifySubsystemCount(expected_node_state{1, 0, 0}, expected_node_state{1, 1, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 1, 0, 0});
 
   // Destroy the remote node's subdscriber
   ret = rcl_subscription_fini(&sub2, this->remote_node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  VerifySubsystemCount(expected_node_state{1, 0, 0}, expected_node_state{1, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
 }
 
 TEST_F(NodeGraphMultiNodeFixture, test_node_info_publishers)
@@ -939,14 +1095,14 @@ TEST_F(NodeGraphMultiNodeFixture, test_node_info_publishers)
   ret = rcl_publisher_init(&pub, this->node_ptr, ts, this->topic_name.c_str(), &pub_ops);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  VerifySubsystemCount(expected_node_state{2, 0, 0}, expected_node_state{1, 0, 0});
+  VerifySubsystemCount(expected_node_state{2, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
 
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Destroyed publisher");
   // Destroy the publisher.
   ret = rcl_publisher_fini(&pub, this->node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  VerifySubsystemCount(expected_node_state{1, 0, 0}, expected_node_state{1, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
 }
 
 TEST_F(NodeGraphMultiNodeFixture, test_node_info_services)
@@ -958,12 +1114,29 @@ TEST_F(NodeGraphMultiNodeFixture, test_node_info_services)
   auto ts1 = ROSIDL_GET_SRV_TYPE_SUPPORT(test_msgs, srv, BasicTypes);
   ret = rcl_service_init(&service, this->node_ptr, ts1, service_name, &service_options);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  VerifySubsystemCount(expected_node_state{1, 0, 1}, expected_node_state{1, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 1, 0}, expected_node_state{1, 0, 0, 0});
 
   // Destroy service.
   ret = rcl_service_fini(&service, this->node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  VerifySubsystemCount(expected_node_state{1, 0, 0}, expected_node_state{1, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
+}
+
+TEST_F(NodeGraphMultiNodeFixture, test_node_info_clients)
+{
+  rcl_ret_t ret;
+  const char * service_name = "test_service";
+  rcl_client_t client = rcl_get_zero_initialized_client();
+  rcl_client_options_t client_options = rcl_client_get_default_options();
+  auto ts = ROSIDL_GET_SRV_TYPE_SUPPORT(test_msgs, srv, BasicTypes);
+  ret = rcl_client_init(&client, this->node_ptr, ts, service_name, &client_options);
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 1}, expected_node_state{1, 0, 0, 0});
+
+  // Destroy client
+  ret = rcl_client_fini(&client, this->node_ptr);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
 }
 
 /*
@@ -1107,7 +1280,8 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_graph_guard_conditi
     ret = rcl_wait_set_add_guard_condition(this->wait_set_ptr, graph_guard_condition, NULL);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     std::chrono::nanoseconds time_to_sleep = std::chrono::milliseconds(400);
-    RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
+    RCUTILS_LOG_INFO_NAMED(
+      ROS_PACKAGE_NAME,
       "waiting up to '%s' nanoseconds for graph changes",
       std::to_string(time_to_sleep.count()).c_str());
     ret = rcl_wait(this->wait_set_ptr, time_to_sleep.count());
@@ -1132,7 +1306,8 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_rcl_service_server_
   rcl_client_options_t client_options = rcl_client_get_default_options();
   ret = rcl_client_init(&client, this->node_ptr, ts, service_name, &client_options);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     rcl_ret_t ret = rcl_client_fini(&client, this->node_ptr);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -1164,7 +1339,8 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_rcl_service_server_
         ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
         ret = rcl_wait_set_add_guard_condition(this->wait_set_ptr, graph_guard_condition, NULL);
         ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-        RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME,
+        RCUTILS_LOG_INFO_NAMED(
+          ROS_PACKAGE_NAME,
           "waiting up to '%s' nanoseconds for graph changes",
           std::to_string(time_to_sleep.count()).c_str());
         ret = rcl_wait(this->wait_set_ptr, time_to_sleep.count());
@@ -1199,7 +1375,8 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_rcl_service_server_
     rcl_service_options_t service_options = rcl_service_get_default_options();
     ret = rcl_service_init(&service, this->node_ptr, ts, service_name, &service_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
       rcl_ret_t ret = rcl_service_fini(&service, this->node_ptr);
       EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     });
@@ -1210,4 +1387,172 @@ TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_rcl_service_server_
   // Assert the state goes back to "not available" after the service is removed.
   wait_for_service_state_to_change(false, is_available);
   ASSERT_FALSE(is_available);
+}
+
+/* Test passing invalid params to server_is_available
+ */
+TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_bad_server_available) {
+  // Create a client which will be used to call the function.
+  rcl_client_t client = rcl_get_zero_initialized_client();
+  auto ts = ROSIDL_GET_SRV_TYPE_SUPPORT(test_msgs, srv, BasicTypes);
+  const char * service_name = "/service_test_rcl_service_server_is_available";
+  rcl_client_options_t client_options = rcl_client_get_default_options();
+  rcl_ret_t ret = rcl_client_init(&client, this->node_ptr, ts, service_name, &client_options);
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_ret_t ret = rcl_client_fini(&client, this->node_ptr);
+    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  });
+  // Check, knowing there is no service server (created by us at least).
+  bool is_available;
+  ret = rcl_service_server_is_available(this->node_ptr, &client, &is_available);
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  ASSERT_FALSE(is_available);
+
+  ret = rcl_service_server_is_available(nullptr, &client, &is_available);
+  EXPECT_EQ(RCL_RET_NODE_INVALID, ret);
+  rcl_reset_error();
+  rcl_node_t not_init_node = rcl_get_zero_initialized_node();
+  ret = rcl_service_server_is_available(&not_init_node, &client, &is_available);
+  EXPECT_EQ(RCL_RET_NODE_INVALID, ret);
+  rcl_reset_error();
+}
+
+/* Test passing invalid params to get_node_names functions
+ */
+TEST_F(CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION), test_bad_get_node_names) {
+  rcutils_string_array_t node_names = rcutils_get_zero_initialized_string_array();
+  rcutils_string_array_t node_namespaces = rcutils_get_zero_initialized_string_array();
+
+  rcutils_string_array_t node_names_2 = rcutils_get_zero_initialized_string_array();
+  rcutils_string_array_t node_namespaces_2 = rcutils_get_zero_initialized_string_array();
+  rcutils_string_array_t node_enclaves = rcutils_get_zero_initialized_string_array();
+  rcl_ret_t ret = RCL_RET_OK;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    ret = rcutils_string_array_fini(&node_names);
+    EXPECT_EQ(RCUTILS_RET_OK, ret);
+    ret = rcutils_string_array_fini(&node_namespaces);
+    EXPECT_EQ(RCUTILS_RET_OK, ret);
+    ret = rcutils_string_array_fini(&node_enclaves);
+    EXPECT_EQ(RCUTILS_RET_OK, ret);
+  });
+  rcl_allocator_t allocator = rcl_get_default_allocator();
+
+  // Invalid nullptr as node
+  ret = rcl_get_node_names(nullptr, allocator, &node_names, &node_namespaces);
+  EXPECT_EQ(RCL_RET_NODE_INVALID, ret);
+  rcl_reset_error();
+  ret = rcl_get_node_names_with_enclaves(
+    nullptr, allocator, &node_names, &node_namespaces, &node_enclaves);
+  EXPECT_EQ(RCL_RET_NODE_INVALID, ret);
+  rcl_reset_error();
+
+  // Invalid not init node
+  rcl_node_t not_init_node = rcl_get_zero_initialized_node();
+  ret = rcl_get_node_names(&not_init_node, allocator, &node_names, &node_namespaces);
+  EXPECT_EQ(RCL_RET_NODE_INVALID, ret);
+  rcl_reset_error();
+  ret = rcl_get_node_names_with_enclaves(
+    &not_init_node, allocator, &node_names, &node_namespaces, &node_enclaves);
+  EXPECT_EQ(RCL_RET_NODE_INVALID, ret);
+  rcl_reset_error();
+
+  // Invalid nullptr as node names output
+  ret = rcl_get_node_names(this->node_ptr, allocator, nullptr, &node_namespaces);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  ret = rcl_get_node_names_with_enclaves(
+    this->node_ptr, allocator, nullptr, &node_namespaces, &node_enclaves);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  rcl_reset_error();
+
+  // Invalid nullptr as node_namespaces output
+  ret = rcl_get_node_names(this->node_ptr, allocator, &node_names, nullptr);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  ret = rcl_get_node_names_with_enclaves(
+    this->node_ptr, allocator, &node_names, nullptr, &node_enclaves);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  rcl_reset_error();
+
+  // Invalid nullptr as node_enclaves output
+  ret = rcl_get_node_names_with_enclaves(
+    this->node_ptr, allocator, &node_names, &node_namespaces, nullptr);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  rcl_reset_error();
+
+  // Invalid node_names previously init (size is set)
+  node_names.size = 1;
+  ret = rcl_get_node_names(this->node_ptr, allocator, &node_names, &node_namespaces);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  ret = rcl_get_node_names_with_enclaves(
+    this->node_ptr, allocator, &node_names, &node_namespaces, &node_enclaves);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  rcl_reset_error();
+  node_names.size = 0;
+
+  // Invalid node_names previously init (size is zero, but internal structure size is 1)
+  ret = rcutils_string_array_init(&node_names, 1, &allocator);
+  EXPECT_EQ(RCL_RET_OK, ret);
+  node_names.size = 0;
+  ret = rcl_get_node_names(this->node_ptr, allocator, &node_names, &node_namespaces);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  ret = rcl_get_node_names_with_enclaves(
+    this->node_ptr, allocator, &node_names, &node_namespaces, &node_enclaves);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  rcl_reset_error();
+  node_names.size = 1;
+  ret = rcutils_string_array_fini(&node_names);
+  EXPECT_EQ(RCL_RET_OK, ret);
+
+  // Invalid node_namespaces previously init (size is set)
+  node_namespaces.size = 1;
+  ret = rcl_get_node_names(this->node_ptr, allocator, &node_names, &node_namespaces);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  ret = rcl_get_node_names_with_enclaves(
+    this->node_ptr, allocator, &node_names, &node_namespaces, &node_enclaves);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  rcl_reset_error();
+  node_namespaces.size = 0;
+
+  // Invalid node_namespaces previously init (size is zero, but internal structure size is 1)
+  ret = rcutils_string_array_init(&node_namespaces, 1, &allocator);
+  EXPECT_EQ(RCL_RET_OK, ret);
+  node_namespaces.size = 0;
+  ret = rcl_get_node_names(this->node_ptr, allocator, &node_names, &node_namespaces);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  ret = rcl_get_node_names_with_enclaves(
+    this->node_ptr, allocator, &node_names, &node_namespaces, &node_enclaves);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  rcl_reset_error();
+  node_namespaces.size = 1;
+  ret = rcutils_string_array_fini(&node_namespaces);
+  EXPECT_EQ(RCL_RET_OK, ret);
+
+  // Invalid node_enclaves previously init (size is set)
+  node_enclaves.size = 1;
+  ret = rcl_get_node_names_with_enclaves(
+    this->node_ptr, allocator, &node_names, &node_namespaces, &node_enclaves);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  rcl_reset_error();
+  node_enclaves.size = 0;
+
+  // Invalid node_enclave previously init (size is zero, but internal structure size is 1)
+  ret = rcutils_string_array_init(&node_enclaves, 1, &allocator);
+  EXPECT_EQ(RCL_RET_OK, ret);
+  node_enclaves.size = 0;
+  ret = rcl_get_node_names_with_enclaves(
+    this->node_ptr, allocator, &node_names, &node_namespaces, &node_enclaves);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  rcl_reset_error();
+  node_enclaves.size = 1;
+  ret = rcutils_string_array_fini(&node_enclaves);
+  EXPECT_EQ(RCL_RET_OK, ret);
+
+  // Expected usage
+  ret = rcl_get_node_names(this->node_ptr, allocator, &node_names, &node_namespaces);
+  EXPECT_EQ(RCL_RET_OK, ret);
+  ret = rcl_get_node_names_with_enclaves(
+    this->node_ptr, allocator, &node_names_2, &node_namespaces_2, &node_enclaves);
+  EXPECT_EQ(RCL_RET_OK, ret);
 }
