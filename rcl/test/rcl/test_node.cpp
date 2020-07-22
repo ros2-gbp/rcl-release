@@ -73,14 +73,6 @@ public:
   }
 };
 
-bool is_opensplice =
-  std::string(rmw_get_implementation_identifier()).find("opensplice") != std::string::npos;
-#if defined(_WIN32)
-bool is_windows = true;
-#else
-bool is_windows = false;
-#endif  // defined(_WIN32)
-
 /* Tests the node accessors, i.e. rcl_node_get_* functions.
  */
 TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) {
@@ -262,7 +254,7 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   ASSERT_TRUE(rcl_error_is_set());
   rcl_reset_error();
   ret = rcl_node_get_domain_id(&invalid_node, &actual_domain_id);
-  EXPECT_EQ(RCL_RET_OK, ret);
+  EXPECT_EQ(RCL_RET_NODE_INVALID, ret);
   rcl_reset_error();
   EXPECT_NO_MEMORY_OPERATIONS(
   {
@@ -270,6 +262,14 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_accessors) 
   });
   EXPECT_EQ(RCL_RET_OK, ret);
   EXPECT_EQ(42u, actual_domain_id);
+  actual_domain_id = 0u;
+  EXPECT_NO_MEMORY_OPERATIONS(
+  {
+    ret = rcl_context_get_domain_id(&context, &actual_domain_id);
+  });
+  EXPECT_EQ(RCL_RET_OK, ret);
+  EXPECT_EQ(42u, actual_domain_id);
+
   // Test rcl_node_get_rmw_handle().
   rmw_node_t * node_handle;
   node_handle = rcl_node_get_rmw_handle(nullptr);
@@ -767,4 +767,6 @@ TEST_F(CLASSNAME(TestNodeFixture, RMW_IMPLEMENTATION), test_rcl_node_options_fai
 
   rcl_node_options_t default_options = rcl_node_get_default_options();
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_node_options_copy(&default_options, &prev_ini_options));
+
+  EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&prev_ini_options.arguments));
 }
