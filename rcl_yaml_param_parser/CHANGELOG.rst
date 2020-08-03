@@ -2,17 +2,12 @@
 Changelog for package rcl_yaml_param_parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.1.0 (2020-07-22)
+1.1.7 (2020-08-03)
 ------------------
-* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_)
+* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_) (`#724 <https://github.com/ros2/rcl/issues/724>`_)
 * Contributors: Alejandro Hernández Cordero
 
-2.0.0 (2020-07-09)
-------------------
-* Update quality declaration and coverage (`#674 <https://github.com/ros2/rcl/issues/674>`_)
-* Contributors: Alejandro Hernández Cordero
-
-1.2.0 (2020-06-18)
+1.1.6 (2020-07-07)
 ------------------
 
 1.1.5 (2020-06-03)

@@ -2,20 +2,14 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.1.0 (2020-07-22)
+1.1.7 (2020-08-03)
 ------------------
-* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_)
-* Address issue 716 by zero initializing pointers and freeing memory (`#717 <https://github.com/ros2/rcl/issues/717>`_)
-* Contributors: Alejandro Hernández Cordero, brawner
-
-2.0.0 (2020-07-09)
-------------------
-* Update quality declaration and coverage (`#674 <https://github.com/ros2/rcl/issues/674>`_)
+* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_) (`#724 <https://github.com/ros2/rcl/issues/724>`_)
 * Contributors: Alejandro Hernández Cordero
 
-1.2.0 (2020-06-18)
+1.1.6 (2020-07-07)
 ------------------
-* Fixed doxygen warnings (`#677 <https://github.com/ros2/rcl/issues/677>`_)
+* Fixed doxygen warnings (`#677 <https://github.com/ros2/rcl/issues/677>`_) (`#696 <https://github.com/ros2/rcl/issues/696>`_)
 * Contributors: Alejandro Hernández Cordero
 
 1.1.5 (2020-06-03)

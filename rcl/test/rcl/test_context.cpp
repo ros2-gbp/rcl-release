@@ -87,28 +87,6 @@ TEST_F(CLASSNAME(TestContextFixture, RMW_IMPLEMENTATION), nominal) {
   EXPECT_NE(instance_id, 0UL) << rcl_get_error_string().str;
   rcl_reset_error();
 
-  // test rcl_context_get_domain_id
-  size_t domain_id;
-
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
-    EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_context_get_domain_id(&context, nullptr));
-  });
-  EXPECT_TRUE(rcl_error_is_set());
-  rcl_reset_error();
-
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
-    EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_context_get_domain_id(nullptr, &domain_id));
-  });
-  EXPECT_TRUE(rcl_error_is_set());
-  rcl_reset_error();
-
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
-    EXPECT_EQ(RCL_RET_OK, rcl_context_get_domain_id(&context, &domain_id));
-  });
-
   // test rcl_context_is_valid
   bool is_valid;
   EXPECT_NO_MEMORY_OPERATIONS(
@@ -145,31 +123,4 @@ TEST_F(CLASSNAME(TestContextFixture, RMW_IMPLEMENTATION), nominal) {
 
   ret = rcl_init_options_fini(&init_options);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-}
-
-TEST_F(CLASSNAME(TestContextFixture, RMW_IMPLEMENTATION), bad_fini) {
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_context_fini(nullptr));
-  rcl_reset_error();
-
-  rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
-  rcl_ret_t ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
-  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
-  });
-
-  rcl_context_t context = rcl_get_zero_initialized_context();
-  ret = rcl_init(0, nullptr, &init_options, &context);
-  EXPECT_EQ(RCL_RET_OK, ret);
-
-  ret = rcl_context_fini(&context);
-  EXPECT_EQ(ret, RCL_RET_INVALID_ARGUMENT);
-  rcl_reset_error();
-
-  ret = rcl_shutdown(&context);
-  EXPECT_EQ(ret, RCL_RET_OK);
-
-  ret = rcl_context_fini(&context);
-  EXPECT_EQ(ret, RCL_RET_OK);
 }
