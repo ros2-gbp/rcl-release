@@ -194,6 +194,7 @@ rcl_subscription_init(
 fail:
   if (subscription->impl) {
     allocator->deallocate(subscription->impl, allocator->state);
+    subscription->impl = NULL;
   }
   ret = fail_ret;
   // Fall through to cleanup
@@ -210,6 +211,11 @@ cleanup:
 rcl_ret_t
 rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_SUBSCRIPTION_INVALID);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_NODE_INVALID);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
+
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Finalizing subscription");
   rcl_ret_t result = RCL_RET_OK;
   RCL_CHECK_ARGUMENT_FOR_NULL(subscription, RCL_RET_SUBSCRIPTION_INVALID);
@@ -229,6 +235,7 @@ rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
       result = RCL_RET_ERROR;
     }
     allocator.deallocate(subscription->impl, allocator.state);
+    subscription->impl = NULL;
   }
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription finalized");
   return result;
@@ -270,10 +277,7 @@ rcl_take(
     subscription->impl->rmw_handle, ros_message, &taken, message_info_local, allocation);
   if (ret != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
-    if (RMW_RET_BAD_ALLOC == ret) {
-      return RCL_RET_BAD_ALLOC;
-    }
-    return RCL_RET_ERROR;
+    return rcl_convert_rmw_ret_to_rcl_ret(ret);
   }
   RCUTILS_LOG_DEBUG_NAMED(
     ROS_PACKAGE_NAME, "Subscription take succeeded: %s", taken ? "true" : "false");
@@ -292,10 +296,6 @@ rcl_take_sequence(
   rmw_subscription_allocation_t * allocation
 )
 {
-  // Set the sizes to zero to indicate that there are no valid messages
-  message_sequence->size = 0u;
-  message_info_sequence->size = 0u;
-
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription taking %zu messages", count);
   if (!rcl_subscription_is_valid(subscription)) {
     return RCL_RET_SUBSCRIPTION_INVALID;  // error message already set
@@ -312,6 +312,10 @@ rcl_take_sequence(
     RCL_SET_ERROR_MSG("Insufficient message info sequence capacity for requested count");
     return RCL_RET_INVALID_ARGUMENT;
   }
+
+  // Set the sizes to zero to indicate that there are no valid messages
+  message_sequence->size = 0u;
+  message_info_sequence->size = 0u;
 
   size_t taken = 0u;
   rmw_ret_t ret = rmw_take_sequence(
@@ -352,10 +356,7 @@ rcl_take_serialized_message(
     subscription->impl->rmw_handle, serialized_message, &taken, message_info_local, allocation);
   if (ret != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
-    if (RMW_RET_BAD_ALLOC == ret) {
-      return RCL_RET_BAD_ALLOC;
-    }
-    return RCL_RET_ERROR;
+    return rcl_convert_rmw_ret_to_rcl_ret(ret);
   }
   RCUTILS_LOG_DEBUG_NAMED(
     ROS_PACKAGE_NAME, "Subscription serialized take succeeded: %s", taken ? "true" : "false");
@@ -376,6 +377,7 @@ rcl_take_loaned_message(
   if (!rcl_subscription_is_valid(subscription)) {
     return RCL_RET_SUBSCRIPTION_INVALID;  // error already set
   }
+  RCL_CHECK_ARGUMENT_FOR_NULL(loaned_message, RCL_RET_INVALID_ARGUMENT);
   if (*loaned_message) {
     RCL_SET_ERROR_MSG("loaned message is already initialized");
     return RCL_RET_INVALID_ARGUMENT;
@@ -390,10 +392,7 @@ rcl_take_loaned_message(
     subscription->impl->rmw_handle, loaned_message, &taken, message_info_local, allocation);
   if (ret != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
-    if (RMW_RET_BAD_ALLOC == ret) {
-      return RCL_RET_BAD_ALLOC;
-    }
-    return RCL_RET_ERROR;
+    return rcl_convert_rmw_ret_to_rcl_ret(ret);
   }
   RCUTILS_LOG_DEBUG_NAMED(
     ROS_PACKAGE_NAME, "Subscription loaned take succeeded: %s", taken ? "true" : "false");
@@ -413,8 +412,9 @@ rcl_return_loaned_message_from_subscription(
     return RCL_RET_SUBSCRIPTION_INVALID;  // error already set
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(loaned_message, RCL_RET_INVALID_ARGUMENT);
-  return rmw_return_loaned_message_from_subscription(
-    subscription->impl->rmw_handle, loaned_message);
+  return rcl_convert_rmw_ret_to_rcl_ret(
+    rmw_return_loaned_message_from_subscription(
+      subscription->impl->rmw_handle, loaned_message));
 }
 
 const char *
@@ -462,6 +462,9 @@ rcl_subscription_get_publisher_count(
   const rcl_subscription_t * subscription,
   size_t * publisher_count)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_SUBSCRIPTION_INVALID);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
+
   if (!rcl_subscription_is_valid(subscription)) {
     return RCL_RET_SUBSCRIPTION_INVALID;
   }
