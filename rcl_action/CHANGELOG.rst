@@ -2,14 +2,26 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.1.7 (2020-08-03)
+2.2.0 (2020-09-02)
 ------------------
-* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_) (`#724 <https://github.com/ros2/rcl/issues/724>`_)
+* Add fault injection macros and unit tests to rcl_action (`#730 <https://github.com/ros2/rcl/issues/730>`_)
+* Change some EXPECT_EQ to ASSERT_EQ in test_action_server. (`#759 <https://github.com/ros2/rcl/issues/759>`_)
+* Contributors: Chris Lalancette, brawner
+
+2.1.0 (2020-07-22)
+------------------
+* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_)
+* Address issue 716 by zero initializing pointers and freeing memory (`#717 <https://github.com/ros2/rcl/issues/717>`_)
+* Contributors: Alejandro Hernández Cordero, brawner
+
+2.0.0 (2020-07-09)
+------------------
+* Update quality declaration and coverage (`#674 <https://github.com/ros2/rcl/issues/674>`_)
 * Contributors: Alejandro Hernández Cordero
 
-1.1.6 (2020-07-07)
+1.2.0 (2020-06-18)
 ------------------
-* Fixed doxygen warnings (`#677 <https://github.com/ros2/rcl/issues/677>`_) (`#696 <https://github.com/ros2/rcl/issues/696>`_)
+* Fixed doxygen warnings (`#677 <https://github.com/ros2/rcl/issues/677>`_)
 * Contributors: Alejandro Hernández Cordero
 
 1.1.5 (2020-06-03)
