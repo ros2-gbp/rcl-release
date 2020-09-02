@@ -312,10 +312,12 @@ TEST(test_file_parser, seq_map1) {
   ASSERT_TRUE(rcutils_exists(path)) << "No test YAML file found at " << path;
   rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
   ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_yaml_node_struct_fini(params_hdl);
+  });
   bool res = rcl_parse_yaml_file(path, params_hdl);
-  fprintf(stderr, "%s\n", rcutils_get_error_string().str);
   EXPECT_FALSE(res);
-  // No cleanup, rcl_parse_yaml_file takes care of that if it fails.
 }
 
 TEST(test_file_parser, seq_map2) {
@@ -337,10 +339,12 @@ TEST(test_file_parser, seq_map2) {
   ASSERT_TRUE(rcutils_exists(path)) << "No test YAML file found at " << path;
   rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
   ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_yaml_node_struct_fini(params_hdl);
+  });
   bool res = rcl_parse_yaml_file(path, params_hdl);
-  fprintf(stderr, "%s\n", rcutils_get_error_string().str);
   EXPECT_FALSE(res);
-  // No cleanup, rcl_parse_yaml_file takes care of that if it fails
 }
 
 TEST(test_file_parser, params_with_no_node) {
@@ -362,10 +366,12 @@ TEST(test_file_parser, params_with_no_node) {
   ASSERT_TRUE(rcutils_exists(path)) << "No test YAML file found at " << path;
   rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
   ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_yaml_node_struct_fini(params_hdl);
+  });
   bool res = rcl_parse_yaml_file(path, params_hdl);
-  fprintf(stderr, "%s\n", rcutils_get_error_string().str);
   EXPECT_FALSE(res);
-  // No cleanup, rcl_parse_yaml_file takes care of that if it fails.
 }
 
 TEST(test_file_parser, no_alias_support) {
@@ -387,10 +393,12 @@ TEST(test_file_parser, no_alias_support) {
   ASSERT_TRUE(rcutils_exists(path)) << "No test YAML file found at " << path;
   rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
   ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_yaml_node_struct_fini(params_hdl);
+  });
   bool res = rcl_parse_yaml_file(path, params_hdl);
-  fprintf(stderr, "%s\n", rcutils_get_error_string().str);
   EXPECT_FALSE(res);
-  // No cleanup, rcl_parse_yaml_file takes care of that if it fails.
 }
 
 TEST(test_file_parser, empty_string) {
@@ -440,10 +448,12 @@ TEST(test_file_parser, no_value1) {
   ASSERT_TRUE(rcutils_exists(path)) << "No test YAML file found at " << path;
   rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
   ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_yaml_node_struct_fini(params_hdl);
+  });
   bool res = rcl_parse_yaml_file(path, params_hdl);
-  fprintf(stderr, "%s\n", rcutils_get_error_string().str);
   EXPECT_FALSE(res);
-  // No cleanup, rcl_parse_yaml_file takes care of that if it fails.
 }
 
 TEST(test_file_parser, indented_ns) {
@@ -465,10 +475,12 @@ TEST(test_file_parser, indented_ns) {
   ASSERT_TRUE(rcutils_exists(path)) << "No test YAML file found at " << path;
   rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
   ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_yaml_node_struct_fini(params_hdl);
+  });
   bool res = rcl_parse_yaml_file(path, params_hdl);
-  fprintf(stderr, "%s\n", rcutils_get_error_string().str);
   EXPECT_FALSE(res);
-  // No cleanup, rcl_parse_yaml_file takes care of that if it fails.
 }
 
 // Regression test for https://github.com/ros2/rcl/issues/419
@@ -491,10 +503,12 @@ TEST(test_file_parser, maximum_number_parameters) {
   ASSERT_TRUE(rcutils_exists(path)) << "No test YAML file found at " << path;
   rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
   ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_yaml_node_struct_fini(params_hdl);
+  });
   bool res = rcl_parse_yaml_file(path, params_hdl);
-  fprintf(stderr, "%s\n", rcutils_get_error_string().str);
   EXPECT_FALSE(res);
-  // No cleanup, rcl_parse_yaml_file takes care of that if it fails.
 }
 
 int32_t main(int32_t argc, char ** argv)
