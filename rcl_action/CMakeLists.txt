@@ -81,7 +81,6 @@ if(BUILD_TESTING)
   # Gtests
   ament_add_gtest(test_action_client
     test/rcl_action/test_action_client.cpp
-    TIMEOUT 360
   )
   if(TARGET test_action_client)
     target_include_directories(test_action_client PUBLIC
@@ -96,7 +95,6 @@ if(BUILD_TESTING)
       "rcl"
       "test_msgs"
     )
-    target_compile_definitions(test_action_client PUBLIC RCUTILS_ENABLE_FAULT_INJECTION)
   endif()
 
   # get the rmw implementations ahead of time
@@ -109,7 +107,7 @@ if(BUILD_TESTING)
   function(custom_test_c target)
     ament_add_gtest(
       "${target}${target_suffix}" ${ARGN}
-      TIMEOUT 180
+      TIMEOUT 60
       ENV
       RCL_ASSERT_RMW_ID_MATCHES=${rmw_implementation}
       RMW_IMPLEMENTATION=${rmw_implementation}
@@ -117,8 +115,6 @@ if(BUILD_TESTING)
     if(TARGET ${target}${target_suffix})
       target_compile_definitions(${target}${target_suffix}
         PUBLIC "RMW_IMPLEMENTATION=${rmw_implementation}")
-        target_compile_definitions(${target}${target_suffix}
-          PUBLIC RCUTILS_ENABLE_FAULT_INJECTION)
       target_include_directories(${target}${target_suffix} PUBLIC
         include
       )
@@ -147,7 +143,6 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_action_server
     test/rcl_action/test_action_server.cpp
-    TIMEOUT 120
   )
   if(TARGET test_action_server)
     target_include_directories(test_action_server PUBLIC
@@ -162,7 +157,6 @@ if(BUILD_TESTING)
       "rcl"
       "test_msgs"
     )
-    target_compile_definitions(test_action_server PUBLIC RCUTILS_ENABLE_FAULT_INJECTION)
   endif()
   ament_add_gtest(test_goal_handle
     test/rcl_action/test_goal_handle.cpp

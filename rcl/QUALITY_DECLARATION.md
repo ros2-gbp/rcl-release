@@ -2,7 +2,7 @@ This document is a declaration of software quality for the `rcl` package, based 
 
 # `rcl` Quality Declaration
 
-The package `rcl` claims to be in the **Quality Level 3** category.
+The package `rcl` claims to be in the **Quality Level 4** category.
 
 Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#package-quality-categories).
 
@@ -71,7 +71,7 @@ All pull requests must resolve related documentation changes before merging.
 
 ### Public API Documentation [3.ii]
 
-`rcl` has embedded API documentation and it is generated using doxygen. Currently, its latest version is hosted [here](http://docs.ros2.org/latest/api/rcl/).
+`rcl` has embedded API documentation and it is generated using doxygen. Currently, its eloquent version is hosted [here](http://docs.ros2.org/eloquent/api/rcl/). Latest version has to be generated before considering this item fully resolved.
 
 New additions to the public API require documentation before being added.
 
@@ -101,9 +101,7 @@ Currently nightly test results can be seen here:
 
 ### Public API Testing [4.ii]
 
-Each part of the public API has tests, and new additions or changes to the public API require tests before being added. The tests aim to cover both typical usage and corner cases, but are quantified by contributing to code coverage.
-
-The following functions are partially supported: `rcl_take_loaned_message`, `rcl_return_loaned_message_from_subscription`, `rcl_borrow_loaned_message`, `rcl_return_loaned_message_from_publisher` and `rcl_publish_loaned_message` because they are not currently supported on Tier 1 RMW providers.
+Most of the functionality of the declared API in this package is covered in its unit tests. Currently it has a line coverage of [77%](https://ci.ros2.org/job/ci_linux_coverage/85/cobertura/src_ros2_rcl_rcl_src_rcl/).
 
 ### Coverage [4.iii]
 
@@ -116,7 +114,7 @@ This includes:
 
 Changes are required to make a best effort to keep or increase coverage before being accepted, but decreases are allowed if properly justified and accepted by reviewers.
 
-Current coverage statistics can be viewed [here](https://ci.ros2.org/job/nightly_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rcl_rcl_src_rcl/). A description of how coverage statistics are calculated is summarized in this page ["ROS 2 Onboarding Guide"](https://index.ros.org/doc/ros2/Contributing/ROS-2-On-boarding-Guide/#note-on-coverage-runs).
+Current coverage statistics can be viewed (77%) [here](https://ci.ros2.org/job/ci_linux_coverage/85/cobertura/src_ros2_rcl_rcl_src_rcl/). Current coverage statistics need to be improved to reach a higher quality level.
 
 ### Performance [4.iv]
 
@@ -169,7 +167,7 @@ It is **Quality Level 4**, see its [Quality Declaration document](https://github
 
 The `rcutils` package provides an API which contains common utilities and data structures needed when programming in C.
 
-It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md).
 
 #### `rmw_implementation`
 
@@ -187,7 +185,7 @@ It is **Quality Level 4**, see its [Quality Declaration document](https://github
 
 The `tracetools` package provides utilities for instrumenting the code in `rcl` so that it may be traced for debugging and performance analysis.
 
-It is **Quality Level 2**, see its [Quality Declaration document](https://gitlab.com/micro-ROS/ros_tracing/ros2_tracing/-/blob/master/tracetools/QUALITY_DECLARATION.md).
+It is **Quality Level 4**, see its [Quality Declaration document](https://gitlab.com/micro-ROS/ros_tracing/ros2_tracing/-/blob/master/tracetools/QUALITY_DECLARATION.md).
 
 ### Optional Direct Runtime ROS Dependencies [5.ii]
 
@@ -215,7 +213,7 @@ The chart below compares the requirements in the REP-2004 with the current state
 |--|--|--|
 |1| **Version policy** |---|
 |1.i|Version Policy available | ✓ |
-|1.ii|Stable version |✓|
+|1.ii|Stable version |☓|
 |1.iii|Declared public API|✓|
 |1.iv|API stability policy|✓|
 |1.v|ABI stability policy|✓|
@@ -227,8 +225,8 @@ The chart below compares the requirements in the REP-2004 with the current state
 |2.iv| CI policy for change requests | ✓ |
 |2.v| Documentation policy for change requests | ✓ |
 |3| **Documentation** | --- |
-|3.i| Per feature documentation | ✓ |
-|3.ii| Per public API item documentation | ✓ |
+|3.i| Per feature documentation | ☓ |
+|3.ii| Per public API item documentation | * |
 |3.iii| Declared License(s) | ✓ |
 |3.iv| Copyright in source files| ✓ |
 |3.v.a| Quality declaration linked to README | ✓ |
@@ -236,7 +234,7 @@ The chart below compares the requirements in the REP-2004 with the current state
 |4| Testing | --- |
 |4.i| Feature items tests | ✓ |
 |4.ii| Public API tests | ✓ |
-|4.iii.a| Using coverage | ✓ |
+|4.iii.a| Using coverage | * |
 |4.iii.a| Coverage policy | ✓ |
 |4.iv.a| Performance tests (if applicable) | ☓ |
 |4.iv.b| Performance tests policy| ✓ |
@@ -249,4 +247,4 @@ The chart below compares the requirements in the REP-2004 with the current state
 |6| Platform support | --- |
 |6.i| Support targets Tier1 ROS platforms| ✓ |
 |7| Security | --- |
-|7.i| Vulnerability Disclosure Policy | ✓ |
+|7.i| Vulnerability Disclosure Policy | ☓ |

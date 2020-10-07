@@ -19,7 +19,6 @@
 #include "rcl/error_handling.h"
 #include "rcl/expand_topic_name.h"
 #include "rcutils/allocator.h"
-#include "rcutils/macros.h"
 #include "rcutils/strdup.h"
 #include "rcutils/types/string_map.h"
 
@@ -42,12 +41,8 @@ rcl_remap_copy(
   const rcl_remap_t * rule,
   rcl_remap_t * rule_out)
 {
-  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
-  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_BAD_ALLOC);
-
   RCL_CHECK_ARGUMENT_FOR_NULL(rule, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(rule_out, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(rule->impl, RCL_RET_INVALID_ARGUMENT);
 
   if (NULL != rule_out->impl) {
     RCL_SET_ERROR_MSG("rule_out must be zero initialized");
@@ -293,11 +288,6 @@ rcl_remap_node_name(
   rcl_allocator_t allocator,
   char ** output_name)
 {
-  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
-  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_NODE_INVALID_NAME);
-  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_BAD_ALLOC);
-  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
-
   RCL_CHECK_ALLOCATOR_WITH_MSG(&allocator, "allocator is invalid", return RCL_RET_INVALID_ARGUMENT);
   return _rcl_remap_name(
     local_arguments, global_arguments, RCL_NODENAME_REMAP, NULL, node_name, NULL, NULL,
@@ -312,11 +302,6 @@ rcl_remap_node_namespace(
   rcl_allocator_t allocator,
   char ** output_namespace)
 {
-  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
-  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_NODE_INVALID_NAMESPACE);
-  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_BAD_ALLOC);
-  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
-
   RCL_CHECK_ALLOCATOR_WITH_MSG(&allocator, "allocator is invalid", return RCL_RET_INVALID_ARGUMENT);
   return _rcl_remap_name(
     local_arguments, global_arguments, RCL_NAMESPACE_REMAP, NULL, node_name, NULL, NULL,

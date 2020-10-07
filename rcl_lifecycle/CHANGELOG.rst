@@ -2,25 +2,19 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-2.2.0 (2020-09-02)
+1.1.8 (2020-10-07)
 ------------------
-* Add fault injection macros and unit tests to rcl_lifecycle (`#731 <https://github.com/ros2/rcl/issues/731>`_)
-* Remove std::cout line from test_rcl_lifecycle.cpp (`#773 <https://github.com/ros2/rcl/issues/773>`_)
-* Set transition_map->states/transition size to 0 on fini (`#729 <https://github.com/ros2/rcl/issues/729>`_)
-* Contributors: brawner
+* Set transition_map->states/transition size to 0 on fini (`#729 <https://github.com/ros2/rcl/issues/729>`_) (`#821 <https://github.com/ros2/rcl/issues/821>`_)
+* Topic fix rcl lifecycle test issue (`#715 <https://github.com/ros2/rcl/issues/715>`_) (`#796 <https://github.com/ros2/rcl/issues/796>`_)
+* Remove std::cout line from test_rcl_lifecycle.cpp (`#773 <https://github.com/ros2/rcl/issues/773>`_) (`#774 <https://github.com/ros2/rcl/issues/774>`_)
+* Contributors: Shane Loretz, Stephen Brawner
 
-2.1.0 (2020-07-22)
+1.1.7 (2020-08-03)
 ------------------
-* Topic fix rcl lifecycle test issue (`#715 <https://github.com/ros2/rcl/issues/715>`_)
-* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_)
-* Contributors: Alejandro Hernández Cordero, Barry Xu
-
-2.0.0 (2020-07-09)
-------------------
-* Update quality declaration and coverage (`#674 <https://github.com/ros2/rcl/issues/674>`_)
+* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_) (`#724 <https://github.com/ros2/rcl/issues/724>`_)
 * Contributors: Alejandro Hernández Cordero
 
-1.2.0 (2020-06-18)
+1.1.6 (2020-07-07)
 ------------------
 
 1.1.5 (2020-06-03)

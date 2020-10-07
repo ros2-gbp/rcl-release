@@ -152,6 +152,9 @@ rcl_init(
       goto fail;
     }
   }
+  if (RMW_DEFAULT_DOMAIN_ID == *domain_id) {
+    *domain_id = 0u;
+  }
 
   rmw_localhost_only_t * localhost_only =
     &context->impl->init_options.impl->rmw_init_options.localhost_only;
@@ -172,13 +175,6 @@ rcl_init(
     context->impl->init_options.impl->rmw_init_options.enclave = rcutils_strdup(
       "/", context->impl->allocator);
   }
-
-  if (!context->impl->init_options.impl->rmw_init_options.enclave) {
-    RCL_SET_ERROR_MSG("failed to set context name");
-    fail_ret = RCL_RET_BAD_ALLOC;
-    goto fail;
-  }
-
   int validation_result;
   size_t invalid_index;
   ret = rcl_validate_enclave_name(
@@ -196,6 +192,12 @@ rcl_init(
       rcl_enclave_name_validation_result_string(validation_result),
       invalid_index);
     fail_ret = RCL_RET_ERROR;
+    goto fail;
+  }
+
+  if (!context->impl->init_options.impl->rmw_init_options.enclave) {
+    RCL_SET_ERROR_MSG("failed to set context name");
+    fail_ret = RCL_RET_BAD_ALLOC;
     goto fail;
   }
 
@@ -242,14 +244,14 @@ rcl_shutdown(rcl_context_t * context)
     return RCL_RET_ALREADY_SHUTDOWN;
   }
 
+  // reset the instance id to 0 to indicate "invalid"
+  rcutils_atomic_store((atomic_uint_least64_t *)(&context->instance_id_storage), 0);
+
   rmw_ret_t rmw_ret = rmw_shutdown(&(context->impl->rmw_context));
   if (RMW_RET_OK != rmw_ret) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     return rcl_convert_rmw_ret_to_rcl_ret(rmw_ret);
   }
-
-  // reset the instance id to 0 to indicate "invalid"
-  rcutils_atomic_store((atomic_uint_least64_t *)(&context->instance_id_storage), 0);
 
   return RCL_RET_OK;
 }
