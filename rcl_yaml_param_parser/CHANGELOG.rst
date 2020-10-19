@@ -2,21 +2,42 @@
 Changelog for package rcl_yaml_param_parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.1.8 (2020-10-07)
+2.3.0 (2020-10-19)
 ------------------
-* Fix yaml parser error when meets .nan (refactor on `#754 <https://github.com/ros2/rcl/issues/754>`_) (`#781 <https://github.com/ros2/rcl/issues/781>`_) (`#785 <https://github.com/ros2/rcl/issues/785>`_)
-* Refactor parser.c for better testability (`#754 <https://github.com/ros2/rcl/issues/754>`_) (`#784 <https://github.com/ros2/rcl/issues/784>`_)
-* Don't overwrite cur_ns pointer if reallocation fails (`#780 <https://github.com/ros2/rcl/issues/780>`_) (`#783 <https://github.com/ros2/rcl/issues/783>`_)
-* Set yaml_variant values to NULL on finalization (`#765 <https://github.com/ros2/rcl/issues/765>`_) (`#782 <https://github.com/ros2/rcl/issues/782>`_)
-* Fix rcl_parse_yaml_file() error handling (`#776 <https://github.com/ros2/rcl/issues/776>`_) (`#786 <https://github.com/ros2/rcl/issues/786>`_)
-* Contributors: Michel Hidalgo, Stephen Brawner
+* Update maintainers (`#825 <https://github.com/ros2/rcl/issues/825>`_)
+* Updated performance section QD (`#817 <https://github.com/ros2/rcl/issues/817>`_)
+* Several memory-related fixes for rcl_variant_t benchmarks (`#813 <https://github.com/ros2/rcl/issues/813>`_)
+* Improved rcl_yaml_param_parser benchmark test (`#810 <https://github.com/ros2/rcl/issues/810>`_)
+* Added benchmark test to rcl_yaml_param_parser (`#803 <https://github.com/ros2/rcl/issues/803>`_)
+* Remove MAX_NUM_PARAMS_PER_NODE and MAX_NUM_NODE_ENTRIES limitation. (`#802 <https://github.com/ros2/rcl/issues/802>`_)
+* Add mocking unit tests for rcl_yaml_param_parser (coverage part 3/3) (`#772 <https://github.com/ros2/rcl/issues/772>`_)
+* Add fault-injection unit tests (coverage part 2/3) (`#766 <https://github.com/ros2/rcl/issues/766>`_)
+* Add basic unit tests for refactored functions in rcl_yaml_param_parser (coverage part 1/3) (`#771 <https://github.com/ros2/rcl/issues/771>`_)
+* Fix yaml parser error when meets .nan (refactor on `#754 <https://github.com/ros2/rcl/issues/754>`_) (`#781 <https://github.com/ros2/rcl/issues/781>`_)
+* Contributors: Alejandro Hernández Cordero, Chen Lihui, Ivan Santiago Paunovic, Scott K Logan, brawner
 
-1.1.7 (2020-08-03)
+2.2.0 (2020-09-02)
 ------------------
-* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_) (`#724 <https://github.com/ros2/rcl/issues/724>`_)
+* Refactor parser.c for better testability (`#754 <https://github.com/ros2/rcl/issues/754>`_)
+* Don't overwrite cur_ns pointer if reallocation fails (`#780 <https://github.com/ros2/rcl/issues/780>`_)
+* Fix mem leaks in unit test from 776 (`#779 <https://github.com/ros2/rcl/issues/779>`_)
+* Fix rcl_parse_yaml_file() error handling. (`#776 <https://github.com/ros2/rcl/issues/776>`_)
+* Don't overwrite string_array pointer on reallocation failure (`#775 <https://github.com/ros2/rcl/issues/775>`_)
+* Set yaml_variant values to NULL on finalization (`#765 <https://github.com/ros2/rcl/issues/765>`_)
+* Remove debugging statements. (`#755 <https://github.com/ros2/rcl/issues/755>`_)
+* Contributors: Michel Hidalgo, brawner, tomoya
+
+2.1.0 (2020-07-22)
+------------------
+* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_)
 * Contributors: Alejandro Hernández Cordero
 
-1.1.6 (2020-07-07)
+2.0.0 (2020-07-09)
+------------------
+* Update quality declaration and coverage (`#674 <https://github.com/ros2/rcl/issues/674>`_)
+* Contributors: Alejandro Hernández Cordero
+
+1.2.0 (2020-06-18)
 ------------------
 
 1.1.5 (2020-06-03)
