@@ -12,11 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <yaml.h>
+
+#include <string>
+#include <vector>
+
 #include "gtest/gtest.h"
+
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
 #include "rcl_yaml_param_parser/parser.h"
 #include "rcutils/error_handling.h"
 #include "rcutils/filesystem.h"
+#include "rcutils/testing/fault_injection.h"
+#include "./mocking_utils/patch.hpp"
 #include "./time_bomb_allocator_testing_utils.h"
 
 TEST(RclYamlParamParser, node_init_fini) {
@@ -42,6 +50,46 @@ TEST(RclYamlParamParser, node_init_fini) {
 
   // Check this doesn't die.
   rcl_yaml_node_struct_fini(nullptr);
+}
+
+TEST(RclYamlParamParser, node_init_with_capacity_fini) {
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+
+  rcl_params_t * params_st = rcl_yaml_node_struct_init_with_capacity(1024, allocator);
+  ASSERT_NE(params_st, nullptr);
+  EXPECT_EQ(0U, params_st->num_nodes);
+  EXPECT_EQ(1024U, params_st->capacity_nodes);
+  rcl_yaml_node_struct_fini(params_st);
+
+  allocator = get_time_bomb_allocator();
+  // Bad alloc of params_st
+  set_time_bomb_allocator_calloc_count(allocator, 0);
+  // This cleans up after itself if it fails so no need to call fini()
+  EXPECT_EQ(rcl_yaml_node_struct_init_with_capacity(1024, allocator), nullptr);
+
+  // Bad alloc of params_st->node_names
+  set_time_bomb_allocator_calloc_count(allocator, 1);
+  EXPECT_EQ(rcl_yaml_node_struct_init_with_capacity(1024, allocator), nullptr);
+
+  // Bad alloc of params_st->params
+  set_time_bomb_allocator_calloc_count(allocator, 2);
+  EXPECT_EQ(rcl_yaml_node_struct_init_with_capacity(1024, allocator), nullptr);
+
+  // Check this doesn't die.
+  rcl_yaml_node_struct_fini(nullptr);
+}
+
+TEST(RclYamlParamParser, reallocate_node_init_with_capacity_fini) {
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+
+  rcl_params_t * params_st = rcl_yaml_node_struct_init_with_capacity(1024, allocator);
+  ASSERT_NE(params_st, nullptr);
+  EXPECT_EQ(0U, params_st->num_nodes);
+  EXPECT_EQ(1024U, params_st->capacity_nodes);
+  EXPECT_EQ(RCUTILS_RET_OK, rcl_yaml_node_struct_reallocate(params_st, 2048, allocator));
+  EXPECT_EQ(0U, params_st->num_nodes);
+  EXPECT_EQ(2048U, params_st->capacity_nodes);
+  rcl_yaml_node_struct_fini(params_st);
 }
 
 TEST(RclYamlParamParser, node_copy) {
@@ -308,47 +356,91 @@ TEST(RclYamlParamParser, test_parse_file_with_bad_allocator) {
   {
     allocator.deallocate(test_path, allocator.state);
   });
+
+  const std::vector<std::string> filenames = {
+    "correct_config.yaml",
+    "empty_string.yaml",
+    "indented_name_space.yaml",
+    "multi_ns_correct.yaml",
+    "no_alias_support.yaml",
+    "no_value1.yaml",
+    "overlay.yaml",
+    "params_with_no_node.yaml",
+    "root_ns.yaml",
+    "seq_map1.yaml",
+    "seq_map2.yaml",
+    "string_array_with_quoted_number.yaml"
+  };
+
+  for (auto & filename : filenames) {
+    SCOPED_TRACE(filename);
+    char * path = rcutils_join_path(test_path, filename.c_str(), allocator);
+    ASSERT_TRUE(NULL != path) << rcutils_get_error_string().str;
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
+      allocator.deallocate(path, allocator.state);
+    });
+    ASSERT_TRUE(rcutils_exists(path)) << "No test YAML file found at " << path;
+
+    RCUTILS_FAULT_INJECTION_TEST(
+    {
+      rcutils_allocator_t allocator = rcutils_get_default_allocator();
+      rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
+      if (NULL == params_hdl) {
+        continue;
+      }
+
+      bool res = rcl_parse_yaml_file(path, params_hdl);
+      // Not verifying res is true or false here, because eventually it will come back with an ok
+      // result. We're just trying to make sure that bad allocations are properly handled
+      (void)res;
+
+      // If `rcutils_string_array_fini` fails, there will be a small memory leak here.
+      // However, it's necessary for coverage
+      rcl_yaml_node_struct_fini(params_hdl);
+      params_hdl = NULL;
+    });
+  }
+}
+
+TEST(RclYamlParamParser, test_parse_yaml_initialize_mock) {
+  char cur_dir[1024];
+  rcutils_reset_error();
+  EXPECT_TRUE(rcutils_get_cwd(cur_dir, 1024)) << rcutils_get_error_string().str;
+
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  char * test_path = rcutils_join_path(cur_dir, "test", allocator);
+
   char * path = rcutils_join_path(test_path, "correct_config.yaml", allocator);
   ASSERT_TRUE(NULL != path) << rcutils_get_error_string().str;
   OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
   {
+    allocator.deallocate(test_path, allocator.state);
     allocator.deallocate(path, allocator.state);
   });
-  ASSERT_TRUE(rcutils_exists(path)) << "No test YAML file found at " << path;
 
   rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
-  EXPECT_TRUE(rcl_parse_yaml_file(path, params_hdl));
-  rcl_yaml_node_struct_fini(params_hdl);
-  params_hdl = NULL;
-
-  // Check sporadic failing malloc calls
-  for (int i = 0; i < 100; ++i) {
-    params_hdl = rcl_yaml_node_struct_init(get_time_bomb_allocator());
-    ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
-
-    set_time_bomb_allocator_malloc_count(params_hdl->allocator, i);
-    bool res = rcl_parse_yaml_file(path, params_hdl);
-    // Not verifying res is true or false here, because eventually it will come back with an ok
-    // result. We're just trying to make sure that bad allocations are properly handled
-    (void)res;
+  ASSERT_NE(nullptr, params_hdl);
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     rcl_yaml_node_struct_fini(params_hdl);
-    params_hdl = NULL;
-  }
+  });
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rcl_yaml_param_parser", yaml_parser_initialize, false);
 
-  // Check sporadic failing calloc calls
-  for (int i = 0; i < 100; ++i) {
-    params_hdl = rcl_yaml_node_struct_init(get_time_bomb_allocator());
-    ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+  EXPECT_FALSE(rcl_parse_yaml_file(path, params_hdl));
 
-    set_time_bomb_allocator_calloc_count(params_hdl->allocator, i);
+  constexpr char node_name[] = "node name";
+  constexpr char param_name[] = "param name";
+  constexpr char yaml_value[] = "true";
 
-    bool res = rcl_parse_yaml_file(path, params_hdl);
-    // Not verifying res is true or false here, because eventually it will come back with an ok
-    // result. We're just trying to make sure that bad allocations are properly handled
-    (void)res;
-    rcl_yaml_node_struct_fini(params_hdl);
-    params_hdl = NULL;
-  }
+  rcl_params_t * params_st = rcl_yaml_node_struct_init(allocator);
+  ASSERT_NE(params_st, nullptr);
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_yaml_node_struct_fini(params_st);
+  });
+  EXPECT_FALSE(rcl_parse_yaml_value(node_name, param_name, yaml_value, params_st));
 }
 
 
