@@ -93,10 +93,7 @@ rcl_arguments_get_param_files(
     if (NULL == (*parameter_files)[i]) {
       // deallocate allocated memory
       for (int r = i; r >= 0; --r) {
-        if (NULL == (*parameter_files[r])) {
-          break;
-        }
-        allocator.deallocate((*parameter_files[r]), allocator.state);
+        allocator.deallocate((*parameter_files)[r], allocator.state);
       }
       allocator.deallocate((*parameter_files), allocator.state);
       (*parameter_files) = NULL;
@@ -579,17 +576,20 @@ rcl_parse_arguments(
   }
 
   // Shrink remap_rules array to match number of successfully parsed rules
-  if (args_impl->num_remap_rules > 0) {
-    args_impl->remap_rules = rcutils_reallocf(
-      args_impl->remap_rules, sizeof(rcl_remap_t) * args_impl->num_remap_rules, &allocator);
-    if (NULL == args_impl->remap_rules) {
-      ret = RCL_RET_BAD_ALLOC;
-      goto fail;
-    }
-  } else {
+  if (0 == args_impl->num_remap_rules) {
     // No remap rules
     allocator.deallocate(args_impl->remap_rules, allocator.state);
     args_impl->remap_rules = NULL;
+  } else if (args_impl->num_remap_rules < argc) {
+    rcl_remap_t * new_remap_rules = allocator.reallocate(
+      args_impl->remap_rules,
+      sizeof(rcl_remap_t) * args_impl->num_remap_rules,
+      &allocator);
+    if (NULL == new_remap_rules) {
+      ret = RCL_RET_BAD_ALLOC;
+      goto fail;
+    }
+    args_impl->remap_rules = new_remap_rules;
   }
 
   // Shrink Parameter files
@@ -597,12 +597,15 @@ rcl_parse_arguments(
     allocator.deallocate(args_impl->parameter_files, allocator.state);
     args_impl->parameter_files = NULL;
   } else if (args_impl->num_param_files_args < argc) {
-    args_impl->parameter_files = rcutils_reallocf(
-      args_impl->parameter_files, sizeof(char *) * args_impl->num_param_files_args, &allocator);
-    if (NULL == args_impl->parameter_files) {
+    char ** new_parameter_files = allocator.reallocate(
+      args_impl->parameter_files,
+      sizeof(char *) * args_impl->num_param_files_args,
+      &allocator);
+    if (NULL == new_parameter_files) {
       ret = RCL_RET_BAD_ALLOC;
       goto fail;
     }
+    args_impl->parameter_files = new_parameter_files;
   }
 
   // Drop parameter overrides if none was found.
@@ -786,6 +789,9 @@ rcl_arguments_copy(
   const rcl_arguments_t * args,
   rcl_arguments_t * args_out)
 {
+  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
+  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_BAD_ALLOC);
+
   RCL_CHECK_ARGUMENT_FOR_NULL(args, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(args->impl, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(args_out, RCL_RET_INVALID_ARGUMENT);
@@ -843,7 +849,6 @@ rcl_arguments_copy(
       }
       return RCL_RET_BAD_ALLOC;
     }
-    args_out->impl->num_remap_rules = args->impl->num_remap_rules;
     for (int i = 0; i < args->impl->num_remap_rules; ++i) {
       args_out->impl->remap_rules[i] = rcl_get_zero_initialized_remap();
       ret = rcl_remap_copy(
@@ -854,6 +859,7 @@ rcl_arguments_copy(
         }
         return ret;
       }
+      ++(args_out->impl->num_remap_rules);
     }
   }
 
@@ -865,15 +871,14 @@ rcl_arguments_copy(
 
   // Copy parameter files
   if (args->impl->num_param_files_args) {
-    args_out->impl->parameter_files = allocator.allocate(
-      sizeof(char *) * args->impl->num_param_files_args, allocator.state);
+    args_out->impl->parameter_files = allocator.zero_allocate(
+      args->impl->num_param_files_args, sizeof(char *), allocator.state);
     if (NULL == args_out->impl->parameter_files) {
       if (RCL_RET_OK != rcl_arguments_fini(args_out)) {
         RCL_SET_ERROR_MSG("Error while finalizing arguments due to another error");
       }
       return RCL_RET_BAD_ALLOC;
     }
-    args_out->impl->num_param_files_args = args->impl->num_param_files_args;
     for (int i = 0; i < args->impl->num_param_files_args; ++i) {
       args_out->impl->parameter_files[i] =
         rcutils_strdup(args->impl->parameter_files[i], allocator);
@@ -883,6 +888,7 @@ rcl_arguments_copy(
         }
         return RCL_RET_BAD_ALLOC;
       }
+      ++(args_out->impl->num_param_files_args);
     }
   }
   char * enclave_copy = rcutils_strdup(args->impl->enclave, allocator);
@@ -1619,9 +1625,8 @@ _rcl_parse_remap_rule(
   RCL_CHECK_ARGUMENT_FOR_NULL(arg, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(output_rule, RCL_RET_INVALID_ARGUMENT);
 
-  rcl_ret_t ret;
-
-  output_rule->impl = allocator.allocate(sizeof(rcl_remap_impl_t), allocator.state);
+  output_rule->impl =
+    allocator.allocate(sizeof(rcl_remap_impl_t), allocator.state);
   if (NULL == output_rule->impl) {
     return RCL_RET_BAD_ALLOC;
   }
@@ -1632,25 +1637,31 @@ _rcl_parse_remap_rule(
   output_rule->impl->replacement = NULL;
 
   rcl_lexer_lookahead2_t lex_lookahead = rcl_get_zero_initialized_lexer_lookahead2();
+  rcl_ret_t ret = rcl_lexer_lookahead2_init(&lex_lookahead, arg, allocator);
 
-  ret = rcl_lexer_lookahead2_init(&lex_lookahead, arg, allocator);
-  if (RCL_RET_OK != ret) {
-    return ret;
+  if (RCL_RET_OK == ret) {
+    ret = _rcl_parse_remap_begin_remap_rule(&lex_lookahead, output_rule);
+
+    rcl_ret_t fini_ret = rcl_lexer_lookahead2_fini(&lex_lookahead);
+    if (RCL_RET_OK != ret) {
+      if (RCL_RET_OK != fini_ret) {
+        RCUTILS_LOG_ERROR_NAMED(
+          ROS_PACKAGE_NAME, "Failed to fini lookahead2 after error occurred");
+      }
+    } else {
+      if (RCL_RET_OK == fini_ret) {
+        return RCL_RET_OK;
+      }
+      ret = fini_ret;
+    }
   }
 
-  ret = _rcl_parse_remap_begin_remap_rule(&lex_lookahead, output_rule);
-
-  if (RCL_RET_OK != ret) {
-    // cleanup stuff, but return the original error code
-    if (RCL_RET_OK != rcl_remap_fini(output_rule)) {
-      RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Failed to fini remap rule after error occurred");
-    }
-    if (RCL_RET_OK != rcl_lexer_lookahead2_fini(&lex_lookahead)) {
-      RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Failed to fini lookahead2 after error occurred");
-    }
-  } else {
-    ret = rcl_lexer_lookahead2_fini(&lex_lookahead);
+  // cleanup output rule but keep first error return code
+  if (RCL_RET_OK != rcl_remap_fini(output_rule)) {
+    RCUTILS_LOG_ERROR_NAMED(
+      ROS_PACKAGE_NAME, "Failed to fini remap rule after error occurred");
   }
+
   return ret;
 }
 
@@ -1747,6 +1758,8 @@ _rcl_parse_param_file(
     return RCL_RET_BAD_ALLOC;
   }
   if (!rcl_parse_yaml_file(*param_file, params)) {
+    allocator.deallocate(*param_file, allocator.state);
+    *param_file = NULL;
     // Error message already set.
     return RCL_RET_ERROR;
   }
