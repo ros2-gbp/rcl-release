@@ -27,6 +27,7 @@ extern "C"
 #include "rcl/error_handling.h"
 
 #include "rcutils/logging_macros.h"
+#include "rcutils/macros.h"
 #include "rcutils/strdup.h"
 
 #include "rcl_lifecycle/default_state_machine.h"
@@ -80,6 +81,8 @@ rcl_lifecycle_state_fini(
   rcl_lifecycle_state_t * state,
   const rcl_allocator_t * allocator)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
+
   if (!allocator) {
     RCL_SET_ERROR_MSG("can't free state, no allocator given\n");
     return RCL_RET_ERROR;
@@ -231,6 +234,10 @@ rcl_lifecycle_state_machine_init(
       // init default state machine might have allocated memory,
       // so we have to call fini
       ret = rcl_lifecycle_state_machine_fini(state_machine, node_handle, allocator);
+      if (ret != RCL_RET_OK) {
+        RCUTILS_SAFE_FWRITE_TO_STDERR(
+          "Freeing state machine failed while handling a previous error. Leaking memory!\n");
+      }
       return RCL_RET_ERROR;
     }
   }
