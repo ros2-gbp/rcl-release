@@ -59,6 +59,11 @@ int main(int argc, char ** argv)
       }
     });
     ret = rcl_init_options_fini(&init_options);
+    if (ret != RCL_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        ROS_PACKAGE_NAME, "Error in options fini: %s", rcl_get_error_string().str);
+      return -1;
+    }
     rcl_node_t node = rcl_get_zero_initialized_node();
     const char * name = "service_fixture_node";
     rcl_node_options_t node_options = rcl_node_get_default_options();
@@ -111,7 +116,7 @@ int main(int argc, char ** argv)
 
     // Block until a client request comes in.
 
-    if (!wait_for_service_to_be_ready(&service, &context, 10, 100)) {
+    if (!wait_for_service_to_be_ready(&service, &context, 30, 100)) {
       RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Service never became ready");
       return -1;
     }
