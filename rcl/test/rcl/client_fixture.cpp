@@ -54,6 +54,11 @@ int main(int argc, char ** argv)
       }
     });
     ret = rcl_init_options_fini(&init_options);
+    if (ret != RCL_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        ROS_PACKAGE_NAME, "Error in options fini: %s", rcl_get_error_string().str);
+      return -1;
+    }
     rcl_node_t node = rcl_get_zero_initialized_node();
     const char * name = "client_fixture_node";
     rcl_node_options_t node_options = rcl_node_get_default_options();
@@ -94,7 +99,7 @@ int main(int argc, char ** argv)
     });
 
     // Wait until server is available
-    if (!wait_for_server_to_be_available(&node, &client, 10, 100)) {
+    if (!wait_for_server_to_be_available(&node, &client, 30, 100)) {
       RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Server never became available");
       return -1;
     }
@@ -129,7 +134,7 @@ int main(int argc, char ** argv)
     memset(&client_response, 0, sizeof(test_msgs__srv__BasicTypes_Response));
     test_msgs__srv__BasicTypes_Response__init(&client_response);
 
-    if (!wait_for_client_to_be_ready(&client, &context, 10, 100)) {
+    if (!wait_for_client_to_be_ready(&client, &context, 30, 100)) {
       RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Client never became ready");
       return -1;
     }
