@@ -27,7 +27,6 @@ extern "C"
 #include "rcl/expand_topic_name.h"
 #include "rcl/remap.h"
 #include "rcutils/logging_macros.h"
-#include "rcutils/macros.h"
 #include "rmw/error_handling.h"
 #include "rmw/validate_full_topic_name.h"
 #include "tracetools/tracetools.h"
@@ -51,13 +50,6 @@ rcl_publisher_init(
   const rcl_publisher_options_t * options
 )
 {
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_ALREADY_INIT);
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_NODE_INVALID);
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_BAD_ALLOC);
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_TOPIC_NAME_INVALID);
-
   rcl_ret_t fail_ret = RCL_RET_ERROR;
 
   // Check options and allocator first, so allocator can be used with errors.
@@ -177,8 +169,8 @@ rcl_publisher_init(
     remapped_topic_name,
     &(options->qos),
     &(options->rmw_publisher_options));
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    publisher->impl->rmw_handle, rmw_get_error_string().str, goto fail);
+  RCL_CHECK_FOR_NULL_WITH_MSG(publisher->impl->rmw_handle,
+    rmw_get_error_string().str, goto fail);
   // get actual qos, and store it
   rmw_ret = rmw_publisher_get_actual_qos(
     publisher->impl->rmw_handle,
@@ -215,7 +207,6 @@ fail:
     }
 
     allocator->deallocate(publisher->impl, allocator->state);
-    publisher->impl = NULL;
   }
 
   ret = fail_ret;
@@ -233,11 +224,6 @@ cleanup:
 rcl_ret_t
 rcl_publisher_fini(rcl_publisher_t * publisher, rcl_node_t * node)
 {
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_PUBLISHER_INVALID);
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_NODE_INVALID);
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
-
   rcl_ret_t result = RCL_RET_OK;
   RCL_CHECK_ARGUMENT_FOR_NULL(publisher, RCL_RET_PUBLISHER_INVALID);
   if (!rcl_node_is_valid_except_context(node)) {
@@ -258,7 +244,6 @@ rcl_publisher_fini(rcl_publisher_t * publisher, rcl_node_t * node)
       result = RCL_RET_ERROR;
     }
     allocator.deallocate(publisher->impl, allocator.state);
-    publisher->impl = NULL;
   }
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Publisher finalized");
   return result;
@@ -285,8 +270,7 @@ rcl_borrow_loaned_message(
   if (!rcl_publisher_is_valid(publisher)) {
     return RCL_RET_PUBLISHER_INVALID;  // error already set
   }
-  return rcl_convert_rmw_ret_to_rcl_ret(
-    rmw_borrow_loaned_message(publisher->impl->rmw_handle, type_support, ros_message));
+  return rmw_borrow_loaned_message(publisher->impl->rmw_handle, type_support, ros_message);
 }
 
 rcl_ret_t
@@ -298,8 +282,7 @@ rcl_return_loaned_message_from_publisher(
     return RCL_RET_PUBLISHER_INVALID;  // error already set
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(loaned_message, RCL_RET_INVALID_ARGUMENT);
-  return rcl_convert_rmw_ret_to_rcl_ret(
-    rmw_return_loaned_message_from_publisher(publisher->impl->rmw_handle, loaned_message));
+  return rmw_return_loaned_message_from_publisher(publisher->impl->rmw_handle, loaned_message);
 }
 
 rcl_ret_t
@@ -308,9 +291,6 @@ rcl_publish(
   const void * ros_message,
   rmw_publisher_allocation_t * allocation)
 {
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_PUBLISHER_INVALID);
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
-
   if (!rcl_publisher_is_valid(publisher)) {
     return RCL_RET_PUBLISHER_INVALID;  // error already set
   }
@@ -332,14 +312,14 @@ rcl_publish_serialized_message(
     return RCL_RET_PUBLISHER_INVALID;  // error already set
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(serialized_message, RCL_RET_INVALID_ARGUMENT);
-  rmw_ret_t ret = rmw_publish_serialized_message(
-    publisher->impl->rmw_handle, serialized_message, allocation);
+  rmw_ret_t ret = rmw_publish_serialized_message(publisher->impl->rmw_handle, serialized_message,
+      allocation);
   if (ret != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     if (ret == RMW_RET_BAD_ALLOC) {
       return RCL_RET_BAD_ALLOC;
     }
-    return RCL_RET_ERROR;
+    return RMW_RET_ERROR;
   }
   return RCL_RET_OK;
 }
@@ -439,7 +419,7 @@ rcl_publisher_is_valid_except_context(const rcl_publisher_t * publisher)
   return true;
 }
 
-rcl_ret_t
+rmw_ret_t
 rcl_publisher_get_subscription_count(
   const rcl_publisher_t * publisher,
   size_t * subscription_count)
@@ -449,8 +429,8 @@ rcl_publisher_get_subscription_count(
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(subscription_count, RCL_RET_INVALID_ARGUMENT);
 
-  rmw_ret_t ret = rmw_publisher_count_matched_subscriptions(
-    publisher->impl->rmw_handle, subscription_count);
+  rmw_ret_t ret = rmw_publisher_count_matched_subscriptions(publisher->impl->rmw_handle,
+      subscription_count);
 
   if (ret != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);

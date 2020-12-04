@@ -22,22 +22,18 @@ extern "C"
 
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
-#include "rmw/localhost.h"
 
 extern const char * const RCL_LOCALHOST_ENV_VAR;
 
 /// Determine if the user wants to communicate using loopback only.
 /**
- * Checks if localhost should be used for network communication based on environment.
- *
- * \param[out] localhost_only Must not be NULL.
- * \returns RCL_RET_INVALID_ARGUMENT if an argument is invalid, or
- * \returns RCL_RET_ERROR if an unexpected error happened, or
- * \returns RCL_RET_OK.
+ * Checks if localhost should be used for network communication checking ROS_LOCALHOST_ONLY env
+ * variable
+ * \returns true if ROS_LOCALHOST_ONLY is set and is 1, false otherwise.
  */
 RCL_PUBLIC
-rcl_ret_t
-rcl_get_localhost_only(rmw_localhost_only_t * localhost_only);
+bool
+rcl_localhost_only();
 
 #ifdef __cplusplus
 }

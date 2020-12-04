@@ -35,7 +35,6 @@ typedef struct rcl_guard_condition_t
   /// Context associated with this guard condition.
   rcl_context_t * context;
 
-  /// Pointer to the guard condition implementation
   struct rcl_guard_condition_impl_t * impl;
 } rcl_guard_condition_t;
 

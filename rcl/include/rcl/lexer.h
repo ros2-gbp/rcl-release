@@ -42,7 +42,7 @@ typedef enum rcl_lexeme_t
   RCL_LEXEME_URL_TOPIC = 4,
   /// :
   RCL_LEXEME_COLON = 5,
-  /// __node or __name
+  /// __node
   RCL_LEXEME_NODE = 6,
   /// __ns
   RCL_LEXEME_NS = 7,

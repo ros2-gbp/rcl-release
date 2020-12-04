@@ -17,12 +17,9 @@ extern "C"
 {
 #endif
 
-#include "rcutils/macros.h"
-
 #include "rcl/node_options.h"
 
 #include "rcl/arguments.h"
-#include "rcl/domain_id.h"
 #include "rcl/error_handling.h"
 #include "rcl/logging_rosout.h"
 
@@ -33,7 +30,6 @@ rcl_node_get_default_options()
   static rcl_node_options_t default_options = {
     .domain_id = RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID,
     .use_global_arguments = true,
-    .enable_rosout = true,
   };
   // Must set the allocator after because it is not a compile time constant.
   default_options.allocator = rcl_get_default_allocator();
@@ -46,24 +42,18 @@ rcl_node_options_copy(
   const rcl_node_options_t * options,
   rcl_node_options_t * options_out)
 {
-  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
-
   RCL_CHECK_ARGUMENT_FOR_NULL(options, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(options_out, RCL_RET_INVALID_ARGUMENT);
   if (options_out == options) {
     RCL_SET_ERROR_MSG("Attempted to copy options into itself");
     return RCL_RET_INVALID_ARGUMENT;
   }
-  if (NULL != options_out->arguments.impl) {
-    RCL_SET_ERROR_MSG("Options out must be zero initialized");
-    return RCL_RET_INVALID_ARGUMENT;
-  }
   options_out->domain_id = options->domain_id;
   options_out->allocator = options->allocator;
   options_out->use_global_arguments = options->use_global_arguments;
-  options_out->enable_rosout = options->enable_rosout;
   if (NULL != options->arguments.impl) {
-    return rcl_arguments_copy(&(options->arguments), &(options_out->arguments));
+    rcl_ret_t ret = rcl_arguments_copy(&(options->arguments), &(options_out->arguments));
+    return ret;
   }
   return RCL_RET_OK;
 }

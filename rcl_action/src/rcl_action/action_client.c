@@ -18,7 +18,6 @@ extern "C"
 #endif
 
 #include "rcl_action/action_client.h"
-#include "./action_client_impl.h"
 
 #include "rcl_action/default_qos.h"
 #include "rcl_action/names.h"
@@ -39,63 +38,28 @@ extern "C"
 #include "rmw/types.h"
 
 
+typedef struct rcl_action_client_impl_t
+{
+  rcl_client_t goal_client;
+  rcl_client_t cancel_client;
+  rcl_client_t result_client;
+  rcl_subscription_t feedback_subscription;
+  rcl_subscription_t status_subscription;
+  rcl_action_client_options_t options;
+  char * action_name;
+  // Wait set records
+  size_t wait_set_goal_client_index;
+  size_t wait_set_cancel_client_index;
+  size_t wait_set_result_client_index;
+  size_t wait_set_feedback_subscription_index;
+  size_t wait_set_status_subscription_index;
+} rcl_action_client_impl_t;
+
 rcl_action_client_t
 rcl_action_get_zero_initialized_client(void)
 {
   static rcl_action_client_t null_action_client = {0};
   return null_action_client;
-}
-
-rcl_action_client_impl_t
-_rcl_action_get_zero_initialized_client_impl(void)
-{
-  rcl_client_t null_client = rcl_get_zero_initialized_client();
-  rcl_subscription_t null_subscription = rcl_get_zero_initialized_subscription();
-  rcl_action_client_impl_t null_action_client = {
-    null_client,
-    null_client,
-    null_client,
-    null_subscription,
-    null_subscription,
-    rcl_action_client_get_default_options(),
-    NULL,
-    0,
-    0,
-    0,
-    0,
-    0
-  };
-  return null_action_client;
-}
-
-rcl_ret_t
-_rcl_action_client_fini_impl(
-  rcl_action_client_t * action_client, rcl_node_t * node, rcl_allocator_t allocator)
-{
-  if (NULL == action_client->impl) {
-    return RCL_RET_OK;
-  }
-  rcl_ret_t ret = RCL_RET_OK;
-  if (RCL_RET_OK != rcl_client_fini(&action_client->impl->goal_client, node)) {
-    ret = RCL_RET_ERROR;
-  }
-  if (RCL_RET_OK != rcl_client_fini(&action_client->impl->cancel_client, node)) {
-    ret = RCL_RET_ERROR;
-  }
-  if (RCL_RET_OK != rcl_client_fini(&action_client->impl->result_client, node)) {
-    ret = RCL_RET_ERROR;
-  }
-  if (RCL_RET_OK != rcl_subscription_fini(&action_client->impl->feedback_subscription, node)) {
-    ret = RCL_RET_ERROR;
-  }
-  if (RCL_RET_OK != rcl_subscription_fini(&action_client->impl->status_subscription, node)) {
-    ret = RCL_RET_ERROR;
-  }
-  allocator.deallocate(action_client->impl->action_name, allocator.state);
-  allocator.deallocate(action_client->impl, allocator.state);
-  action_client->impl = NULL;
-  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Action client finalized");
-  return ret;
 }
 
 // \internal Initializes an action client specific service client.
@@ -200,12 +164,9 @@ rcl_action_client_init(
   RCL_CHECK_FOR_NULL_WITH_MSG(
     action_client->impl, "allocating memory failed", return RCL_RET_BAD_ALLOC);
 
-  // Avoid uninitialized pointers should initialization fail
-  *action_client->impl = _rcl_action_get_zero_initialized_client_impl();
   // Copy action client name and options.
   action_client->impl->action_name = rcutils_strdup(action_name, allocator);
   if (NULL == action_client->impl->action_name) {
-    RCL_SET_ERROR_MSG("failed to duplicate action name");
     ret = RCL_RET_BAD_ALLOC;
     goto fail;
   }
@@ -223,7 +184,7 @@ rcl_action_client_init(
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Action client initialized");
   return ret;
 fail:
-  fini_ret = _rcl_action_client_fini_impl(action_client, node, allocator);
+  fini_ret = rcl_action_client_fini(action_client, node);
   if (RCL_RET_OK != fini_ret) {
     RCL_SET_ERROR_MSG("failed to cleanup action client");
     ret = RCL_RET_ERROR;
@@ -241,8 +202,28 @@ rcl_action_client_fini(rcl_action_client_t * action_client, rcl_node_t * node)
   if (!rcl_node_is_valid_except_context(node)) {
     return RCL_RET_NODE_INVALID;  // error already set
   }
-  return
-    _rcl_action_client_fini_impl(action_client, node, action_client->impl->options.allocator);
+  rcl_ret_t ret = RCL_RET_OK;
+  if (RCL_RET_OK != rcl_client_fini(&action_client->impl->goal_client, node)) {
+    ret = RCL_RET_ERROR;
+  }
+  if (RCL_RET_OK != rcl_client_fini(&action_client->impl->cancel_client, node)) {
+    ret = RCL_RET_ERROR;
+  }
+  if (RCL_RET_OK != rcl_client_fini(&action_client->impl->result_client, node)) {
+    ret = RCL_RET_ERROR;
+  }
+  if (RCL_RET_OK != rcl_subscription_fini(&action_client->impl->feedback_subscription, node)) {
+    ret = RCL_RET_ERROR;
+  }
+  if (RCL_RET_OK != rcl_subscription_fini(&action_client->impl->status_subscription, node)) {
+    ret = RCL_RET_ERROR;
+  }
+  rcl_allocator_t * allocator = &action_client->impl->options.allocator;
+  allocator->deallocate(action_client->impl->action_name, allocator->state);
+  allocator->deallocate(action_client->impl, allocator->state);
+  action_client->impl = NULL;
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Action client finalized");
+  return ret;
 }
 
 rcl_action_client_options_t
@@ -298,13 +279,6 @@ rcl_action_server_is_available(
 
   ret = rcl_subscription_get_publisher_count(
     &(client->impl->feedback_subscription), &number_of_publishers);
-  if (RCL_RET_OK != ret) {
-    return ret;  // error is already set
-  }
-  *is_available = *is_available && (number_of_publishers != 0);
-
-  ret = rcl_subscription_get_publisher_count(
-    &(client->impl->status_subscription), &number_of_publishers);
   if (RCL_RET_OK != ret) {
     return ret;  // error is already set
   }

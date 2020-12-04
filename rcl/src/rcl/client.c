@@ -26,7 +26,6 @@ extern "C"
 #include "rcl/expand_topic_name.h"
 #include "rcl/remap.h"
 #include "rcutils/logging_macros.h"
-#include "rcutils/macros.h"
 #include "rcutils/stdatomic_helper.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -190,7 +189,6 @@ rcl_client_init(
 fail:
   if (client->impl) {
     allocator->deallocate(client->impl, allocator->state);
-    client->impl = NULL;
   }
   ret = fail_ret;
   // Fall through to cleanup
@@ -207,10 +205,6 @@ cleanup:
 rcl_ret_t
 rcl_client_fini(rcl_client_t * client, rcl_node_t * node)
 {
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_NODE_INVALID);
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
-
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Finalizing client");
   rcl_ret_t result = RCL_RET_OK;
   RCL_CHECK_ARGUMENT_FOR_NULL(client, RCL_RET_INVALID_ARGUMENT);
@@ -229,7 +223,6 @@ rcl_client_fini(rcl_client_t * client, rcl_node_t * node)
       result = RCL_RET_ERROR;
     }
     allocator.deallocate(client->impl, allocator.state);
-    client->impl = NULL;
   }
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Client finalized");
   return result;
@@ -296,9 +289,9 @@ rcl_send_request(const rcl_client_t * client, const void * ros_request, int64_t 
 }
 
 rcl_ret_t
-rcl_take_response_with_info(
+rcl_take_response(
   const rcl_client_t * client,
-  rmw_service_info_t * request_header,
+  rmw_request_id_t * request_header,
   void * ros_response)
 {
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Client taking service response");
@@ -310,8 +303,6 @@ rcl_take_response_with_info(
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_response, RCL_RET_INVALID_ARGUMENT);
 
   bool taken = false;
-  request_header->source_timestamp = 0;
-  request_header->received_timestamp = 0;
   if (rmw_take_response(
       client->impl->rmw_handle, request_header, ros_response, &taken) != RMW_RET_OK)
   {
@@ -324,19 +315,6 @@ rcl_take_response_with_info(
     return RCL_RET_CLIENT_TAKE_FAILED;
   }
   return RCL_RET_OK;
-}
-
-rcl_ret_t
-rcl_take_response(
-  const rcl_client_t * client,
-  rmw_request_id_t * request_header,
-  void * ros_response)
-{
-  rmw_service_info_t header;
-  header.request_id = *request_header;
-  rcl_ret_t ret = rcl_take_response_with_info(client, &header, ros_response);
-  *request_header = header.request_id;
-  return ret;
 }
 
 bool

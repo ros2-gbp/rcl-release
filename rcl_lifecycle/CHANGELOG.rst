@@ -2,76 +2,11 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.1.9 (2020-11-03)
-------------------
-* Make sure to always check return values. (`#840 <https://github.com/ros2/rcl/issues/840>`_)
-* Make sure to check the return value of rcl APIs. (`#838 <https://github.com/ros2/rcl/issues/838>`_)
-* Fix test_rcl_lifecycle (`#788 <https://github.com/ros2/rcl/issues/788>`_)
-* Add fault injection macros and unit tests to rcl_lifecycle (`#731 <https://github.com/ros2/rcl/issues/731>`_)
-* Contributors: Chris Lalancette, brawner
-
-1.1.8 (2020-10-07)
-------------------
-* Set transition_map->states/transition size to 0 on fini (`#729 <https://github.com/ros2/rcl/issues/729>`_) (`#821 <https://github.com/ros2/rcl/issues/821>`_)
-* Topic fix rcl lifecycle test issue (`#715 <https://github.com/ros2/rcl/issues/715>`_) (`#796 <https://github.com/ros2/rcl/issues/796>`_)
-* Remove std::cout line from test_rcl_lifecycle.cpp (`#773 <https://github.com/ros2/rcl/issues/773>`_) (`#774 <https://github.com/ros2/rcl/issues/774>`_)
-* Contributors: Shane Loretz, Stephen Brawner
-
-1.1.7 (2020-08-03)
-------------------
-* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_) (`#724 <https://github.com/ros2/rcl/issues/724>`_)
-* Contributors: Alejandro Hernández Cordero
-
-1.1.6 (2020-07-07)
+0.8.5 (2020-12-04)
 ------------------
 
-1.1.5 (2020-06-03)
+0.8.4 (2020-01-17)
 ------------------
-
-1.1.4 (2020-06-02)
-------------------
-
-1.1.3 (2020-06-01)
-------------------
-* Add Security Vulnerability Policy pointing to REP-2006 (`#661 <https://github.com/ros2/rcl/issues/661>`_)
-* Contributors: Chris Lalancette
-
-1.1.2 (2020-05-28)
-------------------
-* Allow transition start and goal states to be null (`#662 <https://github.com/ros2/rcl/issues/662>`_)
-* Contributors: Karsten Knese
-
-1.1.1 (2020-05-26)
-------------------
-* Increase rcl_lifecycle test coverage and add more safety checks (`#649 <https://github.com/ros2/rcl/issues/649>`_)
-* Contributors: Stephen Brawner
-
-1.1.0 (2020-05-22)
-------------------
-* Update Quality Declaration for 1.0 (`#647 <https://github.com/ros2/rcl/issues/647>`_)
-* Contributors: brawner
-
-1.0.0 (2020-05-12)
-------------------
-
-0.9.1 (2020-05-08)
-------------------
-* Included features (`#644 <https://github.com/ros2/rcl/issues/644>`_)
-* Quality Declarations for rcl_action, rcl_lifecycle, yaml_parser (`#641 <https://github.com/ros2/rcl/issues/641>`_)
-* Contributors: Alejandro Hernández Cordero, Stephen Brawner
-
-0.9.0 (2020-04-29)
-------------------
-* Added rcl_lifecycle Doxyfile (`#633 <https://github.com/ros2/rcl/issues/633>`_)
-* Export targets in a addition to include directories / libraries (`#635 <https://github.com/ros2/rcl/issues/635>`_)
-* Added documentation (`#622 <https://github.com/ros2/rcl/issues/622>`_)
-* Fixed argument name in rcl_lifecycle.h (`#626 <https://github.com/ros2/rcl/issues/626>`_)
-* Rename rosidl_generator_c namespace to rosidl_runtime_c (`#616 <https://github.com/ros2/rcl/issues/616>`_)
-* Changed rosidl_generator_c/cpp to rosidl_runtime_c/cpp (`#588 <https://github.com/ros2/rcl/issues/588>`_)
-* Removed rmw_implementation from package.xml (`#575 <https://github.com/ros2/rcl/issues/575>`_)
-* Code style only: wrap after open parenthesis if not in one line (`#565 <https://github.com/ros2/rcl/issues/565>`_)
-* Free valid_transitions for all states (`#537 <https://github.com/ros2/rcl/issues/537>`_)
-* Contributors: Alejandro Hernández Cordero, Dirk Thomas, Víctor Mayoral Vilches
 
 0.8.3 (2019-11-08)
 ------------------

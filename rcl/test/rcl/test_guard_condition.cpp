@@ -24,10 +24,6 @@
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
 #include "rcl/error_handling.h"
 
-#include "rmw/rmw.h"
-
-#include "../mocking_utils/patch.hpp"
-
 #ifdef RMW_IMPLEMENTATION
 # define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
 # define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
@@ -70,8 +66,7 @@ TEST_F(
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     osrf_testing_tools_cpp::memory_tools::disable_monitoring_in_all_threads();
     ASSERT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options));
   });
@@ -79,8 +74,7 @@ TEST_F(
   ret = rcl_init(0, nullptr, &init_options, &context);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   // Setup automatic rcl_shutdown()
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     osrf_testing_tools_cpp::memory_tools::disable_monitoring_in_all_threads();
     ASSERT_EQ(RCL_RET_OK, rcl_shutdown(&context));
     ASSERT_EQ(RCL_RET_OK, rcl_context_fini(&context));
@@ -95,8 +89,7 @@ TEST_F(
   ret = rcl_guard_condition_init(&guard_condition, &context, default_options);
   ASSERT_EQ(RCL_RET_OK, ret);
   // Setup automatic finalization of guard condition.
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     osrf_testing_tools_cpp::memory_tools::disable_monitoring_in_all_threads();
     rcl_ret_t ret = rcl_guard_condition_fini(&guard_condition);
     EXPECT_EQ(RCL_RET_OK, ret);
@@ -110,8 +103,7 @@ TEST_F(
   actual_options = rcl_guard_condition_get_options(&zero_guard_condition);
   EXPECT_EQ(nullptr, actual_options);
   rcl_reset_error();
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
+  EXPECT_NO_MEMORY_OPERATIONS({
     actual_options = rcl_guard_condition_get_options(&guard_condition);
   });
   EXPECT_NE(nullptr, actual_options);
@@ -126,8 +118,7 @@ TEST_F(
   gc_handle = rcl_guard_condition_get_rmw_handle(&zero_guard_condition);
   EXPECT_EQ(nullptr, gc_handle);
   rcl_reset_error();
-  EXPECT_NO_MEMORY_OPERATIONS(
-  {
+  EXPECT_NO_MEMORY_OPERATIONS({
     gc_handle = rcl_guard_condition_get_rmw_handle(&guard_condition);
   });
   EXPECT_NE(nullptr, gc_handle);
@@ -150,15 +141,13 @@ TEST_F(
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     osrf_testing_tools_cpp::memory_tools::disable_monitoring_in_all_threads();
     ASSERT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options));
   });
   ret = rcl_init(0, nullptr, &init_options, &context);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
     ASSERT_EQ(RCL_RET_OK, rcl_shutdown(&context));
     ASSERT_EQ(RCL_RET_OK, rcl_context_fini(&context));
   });
@@ -192,14 +181,6 @@ TEST_F(
   ASSERT_EQ(RCL_RET_BAD_ALLOC, ret) << "Expected RCL_RET_BAD_ALLOC";
   ASSERT_TRUE(rcl_error_is_set());
   rcl_reset_error();
-  // Try init but force an internal error.
-  {
-    auto mock = mocking_utils::patch_to_fail(
-      "lib:rcl", rmw_create_guard_condition, "internal error", nullptr);
-    ret = rcl_guard_condition_init(&guard_condition, &context, default_options);
-    EXPECT_EQ(RCL_RET_ERROR, ret);
-    rcl_reset_error();
-  }
 
   // Try fini with invalid arguments.
   ret = rcl_guard_condition_fini(nullptr);
@@ -214,18 +195,6 @@ TEST_F(
   EXPECT_EQ(RCL_RET_OK, ret);
   ret = rcl_guard_condition_fini(&guard_condition);
   EXPECT_EQ(RCL_RET_OK, ret);
-  // Try normal init and fini, but force an internal error on first try.
-  {
-    auto mock = mocking_utils::inject_on_return(
-      "lib:rcl", rmw_destroy_guard_condition, RMW_RET_ERROR);
-    ret = rcl_guard_condition_init(&guard_condition, &context, default_options);
-    EXPECT_EQ(RCL_RET_OK, ret);
-    ret = rcl_guard_condition_fini(&guard_condition);
-    EXPECT_EQ(RCL_RET_ERROR, ret);
-    rcl_reset_error();
-  }
-  ret = rcl_guard_condition_fini(&guard_condition);
-  EXPECT_EQ(RCL_RET_OK, ret);
   // Try repeated init and fini calls.
   ret = rcl_guard_condition_init(&guard_condition, &context, default_options);
   EXPECT_EQ(RCL_RET_OK, ret);
@@ -238,16 +207,5 @@ TEST_F(
   rcl_reset_error();
   ret = rcl_guard_condition_fini(&guard_condition);
   EXPECT_EQ(RCL_RET_OK, ret);
-  rcl_reset_error();
-}
-
-/* Tests trigger_guard_condition with bad arguments
- */
-TEST_F(
-  CLASSNAME(TestGuardConditionFixture, RMW_IMPLEMENTATION), test_rcl_guard_condition_bad_arg) {
-  rcl_guard_condition_t zero_guard_condition = rcl_get_zero_initialized_guard_condition();
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_trigger_guard_condition(nullptr));
-  rcl_reset_error();
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_trigger_guard_condition(&zero_guard_condition));
   rcl_reset_error();
 }

@@ -22,7 +22,7 @@
 #include "rcl/error_handling.h"
 #include "rcl/rcl.h"
 
-#include "rosidl_runtime_c/primitives_sequence_functions.h"
+#include "rosidl_generator_c/primitives_sequence_functions.h"
 
 #include "test_msgs/action/fibonacci.h"
 
@@ -55,8 +55,7 @@ protected:
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
     ret = rcl_init_options_init(&init_options, allocator);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-    {
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
       EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
     });
     context = rcl_get_zero_initialized_context();
@@ -67,7 +66,6 @@ protected:
     ret = rcl_node_init(&this->node, "test_action_communication_node", "", &context, &node_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     ret = rcl_clock_init(RCL_STEADY_TIME, &this->clock, &allocator);
-    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     const rosidl_action_type_support_t * ts = ROSIDL_GET_ACTION_TYPE_SUPPORT(
       test_msgs, Fibonacci);
     const char * action_name = "test_action_commmunication_name";
@@ -217,7 +215,6 @@ TEST_F(CLASSNAME(TestActionClientServerInteraction, RMW_IMPLEMENTATION), test_in
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_server(&this->wait_set, &this->action_server, NULL);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
@@ -247,8 +244,7 @@ TEST_F(CLASSNAME(TestActionClientServerInteraction, RMW_IMPLEMENTATION), test_in
 
   // Check that the goal request was received correctly
   EXPECT_EQ(this->outgoing_goal_request.goal.order, this->incoming_goal_request.goal.order);
-  EXPECT_TRUE(
-    uuidcmp(
+  EXPECT_TRUE(uuidcmp(
       this->outgoing_goal_request.goal_id.uuid,
       this->incoming_goal_request.goal_id.uuid));
 
@@ -263,7 +259,6 @@ TEST_F(CLASSNAME(TestActionClientServerInteraction, RMW_IMPLEMENTATION), test_in
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_client(
     &this->wait_set, &this->action_client, NULL, NULL);
@@ -309,8 +304,7 @@ TEST_F(CLASSNAME(TestActionClientServerInteraction, RMW_IMPLEMENTATION), test_in
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   // Initialize feedback
-  ASSERT_TRUE(
-    rosidl_runtime_c__int32__Sequence__init(
+  ASSERT_TRUE(rosidl_generator_c__int32__Sequence__init(
       &this->outgoing_feedback.feedback.sequence, 3));
   this->outgoing_feedback.feedback.sequence.data[0] = 0;
   this->outgoing_feedback.feedback.sequence.data[1] = 1;
@@ -322,7 +316,6 @@ TEST_F(CLASSNAME(TestActionClientServerInteraction, RMW_IMPLEMENTATION), test_in
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_client(
     &this->wait_set, &this->action_client, NULL, NULL);
@@ -353,21 +346,18 @@ TEST_F(CLASSNAME(TestActionClientServerInteraction, RMW_IMPLEMENTATION), test_in
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   // Check that feedback was received correctly
-  EXPECT_TRUE(
-    uuidcmp(
+  EXPECT_TRUE(uuidcmp(
       this->outgoing_feedback.goal_id.uuid,
       this->incoming_feedback.goal_id.uuid));
   ASSERT_EQ(
     this->outgoing_feedback.feedback.sequence.size,
     this->incoming_feedback.feedback.sequence.size);
-  EXPECT_TRUE(
-    !memcmp(
+  EXPECT_TRUE(!memcmp(
       this->outgoing_feedback.feedback.sequence.data,
       this->incoming_feedback.feedback.sequence.data,
       this->outgoing_feedback.feedback.sequence.size));
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_server(&this->wait_set, &this->action_server, NULL);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
@@ -396,14 +386,12 @@ TEST_F(CLASSNAME(TestActionClientServerInteraction, RMW_IMPLEMENTATION), test_in
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   // Check that the result request was received correctly
-  EXPECT_TRUE(
-    uuidcmp(
+  EXPECT_TRUE(uuidcmp(
       this->outgoing_result_request.goal_id.uuid,
       this->incoming_result_request.goal_id.uuid));
 
   // Initialize result response
-  ASSERT_TRUE(
-    rosidl_runtime_c__int32__Sequence__init(
+  ASSERT_TRUE(rosidl_generator_c__int32__Sequence__init(
       &this->outgoing_result_response.result.sequence, 4));
   this->outgoing_result_response.result.sequence.data[0] = 0;
   this->outgoing_result_response.result.sequence.data[1] = 1;
@@ -418,7 +406,6 @@ TEST_F(CLASSNAME(TestActionClientServerInteraction, RMW_IMPLEMENTATION), test_in
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_client(
     &this->wait_set, &this->action_client, NULL, NULL);
@@ -456,8 +443,7 @@ TEST_F(CLASSNAME(TestActionClientServerInteraction, RMW_IMPLEMENTATION), test_in
   ASSERT_EQ(
     this->outgoing_result_response.result.sequence.size,
     this->incoming_result_response.result.sequence.size);
-  EXPECT_TRUE(
-    !memcmp(
+  EXPECT_TRUE(!memcmp(
       this->outgoing_result_response.result.sequence.data,
       this->incoming_result_response.result.sequence.data,
       this->outgoing_result_response.result.sequence.size));
@@ -490,7 +476,6 @@ TEST_F(
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_server(&this->wait_set, &this->action_server, NULL);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
@@ -520,8 +505,7 @@ TEST_F(
 
   // Check that the goal request was received correctly
   EXPECT_EQ(this->outgoing_goal_request.goal.order, this->incoming_goal_request.goal.order);
-  EXPECT_TRUE(
-    uuidcmp(
+  EXPECT_TRUE(uuidcmp(
       this->outgoing_goal_request.goal_id.uuid,
       this->incoming_goal_request.goal_id.uuid));
 
@@ -536,7 +520,6 @@ TEST_F(
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_client(
     &this->wait_set, &this->action_client, NULL, NULL);
@@ -582,8 +565,7 @@ TEST_F(
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   // Initialize feedback
-  ASSERT_TRUE(
-    rosidl_runtime_c__int32__Sequence__init(
+  ASSERT_TRUE(rosidl_generator_c__int32__Sequence__init(
       &this->outgoing_feedback.feedback.sequence, 3));
   this->outgoing_feedback.feedback.sequence.data[0] = 0;
   this->outgoing_feedback.feedback.sequence.data[1] = 1;
@@ -595,7 +577,6 @@ TEST_F(
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_client(
     &this->wait_set, &this->action_client, NULL, NULL);
@@ -626,21 +607,18 @@ TEST_F(
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   // Check that feedback was received correctly
-  EXPECT_TRUE(
-    uuidcmp(
+  EXPECT_TRUE(uuidcmp(
       this->outgoing_feedback.goal_id.uuid,
       this->incoming_feedback.goal_id.uuid));
   ASSERT_EQ(
     this->outgoing_feedback.feedback.sequence.size,
     this->incoming_feedback.feedback.sequence.size);
-  EXPECT_TRUE(
-    !memcmp(
+  EXPECT_TRUE(!memcmp(
       this->outgoing_feedback.feedback.sequence.data,
       this->incoming_feedback.feedback.sequence.data,
       this->outgoing_feedback.feedback.sequence.size));
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_server(&this->wait_set, &this->action_server, NULL);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
@@ -669,14 +647,12 @@ TEST_F(
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   // Check that the result request was received correctly
-  EXPECT_TRUE(
-    uuidcmp(
+  EXPECT_TRUE(uuidcmp(
       this->outgoing_result_request.goal_id.uuid,
       this->incoming_result_request.goal_id.uuid));
 
   // Initialize result response
-  ASSERT_TRUE(
-    rosidl_runtime_c__int32__Sequence__init(
+  ASSERT_TRUE(rosidl_generator_c__int32__Sequence__init(
       &this->outgoing_result_response.result.sequence, 4));
   this->outgoing_result_response.result.sequence.data[0] = 0;
   this->outgoing_result_response.result.sequence.data[1] = 1;
@@ -697,7 +673,6 @@ TEST_F(
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_server(&this->wait_set, &this->action_server, NULL);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
@@ -724,8 +699,7 @@ TEST_F(
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   // Check that the cancel request was received correctly
-  EXPECT_TRUE(
-    uuidcmp(
+  EXPECT_TRUE(uuidcmp(
       outgoing_cancel_request.goal_info.goal_id.uuid,
       incoming_cancel_request.goal_info.goal_id.uuid));
   EXPECT_EQ(
@@ -748,7 +722,6 @@ TEST_F(
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_client(
     &this->wait_set, &this->action_client, NULL, NULL);
@@ -798,7 +771,6 @@ TEST_F(
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_client(
     &this->wait_set, &this->action_client, NULL, NULL);
@@ -836,8 +808,7 @@ TEST_F(
   ASSERT_EQ(
     this->outgoing_result_response.result.sequence.size,
     this->incoming_result_response.result.sequence.size);
-  EXPECT_TRUE(
-    !memcmp(
+  EXPECT_TRUE(!memcmp(
       this->outgoing_result_response.result.sequence.data,
       this->incoming_result_response.result.sequence.data,
       this->outgoing_result_response.result.sequence.size));

@@ -27,7 +27,6 @@ extern "C"
 #include "rcl/error_handling.h"
 
 #include "rcutils/logging_macros.h"
-#include "rcutils/macros.h"
 #include "rcutils/strdup.h"
 
 #include "rcl_lifecycle/default_state_machine.h"
@@ -41,8 +40,6 @@ rcl_lifecycle_get_zero_initialized_state()
   rcl_lifecycle_state_t state;
   state.id = 0;
   state.label = NULL;
-  state.valid_transitions = NULL;
-  state.valid_transition_size = 0;
   return state;
 }
 
@@ -61,10 +58,6 @@ rcl_lifecycle_state_init(
     RCL_SET_ERROR_MSG("state pointer is null\n");
     return RCL_RET_ERROR;
   }
-  if (!label) {
-    RCL_SET_ERROR_MSG("State label is null\n");
-    return RCL_RET_ERROR;
-  }
 
   state->id = id;
   state->label = rcutils_strndup(label, strlen(label), *allocator);
@@ -81,8 +74,6 @@ rcl_lifecycle_state_fini(
   rcl_lifecycle_state_t * state,
   const rcl_allocator_t * allocator)
 {
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
-
   if (!allocator) {
     RCL_SET_ERROR_MSG("can't free state, no allocator given\n");
     return RCL_RET_ERROR;
@@ -127,12 +118,7 @@ rcl_lifecycle_transition_init(
 
   if (!transition) {
     RCL_SET_ERROR_MSG("transition pointer is null\n");
-    return RCL_RET_ERROR;
-  }
-
-  if (!label) {
-    RCL_SET_ERROR_MSG("label pointer is null\n");
-    return RCL_RET_ERROR;
+    return RCL_RET_OK;
   }
 
   transition->start = start;
@@ -154,7 +140,7 @@ rcl_lifecycle_transition_fini(
   const rcl_allocator_t * allocator)
 {
   if (!allocator) {
-    RCL_SET_ERROR_MSG("can't finalize transition, no allocator given\n");
+    RCL_SET_ERROR_MSG("can't initialize transition, no allocator given\n");
     return RCL_RET_ERROR;
   }
   // it is already NULL
@@ -206,14 +192,6 @@ rcl_lifecycle_state_machine_init(
   bool default_states,
   const rcl_allocator_t * allocator)
 {
-  if (!state_machine) {
-    RCL_SET_ERROR_MSG("State machine is null\n");
-    return RCL_RET_ERROR;
-  }
-  if (!node_handle) {
-    RCL_SET_ERROR_MSG("Node handle is null\n");
-    return RCL_RET_ERROR;
-  }
   if (!allocator) {
     RCL_SET_ERROR_MSG("can't initialize state machine, no allocator given\n");
     return RCL_RET_ERROR;
@@ -229,16 +207,15 @@ rcl_lifecycle_state_machine_init(
   }
 
   if (default_states) {
-    ret = rcl_lifecycle_init_default_state_machine(state_machine, allocator);
+    rcl_ret_t ret =
+      rcl_lifecycle_init_default_state_machine(state_machine, allocator);
     if (ret != RCL_RET_OK) {
       // init default state machine might have allocated memory,
       // so we have to call fini
-      ret = rcl_lifecycle_state_machine_fini(state_machine, node_handle, allocator);
-      if (ret != RCL_RET_OK) {
-        RCUTILS_SAFE_FWRITE_TO_STDERR(
-          "Freeing state machine failed while handling a previous error. Leaking memory!\n");
+      if (rcl_lifecycle_state_machine_fini(state_machine, node_handle, allocator) != RCL_RET_OK) {
+        // error already set
+        return RCL_RET_ERROR;
       }
-      return RCL_RET_ERROR;
     }
   }
 

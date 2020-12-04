@@ -74,27 +74,25 @@ rcl_get_zero_initialized_wait_set()
     .size_of_services = 0,
     .timers = NULL,
     .size_of_timers = 0,
-    .events = NULL,
-    .size_of_events = 0,
     .impl = NULL,
   };
   return null_wait_set;
 }
 
-bool
-rcl_wait_set_is_valid(const rcl_wait_set_t * wait_set)
+static bool
+__wait_set_is_valid(const rcl_wait_set_t * wait_set)
 {
   return wait_set && wait_set->impl;
 }
 
 static void
-__wait_set_clean_up(rcl_wait_set_t * wait_set)
+__wait_set_clean_up(rcl_wait_set_t * wait_set, rcl_allocator_t allocator)
 {
   rcl_ret_t ret = rcl_wait_set_resize(wait_set, 0, 0, 0, 0, 0, 0);
   (void)ret;  // NO LINT
   assert(RCL_RET_OK == ret);  // Defensive, shouldn't fail with size 0.
   if (wait_set->impl) {
-    wait_set->impl->allocator.deallocate(wait_set->impl, wait_set->impl->allocator.state);
+    allocator.deallocate(wait_set->impl, allocator.state);
     wait_set->impl = NULL;
   }
 }
@@ -120,7 +118,7 @@ rcl_wait_set_init(
 
   RCL_CHECK_ALLOCATOR_WITH_MSG(&allocator, "invalid allocator", return RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(wait_set, RCL_RET_INVALID_ARGUMENT);
-  if (rcl_wait_set_is_valid(wait_set)) {
+  if (__wait_set_is_valid(wait_set)) {
     RCL_SET_ERROR_MSG("wait_set already initialized, or memory was uninitialized.");
     return RCL_RET_ALREADY_INIT;
   }
@@ -148,10 +146,6 @@ rcl_wait_set_init(
   wait_set->impl->rmw_services.service_count = 0;
   wait_set->impl->rmw_events.events = NULL;
   wait_set->impl->rmw_events.event_count = 0;
-  // Set context.
-  wait_set->impl->context = context;
-  // Set allocator.
-  wait_set->impl->allocator = allocator;
 
   size_t num_conditions =
     (2 * number_of_subscriptions) +
@@ -165,6 +159,10 @@ rcl_wait_set_init(
     goto fail;
   }
 
+  // Set context.
+  wait_set->impl->context = context;
+  // Set allocator.
+  wait_set->impl->allocator = allocator;
   // Initialize subscription space.
   rcl_ret_t ret = rcl_wait_set_resize(
     wait_set, number_of_subscriptions, number_of_guard_conditions, number_of_timers,
@@ -175,13 +173,13 @@ rcl_wait_set_init(
   }
   return RCL_RET_OK;
 fail:
-  if (rcl_wait_set_is_valid(wait_set)) {
+  if (__wait_set_is_valid(wait_set)) {
     rmw_ret_t ret = rmw_destroy_wait_set(wait_set->impl->rmw_wait_set);
     if (ret != RMW_RET_OK) {
       fail_ret = RCL_RET_WAIT_SET_INVALID;
     }
   }
-  __wait_set_clean_up(wait_set);
+  __wait_set_clean_up(wait_set, allocator);
   return fail_ret;
 }
 
@@ -191,13 +189,13 @@ rcl_wait_set_fini(rcl_wait_set_t * wait_set)
   rcl_ret_t result = RCL_RET_OK;
   RCL_CHECK_ARGUMENT_FOR_NULL(wait_set, RCL_RET_INVALID_ARGUMENT);
 
-  if (rcl_wait_set_is_valid(wait_set)) {
+  if (__wait_set_is_valid(wait_set)) {
     rmw_ret_t ret = rmw_destroy_wait_set(wait_set->impl->rmw_wait_set);
     if (ret != RMW_RET_OK) {
       RCL_SET_ERROR_MSG(rmw_get_error_string().str);
       result = RCL_RET_WAIT_SET_INVALID;
     }
-    __wait_set_clean_up(wait_set);
+    __wait_set_clean_up(wait_set, wait_set->impl->allocator);
   }
   return result;
 }
@@ -206,7 +204,7 @@ rcl_ret_t
 rcl_wait_set_get_allocator(const rcl_wait_set_t * wait_set, rcl_allocator_t * allocator)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(wait_set, RCL_RET_INVALID_ARGUMENT);
-  if (!rcl_wait_set_is_valid(wait_set)) {
+  if (!__wait_set_is_valid(wait_set)) {
     RCL_SET_ERROR_MSG("wait set is invalid");
     return RCL_RET_WAIT_SET_INVALID;
   }
@@ -217,7 +215,7 @@ rcl_wait_set_get_allocator(const rcl_wait_set_t * wait_set, rcl_allocator_t * al
 
 #define SET_ADD(Type) \
   RCL_CHECK_ARGUMENT_FOR_NULL(wait_set, RCL_RET_INVALID_ARGUMENT); \
-  if (!rcl_wait_set_is_valid(wait_set)) { \
+  if (!__wait_set_is_valid(wait_set)) { \
     RCL_SET_ERROR_MSG("wait set is invalid"); \
     return RCL_RET_WAIT_SET_INVALID; \
   } \
@@ -302,7 +300,6 @@ rcl_wait_set_get_allocator(const rcl_wait_set_t * wait_set, rcl_allocator_t * al
     wait_set->impl->RMWStorage, sizeof(void *) * Type ## s_size, allocator.state); \
   if (!wait_set->impl->RMWStorage) { \
     allocator.deallocate((void *)wait_set->Type ## s, allocator.state); \
-    wait_set->Type ## s = NULL; \
     wait_set->size_of_ ## Type ## s = 0; \
     RCL_SET_ERROR_MSG("allocating memory failed"); \
     return RCL_RET_BAD_ALLOC; \
@@ -425,22 +422,19 @@ rcl_wait_set_resize(
   }
 
   SET_RESIZE(timer,;,;);  // NOLINT
-  SET_RESIZE(
-    client,
+  SET_RESIZE(client,
     SET_RESIZE_RMW_DEALLOC(
       rmw_clients.clients, rmw_clients.client_count),
     SET_RESIZE_RMW_REALLOC(
       client, rmw_clients.clients, rmw_clients.client_count)
   );
-  SET_RESIZE(
-    service,
+  SET_RESIZE(service,
     SET_RESIZE_RMW_DEALLOC(
       rmw_services.services, rmw_services.service_count),
     SET_RESIZE_RMW_REALLOC(
       service, rmw_services.services, rmw_services.service_count)
   );
-  SET_RESIZE(
-    event,
+  SET_RESIZE(event,
     SET_RESIZE_RMW_DEALLOC(
       rmw_events.events, rmw_events.event_count),
     SET_RESIZE_RMW_REALLOC(
@@ -457,8 +451,7 @@ rcl_wait_set_add_guard_condition(
   size_t * index)
 {
   SET_ADD(guard_condition)
-  SET_ADD_RMW(
-    guard_condition, rmw_guard_conditions.guard_conditions,
+  SET_ADD_RMW(guard_condition, rmw_guard_conditions.guard_conditions,
     rmw_guard_conditions.guard_condition_count)
 
   return RCL_RET_OK;
@@ -522,7 +515,7 @@ rcl_ret_t
 rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(wait_set, RCL_RET_INVALID_ARGUMENT);
-  if (!rcl_wait_set_is_valid(wait_set)) {
+  if (!__wait_set_is_valid(wait_set)) {
     RCL_SET_ERROR_MSG("wait set is invalid");
     return RCL_RET_WAIT_SET_INVALID;
   }
@@ -550,14 +543,6 @@ rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout)
       if (!wait_set->timers[i]) {
         continue;  // Skip NULL timers.
       }
-      rmw_guard_conditions_t * rmw_gcs = &(wait_set->impl->rmw_guard_conditions);
-      size_t gc_idx = wait_set->size_of_guard_conditions + i;
-      if (NULL != rmw_gcs->guard_conditions[gc_idx]) {
-        // This timer has a guard condition, so move it to make a legal wait set.
-        rmw_gcs->guard_conditions[rmw_gcs->guard_condition_count] =
-          rmw_gcs->guard_conditions[gc_idx];
-        ++(rmw_gcs->guard_condition_count);
-      }
       bool is_canceled = false;
       rcl_ret_t ret = rcl_timer_is_canceled(wait_set->timers[i], &is_canceled);
       if (ret != RCL_RET_OK) {
@@ -566,6 +551,14 @@ rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout)
       if (is_canceled) {
         wait_set->timers[i] = NULL;
         continue;
+      }
+      rmw_guard_conditions_t * rmw_gcs = &(wait_set->impl->rmw_guard_conditions);
+      size_t gc_idx = wait_set->size_of_guard_conditions + i;
+      if (NULL != rmw_gcs->guard_conditions[gc_idx]) {
+        // This timer has a guard condition, so move it to make a legal wait set.
+        rmw_gcs->guard_conditions[rmw_gcs->guard_condition_count] =
+          rmw_gcs->guard_conditions[gc_idx];
+        ++(rmw_gcs->guard_condition_count);
       }
       // use timer time to to set the rmw_wait timeout
       // TODO(sloretz) fix spurious wake-ups on ROS_TIME timers with ROS_TIME enabled

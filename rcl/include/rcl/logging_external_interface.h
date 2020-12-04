@@ -19,10 +19,6 @@
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /// Initialize the external logging library.
 /**
  * \param[in] config_file The location of a config file that the external
@@ -82,11 +78,6 @@ rcl_logging_external_log(int severity, const char * name, const char * msg);
  * \return RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
-RCL_WARN_UNUSED
 rcl_ret_t rcl_logging_external_set_logger_level(const char * name, int level);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif  // RCL__LOGGING_EXTERNAL_INTERFACE_H_
