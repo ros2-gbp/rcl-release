@@ -154,8 +154,9 @@ rcl_get_zero_initialized_context(void);
 /**
  * The context to be finalized must have been previously initialized with
  * `rcl_init()`, and then later invalidated with `rcl_shutdown()`.
+ * A zero-initialized context that has not been initialized can be finalized.
  * If context is `NULL`, then `RCL_RET_INVALID_ARGUMENT` is returned.
- * If context is zero-initialized, then `RCL_RET_INVALID_ARGUMENT` is returned.
+ * If context is zero-initialized, then `RCL_RET_OK` is returned.
  * If context is initialized and valid (`rcl_shutdown()` was not called on it),
  * then `RCL_RET_INVALID_ARGUMENT` is returned.
  *
@@ -238,7 +239,7 @@ rcl_context_get_init_options(const rcl_context_t * context);
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_context_instance_id_t
-rcl_context_get_instance_id(rcl_context_t * context);
+rcl_context_get_instance_id(const rcl_context_t * context);
 
 /// Returns the context domain id.
 /**
@@ -286,7 +287,7 @@ rcl_context_get_domain_id(rcl_context_t * context, size_t * domain_id);
 RCL_PUBLIC
 RCL_WARN_UNUSED
 bool
-rcl_context_is_valid(rcl_context_t * context);
+rcl_context_is_valid(const rcl_context_t * context);
 
 /// Return pointer to the rmw context if the given context is currently valid, otherwise `NULL`.
 /**
