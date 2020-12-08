@@ -41,10 +41,10 @@
 #define TEST_P_RMW(test_case_name, test_name) \
   APPLY( \
     TEST_P, CLASSNAME(test_case_name, RMW_IMPLEMENTATION), test_name)
-#define INSTANTIATE_TEST_CASE_P_RMW(instance_name, test_case_name, ...) \
+#define INSTANTIATE_TEST_SUITE_P_RMW(instance_name, test_case_name, ...) \
   EXPAND( \
     APPLY( \
-      INSTANTIATE_TEST_CASE_P, instance_name, \
+      INSTANTIATE_TEST_SUITE_P, instance_name, \
       CLASSNAME(test_case_name, RMW_IMPLEMENTATION), __VA_ARGS__))
 
 struct TestParameters
@@ -141,7 +141,8 @@ protected:
 };
 
 void
-wait_for_subscription_to_be_ready(
+check_if_rosout_subscription_gets_a_message(
+  const char * logger_name,
   rcl_subscription_t * subscription,
   rcl_context_t * context,
   size_t max_tries,
@@ -159,6 +160,7 @@ wait_for_subscription_to_be_ready(
   });
   size_t iteration = 0;
   do {
+    RCUTILS_LOG_INFO_NAMED(logger_name, "SOMETHING");
     ++iteration;
     ret = rcl_wait_set_clear(&wait_set);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -182,11 +184,10 @@ wait_for_subscription_to_be_ready(
 /* Testing the subscriber of topic 'rosout' whether to get event from logging or not.
  */
 TEST_P_RMW(TestLoggingRosoutFixture, test_logging_rosout) {
-  // log
-  RCUTILS_LOG_INFO_NAMED(rcl_node_get_logger_name(this->node_ptr), "SOMETHING");
-
-  bool success;
-  wait_for_subscription_to_be_ready(this->subscription_ptr, this->context_ptr, 10, 100, success);
+  bool success = false;
+  check_if_rosout_subscription_gets_a_message(
+    rcl_node_get_logger_name(this->node_ptr), this->subscription_ptr,
+    this->context_ptr, 30, 100, success);
   ASSERT_EQ(success, GetParam().expected_success);
 }
 
@@ -271,7 +272,7 @@ get_parameters()
   return parameters;
 }
 
-INSTANTIATE_TEST_CASE_P_RMW(
+INSTANTIATE_TEST_SUITE_P_RMW(
   TestLoggingRosoutWithDifferentSettings,
   TestLoggingRosoutFixture,
   ::testing::ValuesIn(get_parameters()),
