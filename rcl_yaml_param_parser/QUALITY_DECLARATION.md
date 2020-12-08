@@ -2,7 +2,7 @@ This document is a declaration of software quality for the `rcl_yaml_param_parse
 
 # `rcl_yaml_param_parser` Quality Declaration
 
-The package `rcl_yaml_param_parser` claims to be in the **Quality Level 3** category.
+The package `rcl_yaml_param_parser` claims to be in the **Quality Level 1** category.
 
 Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#package-quality-categories).
 
@@ -114,7 +114,15 @@ Current coverage statistics can be viewed [here](https://ci.ros2.org/job/nightly
 
 ### Performance [4.iv]
 
-The performance tests of `rcl_yaml_param_parser` are located in the [test/benchmark directory](https://github.com/ros2/rcl/tree/master/rcl_yaml_param_parser/test/benchmark). The most recent test results can be found [here](http://build.ros2.org/view/Rci/job/Rci__benchmark_ubuntu_focal_amd64/BenchmarkTable/).
+`rcl_yaml_param_parser` follows the recommendations for performance testing of C/C++ code in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#performance), and opts to do performance analysis on each release rather than each change.
+
+The performance tests of `rcl_yaml_param_parser` are located in the [test/benchmark directory](https://github.com/ros2/rcl/tree/master/rcl_yaml_param_parser/test/benchmark).
+
+Package and system level performance benchmarks that cover features of `rcl_yaml_param_parser` can be found at:
+* [Benchmarks](http://build.ros2.org/view/Rci/job/Rci__benchmark_ubuntu_focal_amd64/BenchmarkTable/)
+* [Performance](http://build.ros2.org/view/Rci/job/Rci__nightly-performance_ubuntu_focal_amd64/lastCompletedBuild/)
+
+Changes that introduce regressions in performance must be adequately justified in order to be accepted and merged.
 
 ### Linters and Static Analysis [4.v]
 
@@ -135,13 +143,13 @@ It also has several test dependencies, which do not affect the resulting quality
 
 `rcutils` provides commonly used functionality in C.
 
-It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md).
 
 #### `libyaml_vendor`
 
 `libyaml_vendor` is a vendor package for the libyaml C library.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/libyaml_vendor/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/libyaml_vendor/blob/master/QUALITY_DECLARATION.md).
 
 ### Direct Runtime Non-ROS Dependencies [5.iii]
 
@@ -151,7 +159,7 @@ It is **Quality Level 4**, see its [Quality Declaration document](https://github
 
 `libyaml` is a YAML parsing library written in C.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/libyaml_vendor/blob/master/libyaml_q_declaration.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/libyaml_vendor/blob/master/libyaml_q_declaration.md).
 
 ## Platform Support [6]
 

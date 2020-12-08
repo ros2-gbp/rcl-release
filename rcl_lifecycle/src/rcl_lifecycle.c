@@ -50,7 +50,7 @@ rcl_lifecycle_get_zero_initialized_state()
 rcl_ret_t
 rcl_lifecycle_state_init(
   rcl_lifecycle_state_t * state,
-  unsigned int id,
+  uint8_t id,
   const char * label,
   const rcl_allocator_t * allocator)
 {
@@ -216,6 +216,10 @@ rcl_lifecycle_state_machine_init(
       // init default state machine might have allocated memory,
       // so we have to call fini
       ret = rcl_lifecycle_state_machine_fini(state_machine, node_handle, allocator);
+      if (ret != RCL_RET_OK) {
+        RCUTILS_SAFE_FWRITE_TO_STDERR(
+          "Freeing state machine failed while handling a previous error. Leaking memory!\n");
+      }
       return RCL_RET_ERROR;
     }
   }
