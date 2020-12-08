@@ -93,10 +93,7 @@ rcl_arguments_get_param_files(
     if (NULL == (*parameter_files)[i]) {
       // deallocate allocated memory
       for (int r = i; r >= 0; --r) {
-        if (NULL == (*parameter_files[r])) {
-          break;
-        }
-        allocator.deallocate((*parameter_files[r]), allocator.state);
+        allocator.deallocate((*parameter_files)[r], allocator.state);
       }
       allocator.deallocate((*parameter_files), allocator.state);
       (*parameter_files) = NULL;
@@ -139,13 +136,26 @@ rcl_arguments_get_param_overrides(
   return RCL_RET_OK;
 }
 
+rcl_ret_t
+rcl_arguments_get_log_levels(
+  const rcl_arguments_t * arguments,
+  rcl_log_levels_t * log_levels)
+{
+  RCL_CHECK_ARGUMENT_FOR_NULL(arguments, RCL_RET_INVALID_ARGUMENT);
+  RCL_CHECK_ARGUMENT_FOR_NULL(arguments->impl, RCL_RET_INVALID_ARGUMENT);
+  RCL_CHECK_ARGUMENT_FOR_NULL(log_levels, RCL_RET_INVALID_ARGUMENT);
+  const rcl_allocator_t * allocator = &arguments->impl->allocator;
+  RCL_CHECK_ALLOCATOR_WITH_MSG(allocator, "invalid allocator", return RCL_RET_INVALID_ARGUMENT);
+
+  return rcl_log_levels_copy(&arguments->impl->log_levels, log_levels);
+}
+
 /// Parse an argument that may or may not be a log level rule.
 /**
  * \param[in] arg the argument to parse
- * \param[in] allocator an allocator to use
- * \param[in,out] log_level parsed log level represented by `RCUTILS_LOG_SEVERITY` enum
+ * \param[in,out] log_levels parsed a default logger level or a logger setting
  * \return RCL_RET_OK if a valid log level was parsed, or
- * \return RCL_RET_INVALID_LOG_LEVEL if the argument is not a valid rule, or
+ * \return RCL_RET_INVALID_LOG_LEVEL_RULE if the argument is not a valid rule, or
  * \return RCL_RET_BAD_ALLOC if an allocation failed, or
  * \return RLC_RET_ERROR if an unspecified error occurred.
  */
@@ -153,26 +163,7 @@ RCL_LOCAL
 rcl_ret_t
 _rcl_parse_log_level(
   const char * arg,
-  rcl_allocator_t allocator,
-  int * log_level);
-
-/// Parse an argument that may or may not be a log level rule.
-/**
- * \param[in] arg the argument to parse
- * \param[in] allocator an allocator to use
- * \param[in,out] log_level parsed log level represented by `RCUTILS_LOG_SEVERITY` enum
- * \return RCL_RET_OK if a valid log level was parsed, or
- * \return RCL_RET_INVALID_LOG_LEVEL_RULE if the argument is not a valid rule, or
- * \return RCL_RET_BAD_ALLOC if an allocation failed, or
- * \return RLC_RET_ERROR if an unspecified error occurred.
- * \deprecated to be removed in F-Turtle
- */
-RCL_LOCAL
-rcl_ret_t
-_rcl_parse_log_level_rule(
-  const char * arg,
-  rcl_allocator_t allocator,
-  int * log_level);
+  rcl_log_levels_t * log_levels);
 
 /// Parse an argument that may or may not be a log configuration file.
 /**
@@ -190,28 +181,12 @@ _rcl_parse_external_log_config_file(
   rcl_allocator_t allocator,
   char ** log_config_file);
 
-/// Parse an argument that may or may not be a log file rule.
-/**
- * \param[in] arg the argument to parse
- * \param[in] allocator an allocator to use
- * \param[in,out] log_config_file parsed log configuration file
- * \return RCL_RET_OK if a valid log config file was parsed, or
- * \return RCL_RET_BAD_ALLOC if an allocation failed, or
- * \return RLC_RET_ERROR if an unspecified error occurred.
- * \deprecated to be removed in F-Turtle
- */
-RCL_LOCAL
-rcl_ret_t
-_rcl_parse_external_log_config_file_rule(
-  const char * arg,
-  rcl_allocator_t allocator,
-  char ** log_config_file);
-
 /// Parse an argument that may or may not be a parameter file.
 /**
  * The syntax of the file name is not validated.
  * \param[in] arg the argument to parse
  * \param[in] allocator an allocator to use
+ * \param[in] params points to the populated parameter struct
  * \param[in,out] param_file string that could be a parameter file name
  * \return RCL_RET_OK if the rule was parsed correctly, or
  * \return RCL_RET_BAD_ALLOC if an allocation failed, or
@@ -225,25 +200,21 @@ _rcl_parse_param_file(
   rcl_params_t * params,
   char ** param_file);
 
-/// Parse an argument that may or may not be a parameter file rule.
+/// Parse an enclave argument.
 /**
- * The syntax of the file name is not validated.
  * \param[in] arg the argument to parse
  * \param[in] allocator an allocator to use
- * \param[in,out] param_file string that could be a parameter file name
- * \return RCL_RET_OK if the rule was parsed correctly, or
- * \return RCL_RET_INVALID_PARAM_RULE if the argument is not a valid rule, or
+ * \param[in,out] enclave parsed security enclave
+ * \return RCL_RET_OK if a valid security enclave was parsed, or
  * \return RCL_RET_BAD_ALLOC if an allocation failed, or
  * \return RLC_RET_ERROR if an unspecified error occurred.
- * \deprecated to be removed in F-Turtle
  */
 RCL_LOCAL
 rcl_ret_t
-_rcl_parse_param_file_rule(
+_rcl_parse_enclave(
   const char * arg,
   rcl_allocator_t allocator,
-  rcl_params_t * params,
-  char ** param_file);
+  char ** enclave);
 
 #define RCL_ENABLE_FLAG_PREFIX "--enable-"
 #define RCL_DISABLE_FLAG_PREFIX "--disable-"
@@ -263,41 +234,15 @@ _rcl_parse_disabling_flag(
   const char * key,
   bool * value);
 
-/// Parse a bool argument that may or may not be for the provided key rule.
+/// Allocate and zero initialize arguments impl and.
 /**
- * \param[in] arg the argument to parse
- * \param[in] key the key for the argument to parse. Should be a null terminated string
- * \param[in,out] value parsed boolean value
- * \return RCL_RET_OK if the bool argument was parsed successfully, or
- * \return RLC_RET_ERROR if an unspecified error occurred.
- * \deprecated to be removed in F-Turtle
+ * \param[out] args target arguments to set impl
+ * \param[in] allocator an allocator to use
+ * \return RCL_RET_OK if a valid rule was parsed, or
+ * \return RCL_RET_BAD_ALLOC if an allocation failed
  */
-RCL_LOCAL
 rcl_ret_t
-_rcl_parse_bool_arg(
-  const char * arg,
-  const char * key,
-  bool * value);
-
-/// Parse a null terminated string to a boolean value.
-/**
- * The case sensitive values: "T", "t", "True", "true", "Y", "y", "Yes", "yes",
- * and "1" will all map to true.
- * The case sensitive values: "F", "f", "False", "false", "N", "n", "No", "no",
- * and "0" will all map to false.
- *
- * \param[in] str a null terminated string to be parsed into a boolean
- * \param[in,out] val the boolean value parsed from the string.
- *   Left unchanged if string cannot be parsed to a valid bool.
- * \return RCL_RET_OK if a valid boolean parsed, or
- * \return RLC_RET_ERROR if an unspecified error occurred.
- * \deprecated to be removed in F-Turtle
- */
-RCL_LOCAL
-rcl_ret_t
-_atob(
-  const char * str,
-  bool * val);
+_rcl_allocate_initialized_arguments_impl(rcl_arguments_t * args, rcl_allocator_t * allocator);
 
 rcl_ret_t
 rcl_parse_arguments(
@@ -323,26 +268,11 @@ rcl_parse_arguments(
   rcl_ret_t ret;
   rcl_ret_t fail_ret;
 
-  args_output->impl = allocator.allocate(sizeof(rcl_arguments_impl_t), allocator.state);
-  if (NULL == args_output->impl) {
-    return RCL_RET_BAD_ALLOC;
+  ret = _rcl_allocate_initialized_arguments_impl(args_output, &allocator);
+  if (RCL_RET_OK != ret) {
+    return ret;
   }
   rcl_arguments_impl_t * args_impl = args_output->impl;
-  args_impl->num_remap_rules = 0;
-  args_impl->remap_rules = NULL;
-  args_impl->log_level = -1;
-  args_impl->external_log_config_file = NULL;
-  args_impl->unparsed_args = NULL;
-  args_impl->num_unparsed_args = 0;
-  args_impl->unparsed_ros_args = NULL;
-  args_impl->num_unparsed_ros_args = 0;
-  args_impl->parameter_overrides = NULL;
-  args_impl->parameter_files = NULL;
-  args_impl->num_param_files_args = 0;
-  args_impl->log_stdout_disabled = false;
-  args_impl->log_rosout_disabled = false;
-  args_impl->log_ext_lib_disabled = false;
-  args_impl->allocator = allocator;
 
   if (argc == 0) {
     // there are no arguments to parse
@@ -377,6 +307,12 @@ rcl_parse_arguments(
     ret = RCL_RET_BAD_ALLOC;
     goto fail;
   }
+  rcl_log_levels_t log_levels = rcl_get_zero_initialized_log_levels();
+  ret = rcl_log_levels_init(&log_levels, &allocator, argc);
+  if (ret != RCL_RET_OK) {
+    goto fail;
+  }
+  args_impl->log_levels = log_levels;
 
   bool parsing_ros_args = false;
   for (int i = 0; i < argc; ++i) {
@@ -397,8 +333,8 @@ rcl_parse_arguments(
         if (i + 1 < argc) {
           // Attempt to parse next argument as parameter override rule
           if (RCL_RET_OK == _rcl_parse_param_rule(argv[i + 1], args_impl->parameter_overrides)) {
-            RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-              "Got param override rule : %s\n", argv[i + 1]);
+            RCUTILS_LOG_DEBUG_NAMED(
+              ROS_PACKAGE_NAME, "Got param override rule : %s\n", argv[i + 1]);
             ++i;  // Skip flag here, for loop will skip rule.
             continue;
           }
@@ -414,8 +350,8 @@ rcl_parse_arguments(
         ret = RCL_RET_INVALID_ROS_ARGS;
         goto fail;
       }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-        "Arg %d (%s) is not a %s nor a %s flag.",
+      RCUTILS_LOG_DEBUG_NAMED(
+        ROS_PACKAGE_NAME, "Arg %d (%s) is not a %s nor a %s flag.",
         i, argv[i], RCL_PARAM_FLAG, RCL_SHORT_PARAM_FLAG);
 
       // Attempt to parse argument as remap rule flag
@@ -442,9 +378,9 @@ rcl_parse_arguments(
         ret = RCL_RET_INVALID_ROS_ARGS;
         goto fail;
       }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-        "Arg %d (%s) is not a %s nor a %s flag.", i,
-        argv[i], RCL_REMAP_FLAG, RCL_SHORT_REMAP_FLAG);
+      RCUTILS_LOG_DEBUG_NAMED(
+        ROS_PACKAGE_NAME, "Arg %d (%s) is not a %s nor a %s flag.",
+        i, argv[i], RCL_REMAP_FLAG, RCL_SHORT_REMAP_FLAG);
 
       // Attempt to parse argument as parameter file rule
       if (strcmp(RCL_PARAM_FILE_FLAG, argv[i]) == 0) {
@@ -457,7 +393,8 @@ rcl_parse_arguments(
               &args_impl->parameter_files[args_impl->num_param_files_args]))
           {
             ++(args_impl->num_param_files_args);
-            RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
+            RCUTILS_LOG_DEBUG_NAMED(
+              ROS_PACKAGE_NAME,
               "Got params file : %s\ntotal num param files %d",
               args_impl->parameter_files[args_impl->num_param_files_args - 1],
               args_impl->num_param_files_args);
@@ -476,16 +413,17 @@ rcl_parse_arguments(
         ret = RCL_RET_INVALID_ROS_ARGS;
         goto fail;
       }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-        "Arg %d (%s) is not a %s flag.", i, argv[i], RCL_PARAM_FILE_FLAG);
+      RCUTILS_LOG_DEBUG_NAMED(
+        ROS_PACKAGE_NAME, "Arg %d (%s) is not a %s flag.",
+        i, argv[i], RCL_PARAM_FILE_FLAG);
 
       // Attempt to parse argument as log level configuration
       if (strcmp(RCL_LOG_LEVEL_FLAG, argv[i]) == 0) {
         if (i + 1 < argc) {
-          int log_level;
-          if (RCL_RET_OK == _rcl_parse_log_level(argv[i + 1], allocator, &log_level)) {
+          if (RCL_RET_OK ==
+            _rcl_parse_log_level(argv[i + 1], &args_impl->log_levels))
+          {
             RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Got log level: %s\n", argv[i + 1]);
-            args_impl->log_level = log_level;
             ++i;  // Skip flag here, for loop will skip value.
             continue;
           }
@@ -501,16 +439,16 @@ rcl_parse_arguments(
         ret = RCL_RET_INVALID_ROS_ARGS;
         goto fail;
       }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-        "Arg %d (%s) is not a %s flag.",
+      RCUTILS_LOG_DEBUG_NAMED(
+        ROS_PACKAGE_NAME, "Arg %d (%s) is not a %s flag.",
         i, argv[i], RCL_LOG_LEVEL_FLAG);
 
       // Attempt to parse argument as log configuration file
       if (strcmp(RCL_EXTERNAL_LOG_CONFIG_FLAG, argv[i]) == 0) {
         if (i + 1 < argc) {
           if (NULL != args_impl->external_log_config_file) {
-            RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-              "Overriding log configuration file : %s\n",
+            RCUTILS_LOG_DEBUG_NAMED(
+              ROS_PACKAGE_NAME, "Overriding log configuration file : %s\n",
               args_impl->external_log_config_file);
             allocator.deallocate(args_impl->external_log_config_file, allocator.state);
             args_impl->external_log_config_file = NULL;
@@ -518,8 +456,8 @@ rcl_parse_arguments(
           if (RCL_RET_OK == _rcl_parse_external_log_config_file(
               argv[i + 1], allocator, &args_impl->external_log_config_file))
           {
-            RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-              "Got log configuration file : %s\n",
+            RCUTILS_LOG_DEBUG_NAMED(
+              ROS_PACKAGE_NAME, "Got log configuration file : %s\n",
               args_impl->external_log_config_file);
             ++i;  // Skip flag here, for loop will skip value.
             continue;
@@ -536,19 +474,54 @@ rcl_parse_arguments(
         ret = RCL_RET_INVALID_ROS_ARGS;
         goto fail;
       }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-        "Arg %d (%s) is not a %s flag.",
+
+      // Attempt to parse argument as a security enclave
+      if (strcmp(RCL_ENCLAVE_FLAG, argv[i]) == 0 || strcmp(RCL_SHORT_ENCLAVE_FLAG, argv[i]) == 0) {
+        if (i + 1 < argc) {
+          if (NULL != args_impl->enclave) {
+            RCUTILS_LOG_DEBUG_NAMED(
+              ROS_PACKAGE_NAME, "Overriding security enclave : %s\n",
+              args_impl->enclave);
+            allocator.deallocate(args_impl->enclave, allocator.state);
+            args_impl->enclave = NULL;
+          }
+          if (RCL_RET_OK == _rcl_parse_enclave(
+              argv[i + 1], allocator, &args_impl->enclave))
+          {
+            RCUTILS_LOG_DEBUG_NAMED(
+              ROS_PACKAGE_NAME, "Got enclave: %s\n",
+              args_impl->enclave);
+            ++i;  // Skip flag here, for loop will skip value.
+            continue;
+          }
+          rcl_error_string_t prev_error_string = rcl_get_error_string();
+          rcl_reset_error();
+          RCL_SET_ERROR_MSG_WITH_FORMAT_STRING(
+            "Couldn't parse enclave name: '%s %s'. Error: %s", argv[i], argv[i + 1],
+            prev_error_string.str);
+        } else {
+          RCL_SET_ERROR_MSG_WITH_FORMAT_STRING(
+            "Couldn't parse trailing %s flag. No enclave path provided.", argv[i]);
+        }
+        ret = RCL_RET_INVALID_ROS_ARGS;
+        goto fail;
+      }
+
+      RCUTILS_LOG_DEBUG_NAMED(
+        ROS_PACKAGE_NAME, "Arg %d (%s) is not a %s flag.",
         i, argv[i], RCL_EXTERNAL_LOG_CONFIG_FLAG);
 
       // Attempt to parse --enable/disable-stdout-logs flag
       ret = _rcl_parse_disabling_flag(
         argv[i], RCL_LOG_STDOUT_FLAG_SUFFIX, &args_impl->log_stdout_disabled);
       if (RCL_RET_OK == ret) {
-        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-          "Disable log stdout ? %s\n", args_impl->log_stdout_disabled ? "true" : "false");
+        RCUTILS_LOG_DEBUG_NAMED(
+          ROS_PACKAGE_NAME, "Disable log stdout ? %s\n",
+          args_impl->log_stdout_disabled ? "true" : "false");
         continue;
       }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
+      RCUTILS_LOG_DEBUG_NAMED(
+        ROS_PACKAGE_NAME,
         "Couldn't parse arg %d (%s) as %s%s or %s%s flag. Error: %s",
         i, argv[i], RCL_ENABLE_FLAG_PREFIX, RCL_LOG_STDOUT_FLAG_SUFFIX,
         RCL_DISABLE_FLAG_PREFIX, RCL_LOG_STDOUT_FLAG_SUFFIX, rcl_get_error_string().str);
@@ -558,11 +531,13 @@ rcl_parse_arguments(
       ret = _rcl_parse_disabling_flag(
         argv[i], RCL_LOG_ROSOUT_FLAG_SUFFIX, &args_impl->log_rosout_disabled);
       if (RCL_RET_OK == ret) {
-        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-          "Disable log rosout ? %s\n", args_impl->log_rosout_disabled ? "true" : "false");
+        RCUTILS_LOG_DEBUG_NAMED(
+          ROS_PACKAGE_NAME, "Disable log rosout ? %s\n",
+          args_impl->log_rosout_disabled ? "true" : "false");
         continue;
       }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
+      RCUTILS_LOG_DEBUG_NAMED(
+        ROS_PACKAGE_NAME,
         "Couldn't parse arg %d (%s) as %s%s or %s%s flag. Error: %s",
         i, argv[i], RCL_ENABLE_FLAG_PREFIX, RCL_LOG_ROSOUT_FLAG_SUFFIX,
         RCL_DISABLE_FLAG_PREFIX, RCL_LOG_ROSOUT_FLAG_SUFFIX, rcl_get_error_string().str);
@@ -572,11 +547,13 @@ rcl_parse_arguments(
       ret = _rcl_parse_disabling_flag(
         argv[i], RCL_LOG_EXT_LIB_FLAG_SUFFIX, &args_impl->log_ext_lib_disabled);
       if (RCL_RET_OK == ret) {
-        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-          "Disable log external lib ? %s\n", args_impl->log_ext_lib_disabled ? "true" : "false");
+        RCUTILS_LOG_DEBUG_NAMED(
+          ROS_PACKAGE_NAME, "Disable log external lib ? %s\n",
+          args_impl->log_ext_lib_disabled ? "true" : "false");
         continue;
       }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
+      RCUTILS_LOG_DEBUG_NAMED(
+        ROS_PACKAGE_NAME,
         "Couldn't parse arg %d (%s) as %s%s or %s%s flag. Error: %s",
         i, argv[i], RCL_ENABLE_FLAG_PREFIX, RCL_LOG_EXT_LIB_FLAG_SUFFIX,
         RCL_DISABLE_FLAG_PREFIX, RCL_LOG_EXT_LIB_FLAG_SUFFIX, rcl_get_error_string().str);
@@ -596,138 +573,17 @@ rcl_parse_arguments(
       rcl_remap_t * rule = &(args_impl->remap_rules[args_impl->num_remap_rules]);
       *rule = rcl_get_zero_initialized_remap();
       if (RCL_RET_OK == _rcl_parse_remap_rule(argv[i], allocator, rule)) {
-        RCUTILS_LOG_WARN_NAMED(ROS_PACKAGE_NAME,
+        RCUTILS_LOG_WARN_NAMED(
+          ROS_PACKAGE_NAME,
           "Found remap rule '%s'. This syntax is deprecated. Use '%s %s %s' instead.",
           argv[i], RCL_ROS_ARGS_FLAG, RCL_REMAP_FLAG, argv[i]);
         RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Got remap rule : %s\n", argv[i + 1]);
         ++(args_impl->num_remap_rules);
         continue;
       }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
+      RCUTILS_LOG_DEBUG_NAMED(
+        ROS_PACKAGE_NAME,
         "Couldn't parse arg %d (%s) as a remap rule in its deprecated form. Error: %s",
-        i, argv[i], rcl_get_error_string().str);
-      rcl_reset_error();
-
-      // Attempt to parse argument as parameter file rule
-      args_impl->parameter_files[args_impl->num_param_files_args] = NULL;
-      ret = _rcl_parse_param_file_rule(
-        argv[i], allocator, args_impl->parameter_overrides,
-        &args_impl->parameter_files[args_impl->num_param_files_args]);
-
-      // Deprecation warning regardless if there is an error parsing the file
-      if (RCL_RET_INVALID_PARAM_RULE != ret) {
-        RCUTILS_LOG_WARN_NAMED(ROS_PACKAGE_NAME,
-          "Found parameter file rule '%s'. This syntax is deprecated. Use '%s %s %s' instead.",
-          argv[i], RCL_ROS_ARGS_FLAG, RCL_PARAM_FILE_FLAG,
-          args_impl->parameter_files[args_impl->num_param_files_args]);
-      }
-
-      if (RCL_RET_OK == ret) {
-        ++(args_impl->num_param_files_args);
-        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-          "params rule : %s\n total num param rules %d",
-          args_impl->parameter_files[args_impl->num_param_files_args - 1],
-          args_impl->num_param_files_args);
-        continue;
-      } else if (RCL_RET_ERROR == ret) {
-        // If _rcl_parse_param_file_rule() returned RCL_RET_ERROR then the argument contained the
-        // '__params:=' prefix, but parsing the parameter file failed.
-        rcl_error_string_t prev_error_string = rcl_get_error_string();
-        rcl_reset_error();
-        RCL_SET_ERROR_MSG_WITH_FORMAT_STRING(
-          "Couldn't parse params file: '%s'. Error: %s",
-          args_impl->parameter_files[args_impl->num_param_files_args],
-          prev_error_string.str);
-        goto fail;
-      }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-        "Couldn't parse arg %d (%s) as a deprecated parameter file rule. Error: %s",
-        i, argv[i], rcl_get_error_string().str);
-      rcl_reset_error();
-
-      // Attempt to parse argument as log level configuration
-      int log_level;
-      if (RCL_RET_OK == _rcl_parse_log_level_rule(argv[i], allocator, &log_level)) {
-        RCUTILS_LOG_WARN_NAMED(ROS_PACKAGE_NAME,
-          "Found log level rule '%s'. This syntax is deprecated. Use '%s %s %s' instead.",
-          argv[i], RCL_ROS_ARGS_FLAG, RCL_LOG_LEVEL_FLAG, g_rcutils_log_severity_names[log_level]);
-        args_impl->log_level = log_level;
-        continue;
-      }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-        "Couldn't parse arg %d (%s) as a deprecated log level rule. Error: %s",
-        i, argv[i], rcl_get_error_string().str);
-      rcl_reset_error();
-
-      // Attempt to parse argument as log configuration file rule
-      rcl_ret_t ret = _rcl_parse_external_log_config_file_rule(
-        argv[i], allocator, &args_impl->external_log_config_file);
-      if (RCL_RET_OK == ret) {
-        RCUTILS_LOG_WARN_NAMED(ROS_PACKAGE_NAME,
-          "Found log config rule '%s'. This syntax is deprecated. Use '%s %s %s' instead.",
-          argv[i], RCL_ROS_ARGS_FLAG, RCL_EXTERNAL_LOG_CONFIG_FLAG,
-          args_impl->external_log_config_file);
-        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-          "Got log configuration file : %s\n",
-          args_impl->external_log_config_file);
-        continue;
-      }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-        "Couldn't parse arg %d (%s) as a deprecated log config rule. Error: %s",
-        i, argv[i], rcl_get_error_string().str);
-      rcl_reset_error();
-
-      // Attempt to parse argument as log_stdout_disabled
-      ret = _rcl_parse_bool_arg(
-        argv[i], RCL_LOG_DISABLE_STDOUT_ARG_RULE, &args_impl->log_stdout_disabled);
-      if (RCL_RET_OK == ret) {
-        const char * flag_prefix =
-          args_impl->log_stdout_disabled ? RCL_DISABLE_FLAG_PREFIX : RCL_ENABLE_FLAG_PREFIX;
-        RCUTILS_LOG_WARN_NAMED(ROS_PACKAGE_NAME,
-          "Found '%s'. This syntax is deprecated. Use '%s %s%s' instead.",
-          argv[i], RCL_ROS_ARGS_FLAG, flag_prefix, RCL_LOG_STDOUT_FLAG_SUFFIX);
-        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-          "Disable log stdout ? %s\n", args_impl->log_stdout_disabled ? "true" : "false");
-        continue;
-      }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-        "Couldn't parse arg %d (%s) as a deprecated log_stdout_disabled rule. Error: %s",
-        i, argv[i], rcl_get_error_string().str);
-      rcl_reset_error();
-
-      // Attempt to parse argument as log_rosout_disabled
-      ret = _rcl_parse_bool_arg(
-        argv[i], RCL_LOG_DISABLE_ROSOUT_ARG_RULE, &args_impl->log_rosout_disabled);
-      if (RCL_RET_OK == ret) {
-        const char * flag_prefix =
-          args_impl->log_rosout_disabled ? RCL_DISABLE_FLAG_PREFIX : RCL_ENABLE_FLAG_PREFIX;
-        RCUTILS_LOG_WARN_NAMED(ROS_PACKAGE_NAME,
-          "Found '%s'. This syntax is deprecated. Use '%s %s%s' instead.",
-          argv[i], RCL_ROS_ARGS_FLAG, flag_prefix, RCL_LOG_ROSOUT_FLAG_SUFFIX);
-        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-          "Disable log rosout ? %s\n", args_impl->log_rosout_disabled ? "true" : "false");
-        continue;
-      }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-        "Couldn't parse arg %d (%s) as a deprecated log_rosout_disabled rule. Error: %s",
-        i, argv[i], rcl_get_error_string().str);
-      rcl_reset_error();
-
-      // Attempt to parse argument as log_ext_lib_disabled
-      ret = _rcl_parse_bool_arg(
-        argv[i], RCL_LOG_DISABLE_EXT_LIB_ARG_RULE, &args_impl->log_ext_lib_disabled);
-      if (RCL_RET_OK == ret) {
-        const char * flag_prefix =
-          args_impl->log_ext_lib_disabled ? RCL_DISABLE_FLAG_PREFIX : RCL_ENABLE_FLAG_PREFIX;
-        RCUTILS_LOG_WARN_NAMED(ROS_PACKAGE_NAME,
-          "Found '%s'. This syntax is deprecated. Use '%s %s%s' instead.",
-          argv[i], RCL_ROS_ARGS_FLAG, flag_prefix, RCL_LOG_EXT_LIB_FLAG_SUFFIX);
-        RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-          "Disable log external lib ? %s\n", args_impl->log_ext_lib_disabled ? "true" : "false");
-        continue;
-      }
-      RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME,
-        "Couldn't parse arg %d (%s) as a deprecated log_ext_lib_disabled rule. Error: %s",
         i, argv[i], rcl_get_error_string().str);
       rcl_reset_error();
 
@@ -738,17 +594,20 @@ rcl_parse_arguments(
   }
 
   // Shrink remap_rules array to match number of successfully parsed rules
-  if (args_impl->num_remap_rules > 0) {
-    args_impl->remap_rules = rcutils_reallocf(
-      args_impl->remap_rules, sizeof(rcl_remap_t) * args_impl->num_remap_rules, &allocator);
-    if (NULL == args_impl->remap_rules) {
-      ret = RCL_RET_BAD_ALLOC;
-      goto fail;
-    }
-  } else {
+  if (0 == args_impl->num_remap_rules) {
     // No remap rules
     allocator.deallocate(args_impl->remap_rules, allocator.state);
     args_impl->remap_rules = NULL;
+  } else if (args_impl->num_remap_rules < argc) {
+    rcl_remap_t * new_remap_rules = allocator.reallocate(
+      args_impl->remap_rules,
+      sizeof(rcl_remap_t) * args_impl->num_remap_rules,
+      &allocator);
+    if (NULL == new_remap_rules) {
+      ret = RCL_RET_BAD_ALLOC;
+      goto fail;
+    }
+    args_impl->remap_rules = new_remap_rules;
   }
 
   // Shrink Parameter files
@@ -756,16 +615,19 @@ rcl_parse_arguments(
     allocator.deallocate(args_impl->parameter_files, allocator.state);
     args_impl->parameter_files = NULL;
   } else if (args_impl->num_param_files_args < argc) {
-    args_impl->parameter_files = rcutils_reallocf(
-      args_impl->parameter_files, sizeof(char *) * args_impl->num_param_files_args, &allocator);
-    if (NULL == args_impl->parameter_files) {
+    char ** new_parameter_files = allocator.reallocate(
+      args_impl->parameter_files,
+      sizeof(char *) * args_impl->num_param_files_args,
+      &allocator);
+    if (NULL == new_parameter_files) {
       ret = RCL_RET_BAD_ALLOC;
       goto fail;
     }
+    args_impl->parameter_files = new_parameter_files;
   }
 
   // Drop parameter overrides if none was found.
-  if (NULL != args_impl->parameter_overrides && 0U == args_impl->parameter_overrides->num_nodes) {
+  if (0U == args_impl->parameter_overrides->num_nodes) {
     rcl_yaml_node_struct_fini(args_impl->parameter_overrides);
     args_impl->parameter_overrides = NULL;
   }
@@ -796,6 +658,12 @@ rcl_parse_arguments(
       ret = RCL_RET_BAD_ALLOC;
       goto fail;
     }
+  }
+
+  // Shrink logger settings of log levels
+  ret = rcl_log_levels_shrink_to_size(&args_impl->log_levels);
+  if (ret != RCL_RET_OK) {
+    goto fail;
   }
 
   return RCL_RET_OK;
@@ -945,6 +813,9 @@ rcl_arguments_copy(
   const rcl_arguments_t * args,
   rcl_arguments_t * args_out)
 {
+  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
+  RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_BAD_ALLOC);
+
   RCL_CHECK_ARGUMENT_FOR_NULL(args, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(args->impl, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(args_out, RCL_RET_INVALID_ARGUMENT);
@@ -955,23 +826,10 @@ rcl_arguments_copy(
 
   rcl_allocator_t allocator = args->impl->allocator;
 
-  args_out->impl = allocator.allocate(sizeof(rcl_arguments_impl_t), allocator.state);
-  if (NULL == args_out->impl) {
-    return RCL_RET_BAD_ALLOC;
+  rcl_ret_t ret = _rcl_allocate_initialized_arguments_impl(args_out, &allocator);
+  if (RCL_RET_OK != ret) {
+    return ret;
   }
-
-  args_out->impl->allocator = allocator;
-
-  // Zero so it's safe to call rcl_arguments_fini() if an error occurrs while copying.
-  args_out->impl->num_remap_rules = 0;
-  args_out->impl->remap_rules = NULL;
-  args_out->impl->unparsed_args = NULL;
-  args_out->impl->num_unparsed_args = 0;
-  args_out->impl->unparsed_ros_args = NULL;
-  args_out->impl->num_unparsed_ros_args = 0;
-  args_out->impl->parameter_overrides = NULL;
-  args_out->impl->parameter_files = NULL;
-  args_out->impl->num_param_files_args = 0;
 
   if (args->impl->num_unparsed_args) {
     // Copy unparsed args
@@ -1015,10 +873,9 @@ rcl_arguments_copy(
       }
       return RCL_RET_BAD_ALLOC;
     }
-    args_out->impl->num_remap_rules = args->impl->num_remap_rules;
     for (int i = 0; i < args->impl->num_remap_rules; ++i) {
       args_out->impl->remap_rules[i] = rcl_get_zero_initialized_remap();
-      rcl_ret_t ret = rcl_remap_copy(
+      ret = rcl_remap_copy(
         &(args->impl->remap_rules[i]), &(args_out->impl->remap_rules[i]));
       if (RCL_RET_OK != ret) {
         if (RCL_RET_OK != rcl_arguments_fini(args_out)) {
@@ -1026,6 +883,7 @@ rcl_arguments_copy(
         }
         return ret;
       }
+      ++(args_out->impl->num_remap_rules);
     }
   }
 
@@ -1037,15 +895,14 @@ rcl_arguments_copy(
 
   // Copy parameter files
   if (args->impl->num_param_files_args) {
-    args_out->impl->parameter_files = allocator.allocate(
-      sizeof(char *) * args->impl->num_param_files_args, allocator.state);
+    args_out->impl->parameter_files = allocator.zero_allocate(
+      args->impl->num_param_files_args, sizeof(char *), allocator.state);
     if (NULL == args_out->impl->parameter_files) {
       if (RCL_RET_OK != rcl_arguments_fini(args_out)) {
         RCL_SET_ERROR_MSG("Error while finalizing arguments due to another error");
       }
       return RCL_RET_BAD_ALLOC;
     }
-    args_out->impl->num_param_files_args = args->impl->num_param_files_args;
     for (int i = 0; i < args->impl->num_param_files_args; ++i) {
       args_out->impl->parameter_files[i] =
         rcutils_strdup(args->impl->parameter_files[i], allocator);
@@ -1055,8 +912,19 @@ rcl_arguments_copy(
         }
         return RCL_RET_BAD_ALLOC;
       }
+      ++(args_out->impl->num_param_files_args);
     }
   }
+  char * enclave_copy = rcutils_strdup(args->impl->enclave, allocator);
+  if (args->impl->enclave && !enclave_copy) {
+    if (RCL_RET_OK != rcl_arguments_fini(args_out)) {
+      RCL_SET_ERROR_MSG("Error while finalizing arguments due to another error");
+    } else {
+      RCL_SET_ERROR_MSG("Error while copying enclave argument");
+    }
+    return RCL_RET_BAD_ALLOC;
+  }
+  args_out->impl->enclave = enclave_copy;
   return RCL_RET_OK;
 }
 
@@ -1082,6 +950,14 @@ rcl_arguments_fini(
       args->impl->num_remap_rules = 0;
     }
 
+    rcl_ret_t log_levels_ret = rcl_log_levels_fini(&args->impl->log_levels);
+    if (log_levels_ret != RCL_RET_OK) {
+      ret = log_levels_ret;
+      RCUTILS_LOG_ERROR_NAMED(
+        ROS_PACKAGE_NAME,
+        "Failed to finalize log levels while finalizing arguments. Continuing...");
+    }
+
     args->impl->allocator.deallocate(args->impl->unparsed_args, args->impl->allocator.state);
     args->impl->num_unparsed_args = 0;
     args->impl->unparsed_args = NULL;
@@ -1103,6 +979,13 @@ rcl_arguments_fini(
       args->impl->allocator.deallocate(args->impl->parameter_files, args->impl->allocator.state);
       args->impl->num_param_files_args = 0;
       args->impl->parameter_files = NULL;
+    }
+    args->impl->allocator.deallocate(args->impl->enclave, args->impl->allocator.state);
+
+    if (NULL != args->impl->external_log_config_file) {
+      args->impl->allocator.deallocate(
+        args->impl->external_log_config_file, args->impl->allocator.state);
+      args->impl->external_log_config_file = NULL;
     }
 
     args->impl->allocator.deallocate(args->impl, args->impl->allocator.state);
@@ -1571,7 +1454,7 @@ _rcl_parse_remap_namespace_replacement(
   return RCL_RET_OK;
 }
 
-/// Parse a nodename replacement rule (ex: `__node:=new_name`).
+/// Parse a nodename replacement rule (ex: `__node:=new_name` or `__name:=new_name`).
 /**
  * \sa _rcl_parse_remap_begin_remap_rule()
  */
@@ -1748,45 +1631,158 @@ _rcl_parse_remap_begin_remap_rule(
   return ret;
 }
 
+RCL_LOCAL
+rcl_ret_t
+_rcl_parse_log_level_name(
+  rcl_lexer_lookahead2_t * lex_lookahead,
+  rcl_allocator_t * allocator,
+  char ** logger_name)
+{
+  rcl_lexeme_t lexeme;
+
+  // Check arguments sanity
+  assert(NULL != lex_lookahead);
+  assert(rcutils_allocator_is_valid(allocator));
+  assert(NULL != logger_name);
+  assert(NULL == *logger_name);
+
+  const char * name_start = rcl_lexer_lookahead2_get_text(lex_lookahead);
+  if (NULL == name_start) {
+    RCL_SET_ERROR_MSG("failed to get start of logger name");
+    return RCL_RET_ERROR;
+  }
+
+  rcl_ret_t ret = rcl_lexer_lookahead2_peek(lex_lookahead, &lexeme);
+  if (RCL_RET_OK != ret) {
+    return ret;
+  }
+
+  while (RCL_LEXEME_SEPARATOR != lexeme) {
+    ret = rcl_lexer_lookahead2_expect(lex_lookahead, lexeme, NULL, NULL);
+    if (RCL_RET_OK != ret) {
+      return ret;
+    }
+
+    ret = rcl_lexer_lookahead2_peek(lex_lookahead, &lexeme);
+    if (RCL_RET_OK != ret) {
+      return ret;
+    }
+
+    if (lexeme == RCL_LEXEME_EOF) {
+      ret = RCL_RET_INVALID_LOG_LEVEL_RULE;
+      return ret;
+    }
+  }
+
+  // Copy logger name
+  const char * name_end = rcl_lexer_lookahead2_get_text(lex_lookahead);
+  const size_t length = (size_t)(name_end - name_start);
+  *logger_name = rcutils_strndup(name_start, length, *allocator);
+  if (NULL == *logger_name) {
+    RCL_SET_ERROR_MSG("failed to copy logger name");
+    return RCL_RET_BAD_ALLOC;
+  }
+
+  return RCL_RET_OK;
+}
+
 rcl_ret_t
 _rcl_parse_log_level(
   const char * arg,
-  rcl_allocator_t allocator,
-  int * log_level)
+  rcl_log_levels_t * log_levels)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(arg, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(log_level, RCL_RET_INVALID_ARGUMENT);
+  RCL_CHECK_ARGUMENT_FOR_NULL(log_levels, RCL_RET_INVALID_ARGUMENT);
+  RCL_CHECK_ARGUMENT_FOR_NULL(log_levels->logger_settings, RCL_RET_INVALID_ARGUMENT);
+  rcl_allocator_t * allocator = &log_levels->allocator;
+  RCL_CHECK_ALLOCATOR_WITH_MSG(allocator, "invalid allocator", return RCL_RET_INVALID_ARGUMENT);
 
-  rcutils_ret_t ret = rcutils_logging_severity_level_from_string(arg, allocator, log_level);
-  if (RCUTILS_RET_OK == ret) {
-    return RCL_RET_OK;
+  rcl_ret_t ret = RCL_RET_OK;
+  char * logger_name = NULL;
+  int level = 0;
+  rcutils_ret_t rcutils_ret = RCUTILS_RET_OK;
+
+  rcl_lexer_lookahead2_t lex_lookahead = rcl_get_zero_initialized_lexer_lookahead2();
+
+  ret = rcl_lexer_lookahead2_init(&lex_lookahead, arg, *allocator);
+  if (RCL_RET_OK != ret) {
+    return ret;
   }
-  RCL_SET_ERROR_MSG("Argument does not use a valid severity level");
-  return RCL_RET_ERROR;
+
+  ret = _rcl_parse_log_level_name(&lex_lookahead, allocator, &logger_name);
+  if (RCL_RET_OK == ret) {
+    if (strlen(logger_name) == 0) {
+      RCL_SET_ERROR_MSG("Argument has an invalid logger item that name is empty");
+      ret = RCL_RET_INVALID_LOG_LEVEL_RULE;
+      goto cleanup;
+    }
+
+    ret = rcl_lexer_lookahead2_expect(&lex_lookahead, RCL_LEXEME_SEPARATOR, NULL, NULL);
+    if (RCL_RET_WRONG_LEXEME == ret) {
+      ret = RCL_RET_INVALID_LOG_LEVEL_RULE;
+      goto cleanup;
+    }
+
+    const char * level_token;
+    size_t level_token_length;
+    ret = rcl_lexer_lookahead2_expect(
+      &lex_lookahead, RCL_LEXEME_TOKEN, &level_token, &level_token_length);
+    if (RCL_RET_WRONG_LEXEME == ret) {
+      ret = RCL_RET_INVALID_LOG_LEVEL_RULE;
+      goto cleanup;
+    }
+
+    ret = rcl_lexer_lookahead2_expect(&lex_lookahead, RCL_LEXEME_EOF, NULL, NULL);
+    if (RCL_RET_OK != ret) {
+      ret = RCL_RET_INVALID_LOG_LEVEL_RULE;
+      goto cleanup;
+    }
+
+    rcutils_ret = rcutils_logging_severity_level_from_string(
+      level_token, *allocator, &level);
+    if (RCUTILS_RET_OK == rcutils_ret) {
+      ret = rcl_log_levels_add_logger_setting(
+        log_levels, logger_name, (rcl_log_severity_t)level);
+      if (ret != RCL_RET_OK) {
+        goto cleanup;
+      }
+    }
+  } else {
+    rcutils_ret = rcutils_logging_severity_level_from_string(
+      arg, *allocator, &level);
+    if (RCUTILS_RET_OK == rcutils_ret) {
+      if (log_levels->default_logger_level != (rcl_log_severity_t)level) {
+        if (log_levels->default_logger_level != RCUTILS_LOG_SEVERITY_UNSET) {
+          RCUTILS_LOG_DEBUG_NAMED(
+            ROS_PACKAGE_NAME, "Minimum default log level will be replaced from %d to %d",
+            log_levels->default_logger_level, level);
+        }
+        log_levels->default_logger_level = (rcl_log_severity_t)level;
+      }
+      ret = RCL_RET_OK;
+    }
+  }
+
+  if (RCUTILS_RET_OK != rcutils_ret) {
+    RCL_SET_ERROR_MSG("Argument does not use a valid severity level");
+    ret = RCL_RET_ERROR;
+  }
+
+cleanup:
+  if (logger_name) {
+    allocator->deallocate(logger_name, allocator->state);
+  }
+  rcl_ret_t rv = rcl_lexer_lookahead2_fini(&lex_lookahead);
+  if (RCL_RET_OK != rv) {
+    if (RCL_RET_OK != ret) {
+      RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Failed to fini lookahead2 after error occurred");
+    } else {
+      ret = rv;
+    }
+  }
+
+  return ret;
 }
-
-rcl_ret_t
-_rcl_parse_log_level_rule(
-  const char * arg,
-  rcl_allocator_t allocator,
-  int * log_level)
-{
-  RCL_CHECK_ARGUMENT_FOR_NULL(arg, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(log_level, RCL_RET_INVALID_ARGUMENT);
-
-  if (strncmp(RCL_LOG_LEVEL_ARG_RULE, arg, strlen(RCL_LOG_LEVEL_ARG_RULE)) != 0) {
-    RCL_SET_ERROR_MSG("Argument does not start with '" RCL_LOG_LEVEL_ARG_RULE "'");
-    return RCL_RET_INVALID_LOG_LEVEL_RULE;
-  }
-  rcutils_ret_t ret = rcutils_logging_severity_level_from_string(
-    arg + strlen(RCL_LOG_LEVEL_ARG_RULE), allocator, log_level);
-  if (RCUTILS_RET_OK == ret) {
-    return RCL_RET_OK;
-  }
-  RCL_SET_ERROR_MSG("Argument does not use a valid severity level");
-  return RCL_RET_INVALID_LOG_LEVEL_RULE;
-}
-
 
 rcl_ret_t
 _rcl_parse_remap_rule(
@@ -1797,9 +1793,8 @@ _rcl_parse_remap_rule(
   RCL_CHECK_ARGUMENT_FOR_NULL(arg, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(output_rule, RCL_RET_INVALID_ARGUMENT);
 
-  rcl_ret_t ret;
-
-  output_rule->impl = allocator.allocate(sizeof(rcl_remap_impl_t), allocator.state);
+  output_rule->impl =
+    allocator.allocate(sizeof(rcl_remap_impl_t), allocator.state);
   if (NULL == output_rule->impl) {
     return RCL_RET_BAD_ALLOC;
   }
@@ -1810,25 +1805,31 @@ _rcl_parse_remap_rule(
   output_rule->impl->replacement = NULL;
 
   rcl_lexer_lookahead2_t lex_lookahead = rcl_get_zero_initialized_lexer_lookahead2();
+  rcl_ret_t ret = rcl_lexer_lookahead2_init(&lex_lookahead, arg, allocator);
 
-  ret = rcl_lexer_lookahead2_init(&lex_lookahead, arg, allocator);
-  if (RCL_RET_OK != ret) {
-    return ret;
+  if (RCL_RET_OK == ret) {
+    ret = _rcl_parse_remap_begin_remap_rule(&lex_lookahead, output_rule);
+
+    rcl_ret_t fini_ret = rcl_lexer_lookahead2_fini(&lex_lookahead);
+    if (RCL_RET_OK != ret) {
+      if (RCL_RET_OK != fini_ret) {
+        RCUTILS_LOG_ERROR_NAMED(
+          ROS_PACKAGE_NAME, "Failed to fini lookahead2 after error occurred");
+      }
+    } else {
+      if (RCL_RET_OK == fini_ret) {
+        return RCL_RET_OK;
+      }
+      ret = fini_ret;
+    }
   }
 
-  ret = _rcl_parse_remap_begin_remap_rule(&lex_lookahead, output_rule);
-
-  if (RCL_RET_OK != ret) {
-    // cleanup stuff, but return the original error code
-    if (RCL_RET_OK != rcl_remap_fini(output_rule)) {
-      RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Failed to fini remap rule after error occurred");
-    }
-    if (RCL_RET_OK != rcl_lexer_lookahead2_fini(&lex_lookahead)) {
-      RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Failed to fini lookahead2 after error occurred");
-    }
-  } else {
-    ret = rcl_lexer_lookahead2_fini(&lex_lookahead);
+  // cleanup output rule but keep first error return code
+  if (RCL_RET_OK != rcl_remap_fini(output_rule)) {
+    RCUTILS_LOG_ERROR_NAMED(
+      ROS_PACKAGE_NAME, "Failed to fini remap rule after error occurred");
   }
+
   return ret;
 }
 
@@ -1925,40 +1926,12 @@ _rcl_parse_param_file(
     return RCL_RET_BAD_ALLOC;
   }
   if (!rcl_parse_yaml_file(*param_file, params)) {
+    allocator.deallocate(*param_file, allocator.state);
+    *param_file = NULL;
     // Error message already set.
     return RCL_RET_ERROR;
   }
   return RCL_RET_OK;
-}
-
-rcl_ret_t
-_rcl_parse_param_file_rule(
-  const char * arg,
-  rcl_allocator_t allocator,
-  rcl_params_t * params,
-  char ** param_file)
-{
-  RCL_CHECK_ARGUMENT_FOR_NULL(arg, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(params, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(param_file, RCL_RET_INVALID_ARGUMENT);
-
-  const size_t param_prefix_len = strlen(RCL_PARAM_FILE_ARG_RULE);
-  if (strncmp(RCL_PARAM_FILE_ARG_RULE, arg, param_prefix_len) == 0) {
-    size_t outlen = strlen(arg) - param_prefix_len;
-    *param_file = allocator.allocate(sizeof(char) * (outlen + 1), allocator.state);
-    if (NULL == *param_file) {
-      RCL_SET_ERROR_MSG("Failed to allocate memory for parameters file path");
-      return RCL_RET_BAD_ALLOC;
-    }
-    snprintf(*param_file, outlen + 1, "%s", arg + param_prefix_len);
-    if (!rcl_parse_yaml_file(*param_file, params)) {
-      // Error message already set.
-      return RCL_RET_ERROR;
-    }
-    return RCL_RET_OK;
-  }
-  RCL_SET_ERROR_MSG("Argument does not start with '" RCL_PARAM_FILE_ARG_RULE "'");
-  return RCL_RET_INVALID_PARAM_RULE;
 }
 
 rcl_ret_t
@@ -1980,27 +1953,20 @@ _rcl_parse_external_log_config_file(
 }
 
 rcl_ret_t
-_rcl_parse_external_log_config_file_rule(
+_rcl_parse_enclave(
   const char * arg,
   rcl_allocator_t allocator,
-  char ** log_config_file)
+  char ** enclave)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(arg, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(log_config_file, RCL_RET_INVALID_ARGUMENT);
+  RCL_CHECK_ARGUMENT_FOR_NULL(enclave, RCL_RET_INVALID_ARGUMENT);
 
-  const size_t param_prefix_len = sizeof(RCL_EXTERNAL_LOG_CONFIG_ARG_RULE) - 1;
-  if (strncmp(RCL_EXTERNAL_LOG_CONFIG_ARG_RULE, arg, param_prefix_len) == 0) {
-    size_t outlen = strlen(arg) - param_prefix_len;
-    *log_config_file = rcutils_format_string_limit(allocator, outlen, "%s", arg + param_prefix_len);
-    if (NULL == *log_config_file) {
-      RCL_SET_ERROR_MSG("Failed to allocate memory for external log config file");
-      return RCL_RET_BAD_ALLOC;
-    }
-    return RCL_RET_OK;
+  *enclave = rcutils_strdup(arg, allocator);
+  if (NULL == *enclave) {
+    RCL_SET_ERROR_MSG("Failed to allocate memory for enclave name");
+    return RCL_RET_BAD_ALLOC;
   }
-
-  RCL_SET_ERROR_MSG("Argument does not start with '" RCL_EXTERNAL_LOG_CONFIG_ARG_RULE "'");
-  return RCL_RET_INVALID_PARAM_RULE;
+  return RCL_RET_OK;
 }
 
 rcl_ret_t
@@ -2039,47 +2005,32 @@ _rcl_parse_disabling_flag(
 }
 
 rcl_ret_t
-_rcl_parse_bool_arg(
-  const char * arg,
-  const char * key,
-  bool * value)
+_rcl_allocate_initialized_arguments_impl(rcl_arguments_t * args, rcl_allocator_t * allocator)
 {
-  RCL_CHECK_ARGUMENT_FOR_NULL(arg, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(key, RCL_RET_INVALID_ARGUMENT);
-
-  const size_t param_prefix_len = strlen(key);
-  if (strncmp(key, arg, param_prefix_len) == 0) {
-    return _atob(arg + param_prefix_len, value);
+  args->impl = allocator->allocate(sizeof(rcl_arguments_impl_t), allocator->state);
+  if (NULL == args->impl) {
+    return RCL_RET_BAD_ALLOC;
   }
 
-  RCL_SET_ERROR_MSG("Argument does not start with key");
-  return RCL_RET_INVALID_PARAM_RULE;
-}
+  rcl_arguments_impl_t * args_impl = args->impl;
+  args_impl->num_remap_rules = 0;
+  args_impl->remap_rules = NULL;
+  args_impl->log_levels = rcl_get_zero_initialized_log_levels();
+  args_impl->external_log_config_file = NULL;
+  args_impl->unparsed_args = NULL;
+  args_impl->num_unparsed_args = 0;
+  args_impl->unparsed_ros_args = NULL;
+  args_impl->num_unparsed_ros_args = 0;
+  args_impl->parameter_overrides = NULL;
+  args_impl->parameter_files = NULL;
+  args_impl->num_param_files_args = 0;
+  args_impl->log_stdout_disabled = false;
+  args_impl->log_rosout_disabled = false;
+  args_impl->log_ext_lib_disabled = false;
+  args_impl->enclave = NULL;
+  args_impl->allocator = *allocator;
 
-rcl_ret_t
-_atob(
-  const char * str,
-  bool * val)
-{
-  RCL_CHECK_ARGUMENT_FOR_NULL(str, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(val, RCL_RET_INVALID_ARGUMENT);
-  const char * true_values[] = {"y", "Y", "yes", "Yes", "t", "T", "true", "True", "1"};
-  const char * false_values[] = {"n", "N", "no", "No", "f", "F", "false", "False", "0"};
-
-  for (size_t idx = 0; idx < sizeof(true_values) / sizeof(char *); idx++) {
-    if (0 == strncmp(true_values[idx], str, strlen(true_values[idx]))) {
-      *val = true;
-      return RCL_RET_OK;
-    }
-  }
-
-  for (size_t idx = 0; idx < sizeof(false_values) / sizeof(char *); idx++) {
-    if (0 == strncmp(false_values[idx], str, strlen(false_values[idx]))) {
-      *val = false;
-      return RCL_RET_OK;
-    }
-  }
-  return RCL_RET_ERROR;
+  return RCL_RET_OK;
 }
 
 #ifdef __cplusplus
