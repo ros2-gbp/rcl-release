@@ -2,7 +2,7 @@ This document is a declaration of software quality for the `rcl` package, based 
 
 # `rcl` Quality Declaration
 
-The package `rcl` claims to be in the **Quality Level 4** category.
+The package `rcl` claims to be in the **Quality Level 1** category when it is used with a **Quality Level 1** middleware.
 
 Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#package-quality-categories).
 
@@ -53,11 +53,11 @@ All pull requests will be peer-reviewed, check [ROS 2 Developer Guide](https://i
 
 All pull requests must pass CI on all [tier 1 platforms](https://www.ros.org/reps/rep-2000.html#support-tiers).
 
-Currently nightly results can be seen here:
-* [linux-aarch64_release](https://ci.ros2.org/view/nightly/job/nightly_linux-aarch64_release/lastBuild/testReport/rcl/)
-* [linux_release](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rcl/)
-* [mac_osx_release](https://ci.ros2.org/view/nightly/job/nightly_osx_release/lastBuild/testReport/rcl/)
-* [windows_release](https://ci.ros2.org/view/nightly/job/nightly_win_rel/lastBuild/testReport/rcl/)
+Though there are no nightly jobs for foxy outside of linux, each change is tested on ci.ros2.org.
+* [linux-aarch64](https://ci.ros2.org/job/ci_linux-aarch64)
+* [linux](https://ci.ros2.org/job/ci_linux)
+* [mac_osx](https://ci.ros2.org/job/ci_osx)
+* [windows](https://ci.ros2.org/job/ci_windows)
 
 ###  Documentation Policy [2.v]
 
@@ -71,7 +71,7 @@ All pull requests must resolve related documentation changes before merging.
 
 ### Public API Documentation [3.ii]
 
-`rcl` has embedded API documentation and it is generated using doxygen. Currently, its eloquent version is hosted [here](http://docs.ros2.org/eloquent/api/rcl/). Latest version has to be generated before considering this item fully resolved.
+`rcl` has embedded API documentation and it is generated using doxygen. Currently, its latest version is hosted [here](http://docs.ros2.org/foxy/api/rcl/).
 
 New additions to the public API require documentation before being added.
 
@@ -79,13 +79,13 @@ New additions to the public API require documentation before being added.
 
 The license for `rcl` is Apache 2.0, and a summary is in each source file, the type is declared in the [`package.xml`](./package.xml) manifest file, and a full copy of the license is in the [`LICENSE`](../LICENSE) file.
 
-There is an automated test which runs a linter that ensures each file has a license statement. [Here](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rcl/) can be found a list with the latest results of the various linters being run on the package.
+There is an automated test which runs a linter that ensures each file has a license statement. [Here](http://build.ros2.org/view/Fpr/job/Fpr__rcl__ubuntu_focal_amd64/lastCompletedBuild/testReport/rcl) can be found a list with the latest results of the various linters being run on the package.
 
 ### Copyright Statements [3.iv]
 
 The copyright holders each provide a statement of copyright in each source code file in `rcl`.
 
-There is an automated test which runs a linter that ensures each file has at least one copyright statement. Latest linter result report can be seen [Here](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rcl/copyright/).
+There is an automated test which runs a linter that ensures each file has at least one copyright statement. Latest linter result report can be seen [Here](http://build.ros2.org/view/Fpr/job/Fpr__rcl__ubuntu_focal_amd64/lastCompletedBuild/testReport/rcl/copyright).
 
 ## Testing [4]
 
@@ -93,15 +93,17 @@ There is an automated test which runs a linter that ensures each file has at lea
 
 Most features in `rcl` have corresponding tests which simulate typical usage, and they are located in the [`test`](./test) directory.
 New features are required to have tests before being added.
-Currently nightly test results can be seen here:
-* [linux-aarch64_release](https://ci.ros2.org/view/nightly/job/nightly_linux-aarch64_release/lastBuild/testReport/rcl/)
-* [linux_release](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rcl/)
-* [mac_osx_release](https://ci.ros2.org/view/nightly/job/nightly_osx_release/lastBuild/testReport/rcl/)
-* [windows_release](https://ci.ros2.org/view/nightly/job/nightly_win_rel/lastBuild/testReport/rcl/)
+Though there are no nightly jobs for foxy outside of linux, each change is tested on ci.ros2.org.
+* [linux-aarch64](https://ci.ros2.org/job/ci_linux-aarch64)
+* [linux](https://ci.ros2.org/job/ci_linux)
+* [mac_osx](https://ci.ros2.org/job/ci_osx)
+* [windows](https://ci.ros2.org/job/ci_windows)
 
 ### Public API Testing [4.ii]
 
-Most of the functionality of the declared API in this package is covered in its unit tests. Currently it has a line coverage of [77%](https://ci.ros2.org/job/ci_linux_coverage/85/cobertura/src_ros2_rcl_rcl_src_rcl/).
+Each part of the public API has tests, and new additions or changes to the public API require tests before being added. The tests aim to cover both typical usage and corner cases, but are quantified by contributing to code coverage.
+
+The following functions are partially supported: `rcl_take_loaned_message`, `rcl_return_loaned_message_from_subscription`, `rcl_borrow_loaned_message`, `rcl_return_loaned_message_from_publisher` and `rcl_publish_loaned_message` because they are not currently supported on Tier 1 RMW providers.
 
 ### Coverage [4.iii]
 
@@ -114,21 +116,27 @@ This includes:
 
 Changes are required to make a best effort to keep or increase coverage before being accepted, but decreases are allowed if properly justified and accepted by reviewers.
 
-Current coverage statistics can be viewed (77%) [here](https://ci.ros2.org/job/ci_linux_coverage/85/cobertura/src_ros2_rcl_rcl_src_rcl/). Current coverage statistics need to be improved to reach a higher quality level.
+Current coverage statistics can be viewed [here](https://ci.ros2.org/job/nightly_linux_foxy_coverage/lastSuccessfulBuild/cobertura/src_ros2_rcl_rcl_src_rcl/). A description of how coverage statistics are calculated is summarized in this page ["ROS 2 Onboarding Guide"](https://index.ros.org/doc/ros2/Contributing/ROS-2-On-boarding-Guide/#note-on-coverage-runs).
 
 ### Performance [4.iv]
 
-`rcl` does not conduct performance tests.
+`rcl` follows the recommendations for performance testing of C code in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#performance), and opts to do performance analysis on each release rather than each change.
+
+System level performance benchmarks that cover features of `rcl` can be found at:
+* [Benchmarks](http://build.ros2.org/view/Fci/job/Fci__benchmark_ubuntu_focal_amd64/BenchmarkTable/)
+* [Performance](http://build.ros2.org/view/Fci/job/Fci__nightly-performance_ubuntu_focal_amd64/lastCompletedBuild/)
+
+Changes that introduce regressions in performance must be adequately justified in order to be accepted and merged.
 
 ### Linters and Static Analysis [4.v]
 
 `rcl` uses and passes all the ROS2 standard linters and static analysis tools for a C++ package as described in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#linters-and-static-analysis). Passing implies there are no linter/static errors when testing against CI of supported platforms.
 
-Currently nightly test results can be seen here:
-* [linux-aarch64_release](https://ci.ros2.org/view/nightly/job/nightly_linux-aarch64_release/lastBuild/testReport/rcl/)
-* [linux_release](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rcl/)
-* [mac_osx_release](https://ci.ros2.org/view/nightly/job/nightly_osx_release/lastBuild/testReport/rcl/)
-* [windows_release](https://ci.ros2.org/view/nightly/job/nightly_win_rel/lastBuild/testReport/rcl/)
+Though there are no nightly jobs for foxy outside of linux, each change is tested on ci.ros2.org.
+* [linux-aarch64](https://ci.ros2.org/job/ci_linux-aarch64)
+* [linux](https://ci.ros2.org/job/ci_linux)
+* [mac_osx](https://ci.ros2.org/job/ci_osx)
+* [windows](https://ci.ros2.org/job/ci_windows)
 
 ## Dependencies [5]
 
@@ -143,49 +151,49 @@ It also has several test dependencies, which do not affect the resulting quality
 
 The `rmw` package provides the API used by `rcl` to interact with the underlying middleware in an abstract way.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rmw/rmw/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rmw/blob/foxy/rmw/QUALITY_DECLARATION.md).
 
 #### `rcl_interfaces`
 
 The `rcl_interfaces` package provides some common ROS Message and ROS Service types which are used to implement certain client library features.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/rcl_interfaces/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/foxy/rcl_interfaces/QUALITY_DECLARATION.md).
 
 #### `rcl_logging_spdlog`
 
 The `rcl_logging_spdlog` package provides the default logging implementation by wrapping the `spdlog` library.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl_logging/rcl_logging_spdlog/Quality_Declaration.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcl_logging/blob/foxy/rcl_logging_spdlog/QUALITY_DECLARATION.md).
 
 #### `rcl_yaml_param_parser`
 
 The `rcl_yaml_param_parser` package provides an API that is used to parse YAML configuration files which may be used to configure ROS and specific nodes.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl/tree/master/rcl_yaml_param_parser/Quality_Declaration.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/foxy/rcl_yaml_param_parser/QUALITY_DECLARATION.md).
 
 #### `rcutils`
 
 The `rcutils` package provides an API which contains common utilities and data structures needed when programming in C.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/foxy/QUALITY_DECLARATION.md).
 
 #### `rmw_implementation`
 
 The `rmw_implementation` package provides access to the default rmw implementation, and provides the ability to dynamically switch rmw implementations if more than one is available.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rmw_implementation/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rmw_implementation/blob/foxy/rmw_implementation/QUALITY_DECLARATION.md).
 
 #### `rosidl_runtime_c`
 
 The `rosidl_runtime_c` package provides runtime interfaces in C based on user defined ROS Messages and ROS Services, as well as associated support functions for those types.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rosidl/tree/master/rosidl_runtime_c/Quality_Declaration.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rosidl/blob/foxy/rosidl_runtime_c/QUALITY_DECLARATION.md).
 
 #### `tracetools`
 
 The `tracetools` package provides utilities for instrumenting the code in `rcl` so that it may be traced for debugging and performance analysis.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://gitlab.com/micro-ROS/ros_tracing/ros2_tracing/-/blob/master/tracetools/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://gitlab.com/ros-tracing/ros2_tracing/-/blob/foxy/tracetools/QUALITY_DECLARATION.md).
 
 ### Optional Direct Runtime ROS Dependencies [5.ii]
 
@@ -198,6 +206,12 @@ It is **Quality Level 4**, see its [Quality Declaration document](https://gitlab
 ## Platform Support [6]
 
 `rcl` supports all of the tier 1 platforms as described in [REP-2000](https://www.ros.org/reps/rep-2000.html#support-tiers), and tests each change against all of them.
+
+Though there are no nightly jobs for foxy outside of linux, each change is tested on ci.ros2.org.
+* [linux-aarch64](https://ci.ros2.org/job/ci_linux-aarch64)
+* [linux](https://ci.ros2.org/job/ci_linux)
+* [mac_osx](https://ci.ros2.org/job/ci_osx)
+* [windows](https://ci.ros2.org/job/ci_windows)
 
 ## Security [7]
 
@@ -213,7 +227,7 @@ The chart below compares the requirements in the REP-2004 with the current state
 |--|--|--|
 |1| **Version policy** |---|
 |1.i|Version Policy available | ✓ |
-|1.ii|Stable version |☓|
+|1.ii|Stable version |✓|
 |1.iii|Declared public API|✓|
 |1.iv|API stability policy|✓|
 |1.v|ABI stability policy|✓|
@@ -225,8 +239,8 @@ The chart below compares the requirements in the REP-2004 with the current state
 |2.iv| CI policy for change requests | ✓ |
 |2.v| Documentation policy for change requests | ✓ |
 |3| **Documentation** | --- |
-|3.i| Per feature documentation | ☓ |
-|3.ii| Per public API item documentation | * |
+|3.i| Per feature documentation | ✓ |
+|3.ii| Per public API item documentation | ✓ |
 |3.iii| Declared License(s) | ✓ |
 |3.iv| Copyright in source files| ✓ |
 |3.v.a| Quality declaration linked to README | ✓ |
@@ -234,9 +248,9 @@ The chart below compares the requirements in the REP-2004 with the current state
 |4| Testing | --- |
 |4.i| Feature items tests | ✓ |
 |4.ii| Public API tests | ✓ |
-|4.iii.a| Using coverage | * |
+|4.iii.a| Using coverage | ✓ |
 |4.iii.a| Coverage policy | ✓ |
-|4.iv.a| Performance tests (if applicable) | ☓ |
+|4.iv.a| Performance tests (if applicable) | ✓ |
 |4.iv.b| Performance tests policy| ✓ |
 |4.v.a| Code style enforcement (linters)| ✓ |
 |4.v.b| Use of static analysis tools | ✓ |
@@ -247,4 +261,4 @@ The chart below compares the requirements in the REP-2004 with the current state
 |6| Platform support | --- |
 |6.i| Support targets Tier1 ROS platforms| ✓ |
 |7| Security | --- |
-|7.i| Vulnerability Disclosure Policy | ☓ |
+|7.i| Vulnerability Disclosure Policy | ✓ |
