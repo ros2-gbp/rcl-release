@@ -24,11 +24,13 @@
 #include "rcl/rcl.h"
 #include "rcl/subscription.h"
 #include "rcl_interfaces/msg/log.h"
-#include "rcl_logging_interface/rcl_logging_interface.h"
+#include "rcl/logging_external_interface.h"
 
 #include "rcutils/logging_macros.h"
 
 #include "../mocking_utils/patch.hpp"
+
+#define RCL_LOGGING_RET_ERROR 2
 
 // Define dummy comparison operators for rcutils_allocator_t type
 // to use with the Mimick mocking library
@@ -170,37 +172,12 @@ TEST(TestLogging, test_failing_external_logging_configure) {
   }
 }
 
-TEST(TestLogging, test_failing_logger_level_configure) {
-  const char * argv[] = {
-    "test_logging", RCL_ROS_ARGS_FLAG,
-    RCL_LOG_LEVEL_FLAG, ROS_PACKAGE_NAME ":=info"};
-  const int argc = sizeof(argv) / sizeof(argv[0]);
-  rcl_allocator_t default_allocator = rcl_get_default_allocator();
-  rcl_arguments_t global_arguments = rcl_get_zero_initialized_arguments();
-  ASSERT_EQ(RCL_RET_OK, rcl_parse_arguments(argc, argv, default_allocator, &global_arguments)) <<
-    rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&global_arguments)) << rcl_get_error_string().str;
-  });
-
-  {
-    auto mock = mocking_utils::patch_to_fail(
-      "lib:rcl", rcutils_logging_set_logger_level, "failed to allocate", RCUTILS_RET_ERROR);
-    EXPECT_EQ(RCL_RET_ERROR, rcl_logging_configure(&global_arguments, &default_allocator));
-    EXPECT_TRUE(rcl_error_is_set());
-    rcl_reset_error();
-
-    EXPECT_EQ(RCL_RET_OK, rcl_logging_fini()) << rcl_get_error_string().str;
-  }
-}
-
 TEST(TestLogging, test_failing_external_logging) {
   const char * argv[] = {
     "test_logging", RCL_ROS_ARGS_FLAG,
     "--disable-" RCL_LOG_STDOUT_FLAG_SUFFIX,
     "--enable-" RCL_LOG_EXT_LIB_FLAG_SUFFIX,
-    RCL_LOG_LEVEL_FLAG, ROS_PACKAGE_NAME ":=DEBUG"
+    RCL_LOG_LEVEL_FLAG, "debug"
   };
   const int argc = sizeof(argv) / sizeof(argv[0]);
   rcl_allocator_t default_allocator = rcl_get_default_allocator();
@@ -242,13 +219,14 @@ TEST(TestLogging, test_failing_external_logging) {
   std::stringstream stderr_sstream;
   auto fwrite_mock = mocking_utils::patch(
     "lib:rcl", fwrite,
-    [&](const void * ptr, size_t size, size_t count, FILE * stream)
+    ([&, base = fwrite](const void * ptr, size_t size,
+    size_t count, FILE * stream)
     {
       if (sizeof(char) == size && stderr == stream) {
         stderr_sstream << std::string(reinterpret_cast<const char *>(ptr), count);
       }
-      return count;
-    });
+      return base(ptr, size, count, stream);
+    }));
 
   constexpr char stderr_message[] = "internal error";
 #ifdef MOCKING_UTILS_SUPPORT_VA_LIST

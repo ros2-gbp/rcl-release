@@ -14,6 +14,8 @@
 #ifndef RCL_YAML_PARAM_PARSER__TYPES_H_
 #define RCL_YAML_PARAM_PARSER__TYPES_H_
 
+#include <stdint.h>
+
 #include "rcutils/allocator.h"
 #include "rcutils/types/string_array.h"
 
@@ -92,7 +94,6 @@ typedef struct rcl_node_params_s
   char ** parameter_names;  ///< Array of parameter names (keys)
   rcl_variant_t * parameter_values;  ///< Array of coressponding parameter values
   size_t num_params;  ///< Number of parameters in the node
-  size_t capacity_params;  ///< Capacity of parameters in the node
 } rcl_node_params_t;
 
 /// stores all the parameters of all nodes of a process
@@ -104,7 +105,6 @@ typedef struct rcl_params_s
   char ** node_names;  ///< List of names of the node
   rcl_node_params_t * params;  ///<  Array of parameters
   size_t num_nodes;       ///< Number of nodes
-  size_t capacity_nodes;  ///< Capacity of nodes
   rcutils_allocator_t allocator;  ///< Allocator used
 } rcl_params_t;
 
