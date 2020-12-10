@@ -1,0 +1,13 @@
+Source: ros-foxy-rcl
+Section: misc
+Priority: optional
+Maintainer: William Woodall <william@osrfoundation.org>
+Build-Depends: debhelper (>= 9.0.0), ros-foxy-ament-cmake-gtest, ros-foxy-ament-cmake-pytest, ros-foxy-ament-cmake-ros, ros-foxy-ament-lint-auto, ros-foxy-ament-lint-common, ros-foxy-launch, ros-foxy-launch-testing, ros-foxy-launch-testing-ament-cmake, ros-foxy-mimick-vendor, ros-foxy-osrf-testing-tools-cpp, ros-foxy-rcl-interfaces, ros-foxy-rcl-logging-spdlog, ros-foxy-rcl-yaml-param-parser, ros-foxy-rcpputils, ros-foxy-rcutils, ros-foxy-rmw, ros-foxy-rmw-implementation, ros-foxy-rmw-implementation-cmake, ros-foxy-rosidl-runtime-c, ros-foxy-test-msgs, ros-foxy-tracetools, ros-foxy-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-foxy-rcl
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-foxy-rcl-interfaces, ros-foxy-rcl-logging-spdlog, ros-foxy-rcl-yaml-param-parser, ros-foxy-rcutils, ros-foxy-rmw, ros-foxy-rmw-implementation, ros-foxy-rosidl-runtime-c, ros-foxy-tracetools, ros-foxy-ros-workspace
+Description: The ROS client library common implementation.
+ This package contains an API which builds on the ROS middleware API and is optionally built upon by the other ROS client libraries.
