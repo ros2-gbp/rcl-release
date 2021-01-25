@@ -2,6 +2,9 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.5.1 (2021-01-25)
+------------------
+
 2.5.0 (2020-12-08)
 ------------------
 * Update QDs to QL 1 (`#866 <https://github.com/ros2/rcl/issues/866>`_)
