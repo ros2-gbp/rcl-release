@@ -7,6 +7,7 @@ find_package(test_msgs REQUIRED)
 find_package(mimick_vendor REQUIRED)
 
 find_package(rcpputils REQUIRED)
+find_package(rcutils REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 
 find_package(osrf_testing_tools_cpp REQUIRED)
@@ -21,6 +22,26 @@ include(cmake/rcl_add_custom_launch_test.cmake)
 set(extra_lib_dirs "${rcl_lib_dir}")
 set(test_resources_dir_name "resources")
 add_definitions(-DTEST_RESOURCES_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/${test_resources_dir_name}")
+
+set(DISTRIBUTION "Unknown")
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+  # If we are on Linux, look for /etc/os-release, which has "key=value" items.
+  # Parse those items, looking for a key named "id" (case-insensitive), and
+  # if we find it, set DISTRIBUTION to that value.  That gives us some idea
+  # of which Linux distribution we are on.
+  if(EXISTS "/etc/os-release")
+    file(STRINGS "/etc/os-release" OS_RELEASE)
+    foreach(line ${OS_RELEASE})
+      string(REGEX REPLACE "^(.*)=.*" "\\1" key "${line}")
+      string(TOLOWER "${key}" key)
+      if("${key}" STREQUAL "id")
+        string(REGEX REPLACE "^.*=(.*)" "\\1" DISTRIBUTION "${line}")
+        string(TOLOWER "${DISTRIBUTION}" DISTRIBUTION)
+        break()
+      endif()
+    endforeach()
+  endif()
+endif()
 
 # finding gtest once in the highest scope
 # prevents finding it repeatedly in each local scope
@@ -129,7 +150,7 @@ function(test_target_function)
     set(AMENT_GTEST_ARGS TIMEOUT 120)
   endif()
   rcl_add_custom_gtest(test_info_by_topic${target_suffix}
-    SRCS rcl/test_info_by_topic.cpp
+    SRCS rcl/test_info_by_topic.cpp rcl/wait_for_entity_helpers.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
@@ -157,18 +178,23 @@ function(test_target_function)
     SRCS rcl/test_init.cpp
     ENV ${rmw_implementation_env_var} ${memory_tools_ld_preload_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools mimick
+    LIBRARIES ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools
     AMENT_DEPENDENCIES ${rmw_implementation}
   )
 
-  rcl_add_custom_gtest(test_node${target_suffix}
-    SRCS rcl/test_node.cpp
-    ENV ${rmw_implementation_env_var} ${memory_tools_ld_preload_env_var}
-    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
-    TIMEOUT 240  # Large timeout to wait for fault injection tests
-  )
+  # CentOS does not support mimick's inject_on_return functionality, which
+  # causes test_node to segfault when it runs.  Since CentOS is not a Tier 1
+  # platform, just disable the test since we are covering it elsewhere.
+  if(NOT "${DISTRIBUTION}" STREQUAL "\"centos\"")
+    rcl_add_custom_gtest(test_node${target_suffix}
+      SRCS rcl/test_node.cpp
+      ENV ${rmw_implementation_env_var} ${memory_tools_ld_preload_env_var}
+      APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+      LIBRARIES ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools
+      AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
+      TIMEOUT 240  # Large timeout to wait for fault injection tests
+    )
+  endif()
 
   rcl_add_custom_gtest(test_arguments${target_suffix}
     SRCS rcl/test_arguments.cpp
@@ -255,6 +281,7 @@ function(test_target_function)
     SRCS rcl/test_events.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
     LIBRARIES ${PROJECT_NAME}
     AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
@@ -287,7 +314,7 @@ function(test_target_function)
     SRCS rcl/test_rmw_impl_id_check_func.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME}
+    LIBRARIES ${PROJECT_NAME} mimick
     AMENT_DEPENDENCIES ${rmw_implementation}
   )
 
@@ -360,7 +387,7 @@ rcl_add_custom_gtest(test_validate_enclave_name
 rcl_add_custom_gtest(test_domain_id
   SRCS rcl/test_domain_id.cpp
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME} mimick
 )
 
 rcl_add_custom_gtest(test_localhost
@@ -400,6 +427,13 @@ rcl_add_custom_gtest(test_common
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
   INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
   LIBRARIES ${PROJECT_NAME}
+)
+
+rcl_add_custom_gtest(test_log_level
+  SRCS rcl/test_log_level.cpp
+  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+  LIBRARIES ${PROJECT_NAME} mimick
+  AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
 )
 
 # Install test resources
