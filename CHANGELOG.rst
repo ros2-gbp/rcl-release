@@ -2,6 +2,9 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.0 (2021-03-23)
+------------------
+
 2.6.0 (2021-03-18)
 ------------------
 * Add support for rmw_connextdds (`#895 <https://github.com/ros2/rcl/issues/895>`_)
