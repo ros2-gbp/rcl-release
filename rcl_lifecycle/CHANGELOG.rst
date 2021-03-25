@@ -2,6 +2,9 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.1 (2021-03-25)
+------------------
+
 3.0.0 (2021-03-23)
 ------------------
 * make rcl_lifecycle_com_interface optional in lifecycle nodes (`#882 <https://github.com/ros2/rcl/issues/882>`_)
