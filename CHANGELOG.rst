@@ -2,6 +2,11 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.1 (2021-03-25)
+------------------
+* Remove exceptions for rmw_connext_cpp tests. (`#903 <https://github.com/ros2/rcl/issues/903>`_)
+* Contributors: Chris Lalancette
+
 3.0.0 (2021-03-23)
 ------------------
 
