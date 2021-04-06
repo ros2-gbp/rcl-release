@@ -2,6 +2,11 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.1.0 (2021-04-06)
+------------------
+* updating quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#909 <https://github.com/ros2/rcl/issues/909>`_)
+* Contributors: shonigmann
+
 3.0.1 (2021-03-25)
 ------------------
 
