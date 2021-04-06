@@ -244,9 +244,6 @@ function(test_target_function)
         PUBLIC "RMW_TIMESTAMPS_SUPPORTED=1")
       target_compile_definitions(test_service${target_suffix}
         PUBLIC "RMW_TIMESTAMPS_SUPPORTED=1")
-      # TODO(tfoote) Disable this tests on CI as it's being flakey
-      # This should be removed when https://github.com/ros2/rmw_cyclonedds/issues/185 is resolved.
-      ament_add_test_label(test_service${target_suffix} xfail)
     else()
       message(STATUS "Disabling message timestamp test for ${rmw_implementation}")
     endif()
@@ -291,6 +288,15 @@ function(test_target_function)
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME} mimick
     AMENT_DEPENDENCIES ${rmw_implementation}
+  )
+
+  rcl_add_custom_gtest(test_network_flow_endpoints${target_suffix}
+    SRCS rcl/test_network_flow_endpoints.cpp
+    ENV ${rmw_implementation_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
+    LIBRARIES ${PROJECT_NAME} mimick
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   # Launch tests
