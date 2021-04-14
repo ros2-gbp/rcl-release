@@ -10,7 +10,7 @@ Below are the rationales, notes, and caveats for this claim, organized by each r
 
 ### Version Scheme [1.i]
 
-`rcl_yaml_param_parser` uses `semver` according to the recommendation for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#versioning).
+`rcl_yaml_param_parser` uses `semver` according to the recommendation for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/foxy/Contributing/Developer-Guide.html#versioning).
 
 ### Version Stability [1.ii]
 
@@ -33,7 +33,7 @@ All installed headers are in the `include` directory of the package, headers in 
 
 ## Change Control Process [2]
 
-`rcl_yaml_param_parser` follows the recommended guidelines for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#quality-practices).
+`rcl_yaml_param_parser` follows the recommended guidelines for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/foxy/Contributing/Developer-Guide.html#quality-practices).
 
 ### Change Requests [2.i]
 
@@ -59,11 +59,11 @@ All pull requests must resolve related documentation changes before merging.
 
 ### Feature Documentation [3.i]
 
-`rcl_yaml_param_parser` provides the main elements of its API listed using doxygen and is hosted [here](http://docs.ros2.org/latest/api/rcl_yaml_param_parser/index.html).
+`rcl_yaml_param_parser` provides the main elements of its API listed using doxygen and is hosted [here](http://docs.ros2.org/foxy/api/rcl_yaml_param_parser/index.html).
 
 ### Public API Documentation [3.ii]
 
-`rcl_yaml_param_parser` has embedded API documentation and it is generated using doxygen. Currently, its latest version is hosted [here](http://docs.ros2.org/latest/api/rcl_yaml_param_parser/index.html). Latest version has to be generated before considering this item fully resolved.
+`rcl_yaml_param_parser` has embedded API documentation and it is generated using doxygen. Currently, its latest version is hosted [here](http://docs.ros2.org/foxy/api/rcl_yaml_param_parser/index.html). Latest version has to be generated before considering this item fully resolved.
 
 All of `rcl_yaml_param_parser` has embedded API documentation. It is not yet hosted publicly.
 
@@ -73,7 +73,7 @@ The license for `rcl_yaml_param_parser` is Apache 2.0, and a summary is in each 
 
 There is an automated test which runs a linter that ensures each file has a license statement.
 
-The most recent test results can be found [here](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rcl_yaml_param_parser/copyright/).
+The most recent test results can be found [here](http://build.ros2.org/view/Fpr/job/Fpr__rcl__ubuntu_focal_amd64/lastCompletedBuild/testReport/rcl_yaml_param_parser).
 
 ### Copyright Statements [3.iv]
 
@@ -81,7 +81,7 @@ The copyright holders each provide a statement of copyright in each source code 
 
 There is an automated test which runs a linter that ensures each file has at least one copyright statement.
 
-The results of the test can be found [here](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rcl_yaml_param_parser/copyright/).
+The results of the test can be found [here](http://build.ros2.org/view/Fpr/job/Fpr__rcl__ubuntu_focal_amd64/lastCompletedBuild/testReport/rcl_yaml_param_parser/copyright/).
 
 ## Testing [4]
 
@@ -89,11 +89,11 @@ The results of the test can be found [here](https://ci.ros2.org/view/nightly/job
 
 Most features in `rcl_yaml_param_parser` have corresponding tests which simulate typical usage, and they are located in the [`test`](./test) directory.
 New features are required to have tests before being added.
-Currently nightly test results can be seen here:
-* [linux-aarch64_release](https://ci.ros2.org/view/nightly/job/nightly_linux-aarch64_release/lastBuild/testReport/rcl_yaml_param_parser/)
-* [linux_release](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rcl_yaml_param_parser/)
-* [mac_osx_release](https://ci.ros2.org/view/nightly/job/nightly_osx_release/lastBuild/testReport/rcl_yaml_param_parser/)
-* [windows_release](https://ci.ros2.org/view/nightly/job/nightly_win_rel/lastBuild/testReport/rcl_yaml_param_parser/)
+Though there are no nightly jobs for foxy outside of linux, each change is tested on ci.ros2.org.
+* [linux-aarch64](https://ci.ros2.org/job/ci_linux-aarch64)
+* [linux](https://ci.ros2.org/job/ci_linux)
+* [mac_osx](https://ci.ros2.org/job/ci_osx)
+* [windows](https://ci.ros2.org/job/ci_windows)
 
 ### Public API Testing [4.ii]
 
@@ -101,7 +101,7 @@ Each part of the public API has tests, and new additions or changes to the publi
 
 ### Coverage [4.iii]
 
-`rcl_yaml_param_parser` follows the recommendations for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#code-coverage), and opts to use line coverage instead of branch coverage.
+`rcl_yaml_param_parser` follows the recommendations for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/foxy/Contributing/Developer-Guide.html#code-coverage), and opts to use line coverage instead of branch coverage.
 
 This includes:
 
@@ -110,25 +110,25 @@ This includes:
 
 Changes are required to make a best effort to keep or increase coverage before being accepted, but decreases are allowed if properly justified and accepted by reviewers.
 
-Current coverage statistics can be viewed [here](https://ci.ros2.org/job/nightly_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rcl_rcl_yaml_param_parser_src/). A description of how coverage statistics are calculated is summarized in this page ["ROS 2 Onboarding Guide"](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#note-on-coverage-runs).
+Current coverage statistics can be viewed [here](https://ci.ros2.org/job/nightly_linux_foxy_coverage/lastCompletedBuild/cobertura/src_ros2_rcl_rcl_yaml_param_parser_src/). A description of how coverage statistics are calculated is summarized in this page ["ROS 2 Onboarding Guide"](https://docs.ros.org/en/foxy/Contributing/Developer-Guide.html#note-on-coverage-runs).
 
 ### Performance [4.iv]
 
-`rcl_yaml_param_parser` follows the recommendations for performance testing of C/C++ code in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#performance), and opts to do performance analysis on each release rather than each change.
+`rcl_yaml_param_parser` follows the recommendations for performance testing of C/C++ code in the [ROS 2 Developer Guide](https://docs.ros.org/en/foxy/Contributing/Developer-Guide.html#performance), and opts to do performance analysis on each release rather than each change.
 
-The performance tests of `rcl_yaml_param_parser` are located in the [test/benchmark directory](https://github.com/ros2/rcl/tree/master/rcl_yaml_param_parser/test/benchmark).
+The performance tests of `rcl_yaml_param_parser` are located in the [test/benchmark directory](https://github.com/ros2/rcl/tree/foxy/rcl_yaml_param_parser/test/benchmark).
 
 Package and system level performance benchmarks that cover features of `rcl_yaml_param_parser` can be found at:
-* [Benchmarks](http://build.ros2.org/view/Rci/job/Rci__benchmark_ubuntu_focal_amd64/BenchmarkTable/)
-* [Performance](http://build.ros2.org/view/Rci/job/Rci__nightly-performance_ubuntu_focal_amd64/lastCompletedBuild/)
+* [Benchmarks](http://build.ros2.org/view/Fci/job/Fci__benchmark_ubuntu_focal_amd64/BenchmarkTable/)
+* [Performance](http://build.ros2.org/view/Fci/job/Fci__nightly-performance_ubuntu_focal_amd64/lastCompletedBuild/)
 
 Changes that introduce regressions in performance must be adequately justified in order to be accepted and merged.
 
 ### Linters and Static Analysis [4.v]
 
-`rcl_yaml_param_parser` uses and passes all the standard linters and static analysis tools for a C package as described in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#linters-and-static-analysis).
+`rcl_yaml_param_parser` uses and passes all the standard linters and static analysis tools for a C package as described in the [ROS 2 Developer Guide](https://docs.ros.org/en/foxy/Contributing/Developer-Guide.html#linters-and-static-analysis).
 
-Results of the nightly linter tests can be found [here](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rcl_yaml_param_parser).
+Results of the nightly linter tests can be found [here](http://build.ros2.org/view/Fpr/job/Fpr__rcl__ubuntu_focal_amd64/lastCompletedBuild/testReport/rcl_yaml_param_parser).
 
 ## Dependencies [5]
 
@@ -143,13 +143,13 @@ It also has several test dependencies, which do not affect the resulting quality
 
 `rcutils` provides commonly used functionality in C.
 
-It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/foxy/QUALITY_DECLARATION.md).
 
 #### `libyaml_vendor`
 
 `libyaml_vendor` is a vendor package for the libyaml C library.
 
-It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/libyaml_vendor/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/libyaml_vendor/blob/foxy/QUALITY_DECLARATION.md).
 
 ### Direct Runtime Non-ROS Dependencies [5.iii]
 
@@ -159,17 +159,17 @@ It is **Quality Level 1**, see its [Quality Declaration document](https://github
 
 `libyaml` is a YAML parsing library written in C.
 
-It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/libyaml_vendor/blob/master/libyaml_q_declaration.md).
+It is **Quality Level 1**, see its [Quality Declaration document](https://github.com/ros2/libyaml_vendor/blob/foxy/libyaml_q_declaration.md).
 
 ## Platform Support [6]
 
 `rcl_yaml_param_parser` supports all of the tier 1 platforms as described in [REP-2000](https://www.ros.org/reps/rep-2000.html#support-tiers), and tests each change against all of them.
 
-Currently nightly results can be seen here:
-* [linux-aarch64_release](https://ci.ros2.org/view/nightly/job/nightly_linux-aarch64_release/lastBuild/testReport/rcl_yaml_param_parser/)
-* [linux_release](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rcl_yaml_param_parser/)
-* [mac_osx_release](https://ci.ros2.org/view/nightly/job/nightly_osx_release/lastBuild/testReport/rcl_yaml_param_parser/)
-* [windows_release](https://ci.ros2.org/view/nightly/job/nightly_win_rel/lastBuild/testReport/rcl_yaml_param_parser/)
+Though there are no nightly jobs for foxy outside of linux, each change is tested on ci.ros2.org.
+* [linux-aarch64](https://ci.ros2.org/job/ci_linux-aarch64)
+* [linux](https://ci.ros2.org/job/ci_linux)
+* [mac_osx](https://ci.ros2.org/job/ci_osx)
+* [windows](https://ci.ros2.org/job/ci_windows)
 
 # Security [7]
 

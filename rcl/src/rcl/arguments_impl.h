@@ -16,7 +16,6 @@
 #define RCL__ARGUMENTS_IMPL_H_
 
 #include "rcl/arguments.h"
-#include "rcl/log_level.h"
 #include "rcl_yaml_param_parser/types.h"
 #include "./remap_impl.h"
 
@@ -51,8 +50,8 @@ typedef struct rcl_arguments_impl_t
   /// Length of remap_rules.
   int num_remap_rules;
 
-  /// Log levels parsed from arguments.
-  rcl_log_levels_t log_levels;
+  /// Default log level (represented by `RCUTILS_LOG_SEVERITY` enum) or -1 if not specified.
+  int log_level;
   /// A file used to configure the external logging library
   char * external_log_config_file;
   /// A boolean value indicating if the standard out handler should be used for log output
