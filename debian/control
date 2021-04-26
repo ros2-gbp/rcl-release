@@ -1,0 +1,13 @@
+Source: ros-galactic-rcl
+Section: misc
+Priority: optional
+Maintainer: Ivan Paunovic <ivanpauno@ekumenlabs.com>
+Build-Depends: debhelper (>= 9.0.0), ros-galactic-ament-cmake-gtest, ros-galactic-ament-cmake-ros, ros-galactic-ament-lint-auto, ros-galactic-ament-lint-common, ros-galactic-launch, ros-galactic-launch-testing, ros-galactic-launch-testing-ament-cmake, ros-galactic-mimick-vendor, ros-galactic-osrf-testing-tools-cpp, ros-galactic-rcl-interfaces, ros-galactic-rcl-logging-interface, ros-galactic-rcl-logging-spdlog, ros-galactic-rcl-yaml-param-parser, ros-galactic-rcpputils, ros-galactic-rcutils, ros-galactic-rmw, ros-galactic-rmw-implementation, ros-galactic-rmw-implementation-cmake, ros-galactic-rosidl-runtime-c, ros-galactic-test-msgs, ros-galactic-tracetools, ros-galactic-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-galactic-rcl
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-galactic-rcl-interfaces, ros-galactic-rcl-logging-interface, ros-galactic-rcl-logging-spdlog, ros-galactic-rcl-yaml-param-parser, ros-galactic-rcutils, ros-galactic-rmw, ros-galactic-rmw-implementation, ros-galactic-rosidl-runtime-c, ros-galactic-tracetools, ros-galactic-ros-workspace
+Description: The ROS client library common implementation.
+ This package contains an API which builds on the ROS middleware API and is optionally built upon by the other ROS client libraries.
