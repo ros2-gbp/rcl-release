@@ -139,7 +139,7 @@ tracks:
       :{release_inc} --os-name rhel
     devel_branch: foxy
     last_version: 1.1.11
-    name: upstream
+    name: rcl
     patches: null
     release_inc: '1'
     release_repo_url: https://github.com/ros2-gbp/rcl-release.git
@@ -165,7 +165,7 @@ tracks:
       :{release_inc} --os-name rhel
     devel_branch: master
     last_version: 3.1.1
-    name: upstream
+    name: rcl
     patches: null
     release_inc: '2'
     release_repo_url: https://github.com/ros2-gbp/rcl-release.git
@@ -239,7 +239,7 @@ tracks:
       :{release_inc} --os-name rhel
     devel_branch: master
     last_version: 3.1.1
-    name: upstream
+    name: rcl
     patches: null
     release_inc: '1'
     release_repo_url: https://github.com/ros2-gbp/rcl-release.git
