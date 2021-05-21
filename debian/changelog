@@ -1,0 +1,246 @@
+ros-dashing-rcl (0.7.10-1bionic) bionic; urgency=high
+
+
+
+ -- William Woodall <william@osrfoundation.org>  Fri, 21 May 2021 07:00:00 -0000
+
+ros-dashing-rcl (0.7.9-1bionic) bionic; urgency=high
+
+  * Fixed doxygen warnings. (#702 <https://github.com/ros2/rcl/issues/702>)
+  * Allow get_node_names to return result in any order. (#592 <https://github.com/ros2/rcl/issues/592>)
+  * Don't check history depth if RMW_QOS_POLICY_HISTORY_KEEP_ALL. (#595 <https://github.com/ros2/rcl/issues/595>)
+  * Contributors: Alejandro Hernández Cordero, Dan Rose
+
+ -- William Woodall <william@osrfoundation.org>  Fri, 10 Jul 2020 07:00:00 -0000
+
+ros-dashing-rcl (0.7.8-1bionic) bionic; urgency=high
+
+  * Set allocator before goto fail. (#540 <https://github.com/ros2/rcl/issues/540>)
+  * Contributors: Borja Outerelo
+
+ -- William Woodall <william@osrfoundation.org>  Tue, 10 Dec 2019 08:00:00 -0000
+
+ros-dashing-rcl (0.7.7-1bionic) bionic; urgency=high
+
+
+
+ -- William Woodall <william@osrfoundation.org>  Fri, 20 Sep 2019 07:00:00 -0000
+
+ros-dashing-rcl (0.7.6-1bionic) bionic; urgency=high
+
+
+
+ -- William Woodall <william@osrfoundation.org>  Thu, 01 Aug 2019 07:00:00 -0000
+
+ros-dashing-rcl (0.7.5-1bionic) bionic; urgency=high
+
+
+
+ -- William Woodall <william@osrfoundation.org>  Wed, 12 Jun 2019 07:00:00 -0000
+
+ros-dashing-rcl (0.7.4-1bionic) bionic; urgency=high
+
+  * Fix tests now that FastRTPS correctly reports that liveliness is not supported (#452 <https://github.com/ros2/rcl/issues/452>)
+  * In test_events, wait for discovery to be complete bidirectionally before moving on (#451 <https://github.com/ros2/rcl/issues/451>)
+  * fix leak in test_service (#447 <https://github.com/ros2/rcl/issues/447>)
+  * fix leak in test_guard_condition (#446 <https://github.com/ros2/rcl/issues/446>)
+  * fix leak in test_get_actual_qos (#445 <https://github.com/ros2/rcl/issues/445>)
+  * fix leak in test_expand_topic_name (#444 <https://github.com/ros2/rcl/issues/444>)
+  * Contributors: Abby Xu, Emerson Knapp
+
+ -- William Woodall <william@osrfoundation.org>  Wed, 29 May 2019 07:00:00 -0000
+
+ros-dashing-rcl (0.7.3-1bionic) bionic; urgency=high
+
+  * Fixed memory leak in ``test_client`` (#443 <https://github.com/ros2/rcl/issues/443>)
+  * Fixed memory leaks in ``test_wait.cpp`` (#439 <https://github.com/ros2/rcl/issues/439>)
+  * Fixed memory leak in ``test_context`` (#441 <https://github.com/ros2/rcl/issues/441>)
+  * Fixed memory leak in ``test_init`` (#440 <https://github.com/ros2/rcl/issues/440>)
+  * Enabled rcl ``test_events`` unit tests on macOS (#433 <https://github.com/ros2/rcl/issues/433>)
+  * Enabled deadline tests for FastRTPS (#438 <https://github.com/ros2/rcl/issues/438>)
+  * Corrected use of ``launch_testing.assert.assertExitCodes`` (#437 <https://github.com/ros2/rcl/issues/437>)
+  * Reverted "Changes the default 3rd party logger from rcl_logging_noop to… (#436 <https://github.com/ros2/rcl/issues/436>)
+  * Fixed memory leaks in ``test_security_directory`` (#420 <https://github.com/ros2/rcl/issues/420>)
+  * Fixed a memory leak in rcl context fini (#434 <https://github.com/ros2/rcl/issues/434>)
+  * Contributors: Abby Xu, Cameron Evans, Chris Lalancette, Dirk Thomas, M. M, ivanpauno
+
+ -- William Woodall <william@osrfoundation.org>  Mon, 20 May 2019 07:00:00 -0000
+
+ros-dashing-rcl (0.7.2-1bionic) bionic; urgency=high
+
+  * Changes the default 3rd party logger from rcl_logging_noop to rcl_logging_log4cxx (#425 <https://github.com/ros2/rcl/issues/425>)
+  * fix leak in node.c (#424 <https://github.com/ros2/rcl/issues/424>)
+  * Add new RCL_RET_UNSUPPORTED (#432 <https://github.com/ros2/rcl/issues/432>)
+  * New interfaces and their implementations for QoS features (#408 <https://github.com/ros2/rcl/issues/408>)
+  * Add an allocator to the external logging initialization. (#430 <https://github.com/ros2/rcl/issues/430>)
+  * fix buffer overflow in test_security_dir (#423 <https://github.com/ros2/rcl/issues/423>)
+  * Rmw preallocate (#428 <https://github.com/ros2/rcl/issues/428>)
+  * Use new test interface definitions (#427 <https://github.com/ros2/rcl/pull/427>)
+  * Migrate launch tests to new launch_testing features & API (#405 <https://github.com/ros2/rcl/issues/405>)
+  * Fix argument passed to logging macros (#421 <https://github.com/ros2/rcl/issues/421>)
+  * Make sure to initialize the bool field. (#426 <https://github.com/ros2/rcl/issues/426>)
+  * Contributors: Abby Xu, Chris Lalancette, Emerson Knapp, Jacob Perron, M. M, Michael Carroll, Michel Hidalgo, Nick Burek, Thomas Moulard
+
+ -- William Woodall <william@osrfoundation.org>  Wed, 08 May 2019 07:00:00 -0000
+
+ros-dashing-rcl (0.7.1-1bionic) bionic; urgency=high
+
+  * Replaced reinterperet_cast with static_cast. (#410 <https://github.com/ros2/rcl/issues/410>)
+  * Fixed leak in __wait_set_clean_up. (#418 <https://github.com/ros2/rcl/issues/418>)
+  * Updated initialization of rmw_qos_profile_t struct instances. (#416 <https://github.com/ros2/rcl/issues/416>)
+  * Contributors: Dirk Thomas, M. M, jhdcs
+
+ -- William Woodall <william@osrfoundation.org>  Mon, 29 Apr 2019 07:00:00 -0000
+
+ros-dashing-rcl (0.7.0-1bionic) bionic; urgency=high
+
+  * Added more test cases for graph API + fix bug. (#404 <https://github.com/ros2/rcl/issues/404>)
+  * Fixed missing include. (#413 <https://github.com/ros2/rcl/issues/413>)
+  * Updated to use pedantic. (#412 <https://github.com/ros2/rcl/issues/412>)
+  * Added function to get publisher actual qos settings. (#406 <https://github.com/ros2/rcl/issues/406>)
+  * Refactored graph API docs. (#401 <https://github.com/ros2/rcl/issues/401>)
+  * Updated to use ament_target_dependencies where possible. (#400 <https://github.com/ros2/rcl/issues/400>)
+  * Fixed regression around fully qualified node name. (#402 <https://github.com/ros2/rcl/issues/402>)
+  * Added function rcl_names_and_types_init. (#403 <https://github.com/ros2/rcl/issues/403>)
+  * Fixed uninitialize sequence number of client. (#395 <https://github.com/ros2/rcl/issues/395>)
+  * Added launch along with launch_testing as test dependencies. (#393 <https://github.com/ros2/rcl/issues/393>)
+  * Set symbol visibility to hidden for rcl. (#391 <https://github.com/ros2/rcl/issues/391>)
+  * Updated to split test_token to avoid compiler note. (#392 <https://github.com/ros2/rcl/issues/392>)
+  * Dropped legacy launch API usage. (#387 <https://github.com/ros2/rcl/issues/387>)
+  * Improved security directory lookup. (#332 <https://github.com/ros2/rcl/issues/332>)
+  * Enforce non-null argv values on rcl_init(). (#388 <https://github.com/ros2/rcl/issues/388>)
+  * Removed incorrect argument documentation. (#361 <https://github.com/ros2/rcl/issues/361>)
+  * Changed error to warning for multiple loggers. (#384 <https://github.com/ros2/rcl/issues/384>)
+  * Added rcl_node_get_fully_qualified_name. (#255 <https://github.com/ros2/rcl/issues/255>)
+  * Updated rcl_remap_t to use the PIMPL pattern. (#377 <https://github.com/ros2/rcl/issues/377>)
+  * Fixed documentation typo. (#376 <https://github.com/ros2/rcl/issues/376>)
+  * Removed test circumvention now that a bug is fixed in rmw_opensplice. (#368 <https://github.com/ros2/rcl/issues/368>)
+  * Updated to pass context to wait set, and fini rmw context. (#373 <https://github.com/ros2/rcl/issues/373>)
+  * Updated to publish logs to Rosout. (#350 <https://github.com/ros2/rcl/issues/350>)
+  * Contributors: AAlon, Dirk Thomas, Jacob Perron, M. M, Michael Carroll, Michel Hidalgo, Mikael Arguedas, Nick Burek, RARvolt, Ross Desmond, Sachin Suresh Bhat, Shane Loretz, William Woodall, ivanpauno
+
+ -- William Woodall <william@osrfoundation.org>  Sun, 14 Apr 2019 07:00:00 -0000
+
+ros-dashing-rcl (0.6.4-1bionic) bionic; urgency=high
+
+  * Added method for accessing rmw_context from rcl_context (#372 <https://github.com/ros2/rcl/issues/372>)
+  * Added guard against bad allocation when calling rcl_arguments_copy() (#367 <https://github.com/ros2/rcl/issues/367>)
+  * Updated to ensure that context instance id storage is aligned correctly (#365 <https://github.com/ros2/rcl/issues/365>)
+  * Fixed error from uncrustify v0.68 (#364 <https://github.com/ros2/rcl/issues/364>)
+  * Contributors: Jacob Perron, William Woodall, sgvandijk
+
+ -- William Woodall <william@osrfoundation.org>  Fri, 11 Jan 2019 08:00:00 -0000
+
+ros-dashing-rcl (0.6.3-1bionic) bionic; urgency=high
+
+  * Set rmw_wait timeout using ros timers too (#357 <https://github.com/ros2/rcl/issues/357>)
+  * Contributors: Shane Loretz
+
+ -- William Woodall <william@osrfoundation.org>  Thu, 13 Dec 2018 08:00:00 -0000
+
+ros-dashing-rcl (0.6.2-1bionic) bionic; urgency=high
+
+  * Updated docs about possibility of rcl_take not taking (#356 <https://github.com/ros2/rcl/issues/356>)
+  * Bugfix: ensure NULL timeout is passed to rmw_wait() when min_timeout is not set
+    Otherwise, there is a risk of integer overflow (e.g. in rmw_fastrtps) and rmw_wait() will wake immediately.
+  * Contributors: Jacob Perron, William Woodall
+
+ -- William Woodall <william@osrfoundation.org>  Thu, 13 Dec 2018 08:00:00 -0000
+
+ros-dashing-rcl (0.6.1-1bionic) bionic; urgency=high
+
+  * Added new cli parameters for configuring the logging. (#327 <https://github.com/ros2/rcl/issues/327>)
+  * Added node graph api to rcl. (#333 <https://github.com/ros2/rcl/issues/333>)
+  * Fixed compiler warning in clang (#345 <https://github.com/ros2/rcl/issues/345>)
+  * Refactored init to not be global (#336 <https://github.com/ros2/rcl/issues/336>)
+  * Methods to retrieve matched counts on pub/sub. (#326 <https://github.com/ros2/rcl/issues/326>)
+  * Updated to output index in container when adding an entity to a wait set. (#335 <https://github.com/ros2/rcl/issues/335>)
+  * Contributors: Jacob Perron, Michael Carroll, Nick Burek, Ross Desmond, William Woodall
+
+ -- William Woodall <william@osrfoundation.org>  Fri, 07 Dec 2018 08:00:00 -0000
+
+ros-dashing-rcl (0.6.0-1bionic) bionic; urgency=high
+
+  * Updated to expand node_secure_root using local_namespace (#300 <https://github.com/ros2/rcl/issues/300>)
+  * Moved stdatomic helper to rcutils (#324 <https://github.com/ros2/rcl/issues/324>)
+  * Added subfolder argument to the ROSIDL_GET_SRV_TYPE_SUPPORT macro (#322 <https://github.com/ros2/rcl/issues/322>)
+  * Updated to use new error handling API from rcutils (#314 <https://github.com/ros2/rcl/issues/314>)
+  * Fixed minor documentation issues (#305 <https://github.com/ros2/rcl/issues/305>)
+  * Added macro semicolons (#303 <https://github.com/ros2/rcl/issues/303>)
+  * Added Rcl timer with ros time (#286 <https://github.com/ros2/rcl/issues/286>)
+  * Updated to ensure that timer period is non-negative (#295 <https://github.com/ros2/rcl/issues/295>)
+  * Fixed calculation of next timer call (#291 <https://github.com/ros2/rcl/issues/291>)
+  * Updated to null deallocated jump callbacks (#294 <https://github.com/ros2/rcl/issues/294>)
+  * Included namespaces in get_node_names. (#287 <https://github.com/ros2/rcl/issues/287>)
+  * Fixed documentation issues (#288 <https://github.com/ros2/rcl/issues/288>)
+  * Updated to check if pointers are null before calling memset (#290 <https://github.com/ros2/rcl/issues/290>)
+  * Added multiple time jump callbacks to clock (#284 <https://github.com/ros2/rcl/issues/284>)
+  * Consolidated wait set functions (#285 <https://github.com/ros2/rcl/issues/285>)
+    * Consolidate functions to clear wait set
+    Added rcl_wait_set_clear()
+    Added rcl_wait_set_resize()
+    Removed
+    rcl_wait_set_clear_subscriptions()
+    rcl_wait_set_clear_guard_conditions()
+    rcl_wait_set_clear_clients()
+    rcl_wait_set_clear_services()
+    rcl_wait_set_clear_timers()
+    rcl_wait_set_resize_subscriptions()
+    rcl_wait_set_resize_guard_conditions()
+    rcl_wait_set_resize_timers()
+    rcl_wait_set_resize_clients()
+    rcl_wait_set_resize_services()
+  * ROS clock storage initially set to zero (#283 <https://github.com/ros2/rcl/issues/283>)
+  * Fixed issue with deallocation of parameter_files (#279 <https://github.com/ros2/rcl/issues/279>)
+  * Update to initialize memory before sending a message (#277 <https://github.com/ros2/rcl/issues/277>)
+  * Set error message when clock type is not ROS_TIME (#275 <https://github.com/ros2/rcl/issues/275>)
+  * Copy allocator passed in to clock init (#274 <https://github.com/ros2/rcl/issues/274>)
+  * Update to initialize timer with clock (#272 <https://github.com/ros2/rcl/issues/272>)
+  * Updated to use test_msgs instead of std_msgs in tests (#270 <https://github.com/ros2/rcl/issues/270>)
+  * Added regression test for node:__ns remapping (#263 <https://github.com/ros2/rcl/issues/263>)
+  * Updated to support Uncrustify 0.67 (#266 <https://github.com/ros2/rcl/issues/266>)
+  * Contributors: Chris Lalancette, Chris Ye, Dirk Thomas, Jacob Perron, Michael Carroll, Mikael Arguedas, Ruffin, Shane Loretz, William Woodall, dhood
+
+ -- William Woodall <william@osrfoundation.org>  Fri, 16 Nov 2018 08:00:00 -0000
+
+ros-dashing-rcl (0.5.0-1bionic) bionic; urgency=high
+
+  * Updated code to only use ``rcutils_allocator_t`` and not use system memory functions directly. (#261 <https://github.com/ros2/rcl/issues/261>)
+  * Changed code to use ``rcutils_format_string()`` rather than ``malloc`` and ``rcutils_snprintf()`` (#240 <https://github.com/ros2/rcl/issues/240>)
+  * Added functions for dealing with serialized messages. (#170 <https://github.com/ros2/rcl/issues/170>)
+  * Updated to use ``test_msgs`` instead of ``example_interfaces``. (#259 <https://github.com/ros2/rcl/issues/259>)
+  * Added regression test for the Connext specific 'wrong type writer' error. (#257 <https://github.com/ros2/rcl/issues/257>)
+  * Added the ability to set the default logger level from command line. (#256 <https://github.com/ros2/rcl/issues/256>)
+  * Refactored the ``memory_tools`` testing API to ``osrf_testing_tools_cpp`` (#238 <https://github.com/ros2/rcl/issues/238>)
+  * Added support for passing YAML parameter files via the command line arguments.  (#253 <https://github.com/ros2/rcl/issues/253>)
+  * Migrated existing uses of ``launch`` to use the same API in it's new API ``launch.legacy``. (#250 <https://github.com/ros2/rcl/issues/250>)
+  * Added a printed warning if non-FQN namespace remapping is passed. (#248 <https://github.com/ros2/rcl/issues/248>)
+  * Made some changes toward MISRA C compliance. (#229 <https://github.com/ros2/rcl/issues/229>)
+  * Changed ``rcl_node_init()`` so that it now copies node options passed into it (#231 <https://github.com/ros2/rcl/issues/231>)
+  * Fixed some memory leaks in ``test_arguments`` (#230 <https://github.com/ros2/rcl/issues/230>)
+  * Extended static remapping feature with support for the url scheme (#227 <https://github.com/ros2/rcl/issues/227>)
+  * Made a change to force ``rcl_arguments_t`` to be zero initialized. (#225 <https://github.com/ros2/rcl/issues/225>)
+  * Updated documentation for ``rmw_get_node_names()`` to mention the potential for null values (#214 <https://github.com/ros2/rcl/issues/214>)
+  * Fix an issue with signed time difference. (#224 <https://github.com/ros2/rcl/issues/224>)
+  * Changed library export order to fix static linking (#216 <https://github.com/ros2/rcl/issues/216>)
+  * Implemented static remapping over command line arguments (#217 <https://github.com/ros2/rcl/issues/217> and #221 <https://github.com/ros2/rcl/issues/221>)
+  * Added a sized validation function for the topic name as ``rcl_validate_topic_name_with_size()`` (#220 <https://github.com/ros2/rcl/issues/220>)
+  * Added a logger name and stored it in the rcl node structure (#212 <https://github.com/ros2/rcl/issues/212>)
+  * Changed ``rcutils_time_point_value_t`` type from ``uint64_t`` to ``int64_t`` (#208 <https://github.com/ros2/rcl/issues/208>)
+  * Fixed a potential bug by resetting the ``RMWCount`` when using the ``DEALLOC`` macro on rmw storage of a wait set (#209 <https://github.com/ros2/rcl/issues/209> and #211 <https://github.com/ros2/rcl/issues/211>)
+    * Signed-off-by: jwang <mailto:jing.j.wang@intel.com>
+  * Fixed a potential bug by resetting ``wait_set`` type index in the ``SET_RESIZE`` macro (#207 <https://github.com/ros2/rcl/issues/207>)
+    * Signed-off-by: jwang <mailto:jing.j.wang@intel.com>
+  * Removed a slash behind ``SET_CLEAR`` MACRO (#206 <https://github.com/ros2/rcl/issues/206>)
+    * Signed-off-by: jwang <mailto:jing.j.wang@intel.com>
+  * Changed rmw result validation string to not ever return nullptr (#193 <https://github.com/ros2/rcl/issues/193>)
+    * Signed-off-by: Ethan Gao <mailto:ethan.gao@linux.intel.com>
+  * Clarified that ``rcl_take_response()`` populates the ``request_header`` (#205 <https://github.com/ros2/rcl/issues/205>)
+  * Removed a now obsolete connext workaround (#203 <https://github.com/ros2/rcl/issues/203>)
+  * Fixed a potential segmentation fault due to a nullptr dereference (#202 <https://github.com/ros2/rcl/issues/202>)
+    * Signed-off-by: Ethan Gao <mailto:ethan.gao@linux.intel.com>
+  * Contributors: Dirk Thomas, Ethan Gao, Karsten Knese, Michael Carroll, Mikael Arguedas, Shane Loretz, William Woodall, dhood, jwang11, serge-nikulin
+
+ -- William Woodall <william@osrfoundation.org>  Mon, 25 Jun 2018 07:00:00 -0000
+
+
