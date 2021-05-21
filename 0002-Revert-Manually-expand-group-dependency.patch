@@ -1,4 +1,4 @@
-From 779ef9b7ef32a76fc06a8293fb48a2f304c961e1 Mon Sep 17 00:00:00 2001
+From 711f9d6947928a688bb4d9837123a5cc3b52a2aa Mon Sep 17 00:00:00 2001
 From: William Woodall <william@osrfoundation.org>
 Date: Mon, 20 May 2019 16:31:18 -0700
 Subject: [PATCH 2/2] Revert "Manually expand group dependency."
@@ -9,7 +9,7 @@ This reverts commit 1f0fc8c2e3c9cfee7068e579a2f2edac3894bc30.
  1 file changed, 3 deletions(-)
 
 diff --git a/package.xml b/package.xml
-index e61986b..8c3b8e2 100644
+index 81109b11..536e707f 100644
 --- a/package.xml
 +++ b/package.xml
 @@ -23,9 +23,6 @@
@@ -23,5 +23,5 @@ index e61986b..8c3b8e2 100644
    <exec_depend>ament_cmake</exec_depend>
    <exec_depend>rcutils</exec_depend>
 -- 
-2.27.0
+2.31.1
 
