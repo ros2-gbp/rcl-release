@@ -1,3 +1,30 @@
+## rcl (dashing) - 0.7.10-1
+
+The packages in the `rcl` repository were released into the `dashing` distro by running `/home/steven/osrf/bloom/.direnv/python-3.9.5/bin/bloom-release -r dashing rcl --override-release-repository-push-url git@github.com:ros2-gbp/rcl-release` on `Fri, 21 May 2021 15:00:08 -0000`
+
+These packages were released:
+- `rcl`
+- `rcl_action`
+- `rcl_lifecycle`
+- `rcl_yaml_param_parser`
+
+Version of package(s) in repository `rcl`:
+
+- upstream repository: https://github.com/ros2/rcl.git
+- release repository: https://github.com/ros2-gbp/rcl-release.git
+- rosdistro version: `0.7.9-1`
+- old version: `0.7.9-1`
+- new version: `0.7.10-1`
+
+Versions of tools used:
+
+- bloom version: `0.10.7`
+- catkin_pkg version: `0.4.23`
+- rosdep version: `0.20.1`
+- rosdistro version: `0.8.3`
+- vcstools version: `0.1.42`
+
+
 ## rcl (galactic) - 3.1.2-1
 
 The packages in the `rcl` repository were released into the `galactic` distro by running `/usr/bin/bloom-release --rosdistro galactic --track galactic rcl` on `Mon, 26 Apr 2021 21:03:53 -0000`
