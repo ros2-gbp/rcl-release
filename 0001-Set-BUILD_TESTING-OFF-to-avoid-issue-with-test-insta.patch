@@ -1,4 +1,4 @@
-From 52fa8c3af464e6c98e6ca013a3779c3e7b97f688 Mon Sep 17 00:00:00 2001
+From b666f74aed03d1b510c7d3da2cc1be59c73dd317 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Steven!=20Ragnar=C3=B6k?= <steven@nuclearsandwich.com>
 Date: Mon, 15 Apr 2019 05:21:48 -0700
 Subject: [PATCH] Set BUILD_TESTING=OFF to avoid issue with test installation.
@@ -8,7 +8,7 @@ Subject: [PATCH] Set BUILD_TESTING=OFF to avoid issue with test installation.
  1 file changed, 1 insertion(+)
 
 diff --git a/debian/rules.em b/debian/rules.em
-index 9c9604d..ff4db1b 100755
+index 9c9604d9..ff4db1ba 100755
 --- a/debian/rules.em
 +++ b/debian/rules.em
 @@ -27,6 +27,7 @@ override_dh_auto_configure:
@@ -20,5 +20,5 @@ index 9c9604d..ff4db1b 100755
  		-DAMENT_PREFIX_PATH="@(InstallationPrefix)"
  
 -- 
-2.27.0
+2.31.1
 
