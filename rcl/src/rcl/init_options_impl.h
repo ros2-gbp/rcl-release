@@ -17,7 +17,7 @@
 
 #include "rcl/init_options.h"
 
-#include "rmw/init_options.h"
+#include "rmw/init.h"
 
 #ifdef __cplusplus
 extern "C"

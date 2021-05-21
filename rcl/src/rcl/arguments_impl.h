@@ -16,8 +16,6 @@
 #define RCL__ARGUMENTS_IMPL_H_
 
 #include "rcl/arguments.h"
-#include "rcl/log_level.h"
-#include "rcl_yaml_param_parser/types.h"
 #include "./remap_impl.h"
 
 #ifdef __cplusplus
@@ -28,19 +26,12 @@ extern "C"
 /// \internal
 typedef struct rcl_arguments_impl_t
 {
-  /// Array of indices to unknown ROS specific arguments.
-  int * unparsed_ros_args;
-  /// Length of unparsed_ros_args.
-  int num_unparsed_ros_args;
-
-  /// Array of indices to non-ROS arguments.
+  /// Array of indices that were not valid ROS arguments.
   int * unparsed_args;
   /// Length of unparsed_args.
   int num_unparsed_args;
 
-  /// Parameter override rules parsed from arguments.
-  rcl_params_t * parameter_overrides;
-
+  // TODO(mikaelarguedas) consider storing CLI parameter rules here
   /// Array of yaml parameter file paths
   char ** parameter_files;
   /// Length of parameter_files.
@@ -51,8 +42,8 @@ typedef struct rcl_arguments_impl_t
   /// Length of remap_rules.
   int num_remap_rules;
 
-  /// Log levels parsed from arguments.
-  rcl_log_levels_t log_levels;
+  /// Default log level (represented by `RCUTILS_LOG_SEVERITY` enum) or -1 if not specified.
+  int log_level;
   /// A file used to configure the external logging library
   char * external_log_config_file;
   /// A boolean value indicating if the standard out handler should be used for log output
@@ -61,9 +52,6 @@ typedef struct rcl_arguments_impl_t
   bool log_rosout_disabled;
   /// A boolean value indicating if the external lib handler should be used for log output
   bool log_ext_lib_disabled;
-
-  /// Enclave to be used.
-  char * enclave;
 
   /// Allocator used to allocate objects in this struct
   rcl_allocator_t allocator;

@@ -35,8 +35,7 @@ class TestMultipleInstances : public ::testing::Test
 public:
   rcl_context_t * context_ptr;
   rcl_node_t * node_ptr;
-  rcl_lifecycle_state_machine_options_t state_machine_options;
-
+  const rcl_allocator_t * allocator;
   void SetUp()
   {
     rcl_ret_t ret;
@@ -44,8 +43,7 @@ public:
       rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
       ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
       ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-      OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-      {
+      OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
         EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
       });
       this->context_ptr = new rcl_context_t;
@@ -60,8 +58,7 @@ public:
     ret = rcl_node_init(this->node_ptr, name, "", this->context_ptr, &node_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     const rcl_node_options_t * node_ops = rcl_node_get_options(this->node_ptr);
-    state_machine_options = rcl_lifecycle_get_default_state_machine_options();
-    state_machine_options.allocator = node_ops->allocator;
+    this->allocator = &node_ops->allocator;
   }
 
   void TearDown()
@@ -98,23 +95,17 @@ TEST_F(TestMultipleInstances, default_sequence_error_unresolved) {
 
   rcl_lifecycle_state_machine_t state_machine1 =
     rcl_lifecycle_get_zero_initialized_state_machine();
-  state_machine1.options = this->state_machine_options;
-  ret =
-    rcl_lifecycle_init_default_state_machine(&state_machine1, &state_machine1.options.allocator);
+  ret = rcl_lifecycle_init_default_state_machine(&state_machine1, this->allocator);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
   rcl_lifecycle_state_machine_t state_machine2 =
     rcl_lifecycle_get_zero_initialized_state_machine();
-  state_machine2.options = this->state_machine_options;
-  ret =
-    rcl_lifecycle_init_default_state_machine(&state_machine2, &state_machine2.options.allocator);
+  ret = rcl_lifecycle_init_default_state_machine(&state_machine2, this->allocator);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
   rcl_lifecycle_state_machine_t state_machine3 =
     rcl_lifecycle_get_zero_initialized_state_machine();
-  state_machine3.options = this->state_machine_options;
-  ret =
-    rcl_lifecycle_init_default_state_machine(&state_machine3, &state_machine3.options.allocator);
+  ret = rcl_lifecycle_init_default_state_machine(&state_machine3, this->allocator);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
   test_trigger_transition(
@@ -131,10 +122,10 @@ TEST_F(TestMultipleInstances, default_sequence_error_unresolved) {
   EXPECT_EQ(
     lifecycle_msgs__msg__State__PRIMARY_STATE_UNCONFIGURED, state_machine3.current_state->id);
 
-  ret = rcl_lifecycle_state_machine_fini(&state_machine1, this->node_ptr);
+  ret = rcl_lifecycle_state_machine_fini(&state_machine1, this->node_ptr, this->allocator);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  ret = rcl_lifecycle_state_machine_fini(&state_machine2, this->node_ptr);
+  ret = rcl_lifecycle_state_machine_fini(&state_machine2, this->node_ptr, this->allocator);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  ret = rcl_lifecycle_state_machine_fini(&state_machine3, this->node_ptr);
+  ret = rcl_lifecycle_state_machine_fini(&state_machine3, this->node_ptr, this->allocator);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 }

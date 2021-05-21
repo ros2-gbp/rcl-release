@@ -46,12 +46,7 @@ TEST_F(CLASSNAME(TestRemapIntegrationFixture, RMW_IMPLEMENTATION), remap_using_g
   int argc;
   char ** argv;
   SCOPE_GLOBAL_ARGS(
-    argc, argv,
-    "process_name",
-    "--ros-args",
-    "-r", "__node:=new_name",
-    "-r", "__ns:=/new_ns",
-    "-r", "/foo/bar:=/bar/foo");
+    argc, argv, "process_name", "__node:=new_name", "__ns:=/new_ns", "/foo/bar:=/bar/foo");
 
   rcl_node_t node = rcl_get_zero_initialized_node();
   rcl_node_options_t default_options = rcl_node_get_default_options();
@@ -117,12 +112,7 @@ TEST_F(CLASSNAME(TestRemapIntegrationFixture, RMW_IMPLEMENTATION), ignore_global
   int argc;
   char ** argv;
   SCOPE_GLOBAL_ARGS(
-    argc, argv,
-    "process_name",
-    "--ros-args",
-    "-r", "__node:=new_name",
-    "-r", "__ns:=/new_ns",
-    "-r", "/foo/bar:=/bar/foo");
+    argc, argv, "process_name", "__node:=new_name", "__ns:=/new_ns", "/foo/bar:=/bar/foo");
   rcl_arguments_t local_arguments;
   SCOPE_ARGS(local_arguments, "local_process_name");
 
@@ -190,20 +180,11 @@ TEST_F(CLASSNAME(TestRemapIntegrationFixture, RMW_IMPLEMENTATION), local_rules_b
   int argc;
   char ** argv;
   SCOPE_GLOBAL_ARGS(
-    argc, argv,
-    "process_name",
-    "--ros-args",
-    "-r", "__node:=global_name",
-    "-r", "__ns:=/global_ns",
-    "-r", "/foo/bar:=/bar/global");
+    argc, argv, "process_name", "__node:=global_name", "__ns:=/global_ns", "/foo/bar:=/bar/global");
   rcl_arguments_t local_arguments;
   SCOPE_ARGS(
     local_arguments,
-    "process_name",
-    "--ros-args",
-    "-r", "__node:=local_name",
-    "-r", "__ns:=/local_ns",
-    "-r", "/foo/bar:=/bar/local");
+    "process_name", "__node:=local_name", "__ns:=/local_ns", "/foo/bar:=/bar/local");
 
   rcl_node_t node = rcl_get_zero_initialized_node();
   rcl_node_options_t options = rcl_node_get_default_options();
@@ -267,7 +248,7 @@ TEST_F(CLASSNAME(TestRemapIntegrationFixture, RMW_IMPLEMENTATION), local_rules_b
 TEST_F(CLASSNAME(TestRemapIntegrationFixture, RMW_IMPLEMENTATION), remap_relative_topic) {
   int argc;
   char ** argv;
-  SCOPE_GLOBAL_ARGS(argc, argv, "process_name", "--ros-args", "-r", "/foo/bar:=remap/global");
+  SCOPE_GLOBAL_ARGS(argc, argv, "process_name", "/foo/bar:=remap/global");
 
   rcl_node_t node = rcl_get_zero_initialized_node();
   rcl_node_options_t default_options = rcl_node_get_default_options();
@@ -322,7 +303,7 @@ TEST_F(CLASSNAME(TestRemapIntegrationFixture, RMW_IMPLEMENTATION), remap_using_n
   int argc;
   char ** argv;
   SCOPE_GLOBAL_ARGS(
-    argc, argv, "process_name", "--ros-args", "-r", "original_name:__ns:=/new_ns");
+    argc, argv, "process_name", "original_name:__ns:=/new_ns");
 
   rcl_node_t node = rcl_get_zero_initialized_node();
   rcl_node_options_t default_options = rcl_node_get_default_options();

@@ -22,7 +22,7 @@
 #include "rcl/error_handling.h"
 #include "rcl/rcl.h"
 
-#include "rosidl_runtime_c/primitives_sequence_functions.h"
+#include "rosidl_generator_c/primitives_sequence_functions.h"
 
 #include "test_msgs/action/fibonacci.h"
 
@@ -43,8 +43,7 @@ protected:
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
     ret = rcl_init_options_init(&init_options, allocator);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-    {
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
       EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
     });
     context = rcl_get_zero_initialized_context();
@@ -55,7 +54,6 @@ protected:
     ret = rcl_node_init(&this->node, "test_action_communication_node", "", &context, &node_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     ret = rcl_clock_init(RCL_STEADY_TIME, &this->clock, &allocator);
-    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     const rosidl_action_type_support_t * ts = ROSIDL_GET_ACTION_TYPE_SUPPORT(
       test_msgs, Fibonacci);
     const char * action_name = "test_action_commmunication_name";
@@ -212,8 +210,7 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_goal_c
 
   // Check that the goal request was received correctly
   EXPECT_EQ(outgoing_goal_request.goal.order, incoming_goal_request.goal.order);
-  EXPECT_TRUE(
-    uuidcmp(
+  EXPECT_TRUE(uuidcmp(
       outgoing_goal_request.goal_id.uuid,
       incoming_goal_request.goal_id.uuid));
 
@@ -228,7 +225,6 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_goal_c
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_client(
     &this->wait_set, &this->action_client, NULL, NULL);
@@ -319,8 +315,7 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_cancel
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   // Check that the cancel request was received correctly
-  EXPECT_TRUE(
-    uuidcmp(
+  EXPECT_TRUE(uuidcmp(
       outgoing_cancel_request.goal_info.goal_id.uuid,
       incoming_cancel_request.goal_info.goal_id.uuid));
   EXPECT_EQ(
@@ -331,8 +326,7 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_cancel
     incoming_cancel_request.goal_info.stamp.nanosec);
 
   // Initialize cancel request
-  ASSERT_TRUE(
-    action_msgs__msg__GoalInfo__Sequence__init(
+  ASSERT_TRUE(action_msgs__msg__GoalInfo__Sequence__init(
       &outgoing_cancel_response.goals_canceling, 2));
   init_test_uuid0(outgoing_cancel_response.goals_canceling.data[0].goal_id.uuid);
   outgoing_cancel_response.goals_canceling.data[0].stamp.sec = 102;
@@ -348,7 +342,6 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_cancel
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_client(
     &this->wait_set, &this->action_client, NULL, NULL);
@@ -444,14 +437,12 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_result
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   // Check that the result request was received correctly
-  EXPECT_TRUE(
-    uuidcmp(
+  EXPECT_TRUE(uuidcmp(
       outgoing_result_request.goal_id.uuid,
       incoming_result_request.goal_id.uuid));
 
   // Initialize result response
-  ASSERT_TRUE(
-    rosidl_runtime_c__int32__Sequence__init(
+  ASSERT_TRUE(rosidl_generator_c__int32__Sequence__init(
       &outgoing_result_response.result.sequence, 4));
   outgoing_result_response.result.sequence.data[0] = 0;
   outgoing_result_response.result.sequence.data[1] = 1;
@@ -466,7 +457,6 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_result
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_client(
     &this->wait_set, &this->action_client, NULL, NULL);
@@ -501,8 +491,7 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_result
   ASSERT_EQ(
     outgoing_result_response.result.sequence.size,
     incoming_result_response.result.sequence.size);
-  EXPECT_TRUE(
-    !memcmp(
+  EXPECT_TRUE(!memcmp(
       outgoing_result_response.result.sequence.data,
       incoming_result_response.result.sequence.data,
       outgoing_result_response.result.sequence.size));
@@ -539,7 +528,6 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_status
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_wait_set_clear(&this->wait_set);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   ret = rcl_action_wait_set_add_action_client(
     &this->wait_set, &this->action_client, NULL, NULL);
@@ -597,8 +585,7 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_feedba
   test_msgs__action__Fibonacci_FeedbackMessage__init(&incoming_feedback);
 
   // Initialize feedback
-  ASSERT_TRUE(
-    rosidl_runtime_c__int32__Sequence__init(
+  ASSERT_TRUE(rosidl_generator_c__int32__Sequence__init(
       &outgoing_feedback.feedback.sequence, 3));
   outgoing_feedback.feedback.sequence.data[0] = 0;
   outgoing_feedback.feedback.sequence.data[1] = 1;
@@ -637,13 +624,11 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_feedba
   EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
 
   // Check that feedback was received correctly
-  EXPECT_TRUE(
-    uuidcmp(
+  EXPECT_TRUE(uuidcmp(
       outgoing_feedback.goal_id.uuid,
       incoming_feedback.goal_id.uuid));
   ASSERT_EQ(outgoing_feedback.feedback.sequence.size, incoming_feedback.feedback.sequence.size);
-  EXPECT_TRUE(
-    !memcmp(
+  EXPECT_TRUE(!memcmp(
       outgoing_feedback.feedback.sequence.data,
       incoming_feedback.feedback.sequence.data,
       outgoing_feedback.feedback.sequence.size));
@@ -837,8 +822,7 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_canc
   action_msgs__srv__CancelGoal_Response__init(&incoming_cancel_response);
 
   // Initialize cancel request
-  ASSERT_TRUE(
-    action_msgs__msg__GoalInfo__Sequence__init(
+  ASSERT_TRUE(action_msgs__msg__GoalInfo__Sequence__init(
       &outgoing_cancel_response.goals_canceling, 2));
   init_test_uuid0(outgoing_cancel_response.goals_canceling.data[0].goal_id.uuid);
   outgoing_cancel_response.goals_canceling.data[0].stamp.sec = 102;
@@ -956,8 +940,7 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_resu
   test_msgs__action__Fibonacci_GetResult_Response__init(&incoming_result_response);
 
   // Initialize result response
-  ASSERT_TRUE(
-    rosidl_runtime_c__int32__Sequence__init(
+  ASSERT_TRUE(rosidl_generator_c__int32__Sequence__init(
       &outgoing_result_response.result.sequence, 4));
   outgoing_result_response.result.sequence.data[0] = 0;
   outgoing_result_response.result.sequence.data[1] = 1;
@@ -1019,8 +1002,7 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_feed
   test_msgs__action__Fibonacci_FeedbackMessage__init(&incoming_feedback);
 
   // Initialize feedback
-  ASSERT_TRUE(
-    rosidl_runtime_c__int32__Sequence__init(
+  ASSERT_TRUE(rosidl_generator_c__int32__Sequence__init(
       &outgoing_feedback.feedback.sequence, 3));
   outgoing_feedback.feedback.sequence.data[0] = 0;
   outgoing_feedback.feedback.sequence.data[1] = 1;
@@ -1110,75 +1092,4 @@ TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_stat
   ret = rcl_action_goal_status_array_fini(&status_array);
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
   action_msgs__msg__GoalStatusArray__fini(&incoming_status_array);
-}
-
-TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_feedback_comm_maybe_fail)
-{
-  test_msgs__action__Fibonacci_FeedbackMessage outgoing_feedback;
-  test_msgs__action__Fibonacci_FeedbackMessage incoming_feedback;
-  test_msgs__action__Fibonacci_FeedbackMessage__init(&outgoing_feedback);
-  test_msgs__action__Fibonacci_FeedbackMessage__init(&incoming_feedback);
-
-  // Initialize feedback
-  ASSERT_TRUE(
-    rosidl_runtime_c__int32__Sequence__init(
-      &outgoing_feedback.feedback.sequence, 3));
-  outgoing_feedback.feedback.sequence.data[0] = 0;
-  outgoing_feedback.feedback.sequence.data[1] = 1;
-  outgoing_feedback.feedback.sequence.data[2] = 2;
-  init_test_uuid0(outgoing_feedback.goal_id.uuid);
-
-  RCUTILS_FAULT_INJECTION_TEST(
-  {
-    // Publish feedback with valid arguments
-    rcl_ret_t ret = rcl_action_publish_feedback(&this->action_server, &outgoing_feedback);
-    if (RCL_RET_OK != ret) {
-      // This isn't set in all cases, but reset anyway.
-      rcl_reset_error();
-      continue;
-    }
-
-    ret = rcl_action_wait_set_add_action_client(
-      &this->wait_set, &this->action_client, NULL, NULL);
-    if (RCL_RET_OK != ret) {
-      EXPECT_TRUE(rcl_error_is_set());
-      rcl_reset_error();
-      continue;
-    }
-
-    ret = rcl_wait(&this->wait_set, RCL_S_TO_NS(10));
-    if (RCL_RET_OK != ret) {
-      // All non-OK retcodes should set an error string, except RCL_RET_TIMEOUT.
-      if (RCL_RET_TIMEOUT != ret) {
-        EXPECT_TRUE(rcl_error_is_set());
-        rcl_reset_error();
-      }
-      continue;
-    }
-
-    ret = rcl_action_client_wait_set_get_entities_ready(
-      &this->wait_set,
-      &this->action_client,
-      &this->is_feedback_ready,
-      &this->is_status_ready,
-      &this->is_goal_response_ready,
-      &this->is_cancel_response_ready,
-      &this->is_result_response_ready);
-    if (RCL_RET_OK != ret) {
-      EXPECT_TRUE(rcl_error_is_set());
-      rcl_reset_error();
-      continue;
-    }
-
-    // Take feedback with valid arguments
-    ret = rcl_action_take_feedback(&this->action_client, &incoming_feedback);
-    if (RCL_RET_OK != ret) {
-      EXPECT_TRUE(rcl_error_is_set());
-      rcl_reset_error();
-      continue;
-    }
-
-    test_msgs__action__Fibonacci_FeedbackMessage__fini(&incoming_feedback);
-    test_msgs__action__Fibonacci_FeedbackMessage__fini(&outgoing_feedback);
-  });
 }

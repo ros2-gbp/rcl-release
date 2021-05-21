@@ -15,17 +15,19 @@
 #ifndef RCL__MACROS_H_
 #define RCL__MACROS_H_
 
-#include "rcutils/macros.h"
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+#ifndef _WIN32
 /// Ignored return values of functions with this macro will emit a warning.
-#define RCL_WARN_UNUSED RCUTILS_WARN_UNUSED
+# define RCL_WARN_UNUSED __attribute__((warn_unused_result))
+#else
+# define RCL_WARN_UNUSED _Check_return_
+#endif
 
-#define RCL_UNUSED(x) RCUTILS_UNUSED(x)
+#define RCL_UNUSED(x) (void)(x)
 
 #ifdef __cplusplus
 }

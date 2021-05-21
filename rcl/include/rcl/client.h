@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// @file
-
 #ifndef RCL__CLIENT_H_
 #define RCL__CLIENT_H_
 
@@ -22,7 +20,7 @@ extern "C"
 {
 #endif
 
-#include "rosidl_runtime_c/service_type_support_struct.h"
+#include "rosidl_generator_c/service_type_support_struct.h"
 
 #include "rcl/macros.h"
 #include "rcl/node.h"
@@ -34,7 +32,6 @@ struct rcl_client_impl_t;
 /// Structure which encapsulates a ROS Client.
 typedef struct rcl_client_t
 {
-  /// Pointer to the client implementation
   struct rcl_client_impl_t * impl;
 } rcl_client_t;
 
@@ -78,7 +75,7 @@ rcl_get_zero_initialized_client(void);
  * For C, a macro can be used (for example `example_interfaces/AddTwoInts`):
  *
  * ```c
- * #include <rosidl_runtime_c/service_type_support_struct.h>
+ * #include <rosidl_generator_c/service_type_support_struct.h>
  * #include <example_interfaces/srv/add_two_ints.h>
  *
  * const rosidl_service_type_support_t * ts =
@@ -112,7 +109,7 @@ rcl_get_zero_initialized_client(void);
  *
  * ```c
  * #include <rcl/rcl.h>
- * #include <rosidl_runtime_c/service_type_support_struct.h>
+ * #include <rosidl_generator_c/service_type_support_struct.h>
  * #include <example_interfaces/srv/add_two_ints.h>
  *
  * rcl_node_t node = rcl_get_zero_initialized_node();
@@ -144,13 +141,13 @@ rcl_get_zero_initialized_client(void);
  * \param[in] type_support type support object for the service's type
  * \param[in] service_name the name of the service to request
  * \param[in] options client options, including quality of service settings
- * \return #RCL_RET_OK if the client was initialized successfully, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_ALREADY_INIT if the client is already initialized, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory fails, or
- * \return #RCL_RET_SERVICE_NAME_INVALID if the given service name is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \return `RCL_RET_OK` if the client was initialized successfully, or
+ * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
+ * \return `RCL_RET_ALREADY_INIT` if the client is already initialized, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_BAD_ALLOC` if allocating memory fails, or
+ * \return `RCL_RET_SERVICE_NAME_INVALID` if the given service name is invalid, or
+ * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -177,11 +174,11 @@ rcl_client_init(
  * Lock-Free          | Yes
  *
  * \param[inout] client handle to the client to be finalized
- * \param[in] node a valid (not finalized) handle to the node used to create the client
- * \return #RCL_RET_OK if client was finalized successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node handle to the node used to create the client
+ * \return `RCL_RET_OK` if client was finalized successfully, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
+ * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -239,10 +236,10 @@ rcl_client_get_default_options(void);
  * \param[in] client handle to the client which will make the response
  * \param[in] ros_request type-erased pointer to the ROS request message
  * \param[out] sequence_number the sequence number
- * \return #RCL_RET_OK if the request was sent successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_CLIENT_INVALID if the client is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \return `RCL_RET_OK` if the request was sent successfully, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_CLIENT_INVALID` if the client is invalid, or
+ * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -278,22 +275,13 @@ rcl_send_request(const rcl_client_t * client, const void * ros_request, int64_t 
  * \param[in] client handle to the client which will take the response
  * \param[inout] request_header pointer to the request header
  * \param[inout] ros_response type-erased pointer to the ROS response message
- * \return #RCL_RET_OK if the response was taken successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_CLIENT_INVALID if the client is invalid, or
- * \return #RCL_RET_CLIENT_TAKE_FAILED if take failed but no error occurred
+ * \return `RCL_RET_OK` if the response was taken successfully, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_CLIENT_INVALID` if the client is invalid, or
+ * \return `RCL_RET_CLIENT_TAKE_FAILED` if take failed but no error occurred
  *         in the middleware, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_take_response_with_info(
-  const rcl_client_t * client,
-  rmw_service_info_t * request_header,
-  void * ros_response);
-
-/// backwards compatibility function that takes a rmw_request_id_t only
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t

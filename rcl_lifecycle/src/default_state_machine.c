@@ -23,7 +23,6 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/rcl.h"
-#include "rcutils/strdup.h"
 
 #include "rcl_lifecycle/transition_map.h"
 
@@ -651,19 +650,13 @@ _register_transitions(
   return ret;
 }
 
-// default implementation as depicted on
+// default implementation as despicted on
 // design.ros2.org
 rcl_ret_t
 rcl_lifecycle_init_default_state_machine(
   rcl_lifecycle_state_machine_t * state_machine, const rcutils_allocator_t * allocator)
 {
   rcl_ret_t ret = RCL_RET_ERROR;
-  // Used for concatenating error messages in the fail: block.
-  // The cause or error which leads to jump to fail:
-  char * fail_error_message = NULL;
-  // The error happens in fail:
-  char * fini_error_message = NULL;
-  rcl_allocator_t default_allocator;
 
   // ***************************
   // register all primary states
@@ -698,42 +691,9 @@ rcl_lifecycle_init_default_state_machine(
   return ret;
 
 fail:
-  // If rcl_lifecycle_transition_map_fini() fails, it will clobber the error string here.
-  // Concatenate the error strings if that happens
-  default_allocator = rcl_get_default_allocator();
-
-  if (rcl_error_is_set()) {
-    fail_error_message = rcutils_strdup(rcl_get_error_string().str, default_allocator);
-    rcl_reset_error();
-  }
-
   if (rcl_lifecycle_transition_map_fini(&state_machine->transition_map, allocator) != RCL_RET_OK) {
-    if (rcl_error_is_set()) {
-      fini_error_message = rcutils_strdup(rcl_get_error_string().str, default_allocator);
-      rcl_reset_error();
-    }
-    RCL_SET_ERROR_MSG_WITH_FORMAT_STRING(
-      "Freeing transition map failed while handling a previous error. Leaking memory!"
-      "\nOriginal error:\n\t%s\nError encountered in rcl_lifecycle_transition_map_fini():\n\t%s\n",
-      fail_error_message != NULL ?
-      fail_error_message : "Failed to duplicate error while init state machine !",
-      fini_error_message != NULL ?
-      fini_error_message : "Failed to duplicate error while fini transition map !");
+    RCL_SET_ERROR_MSG("could not free lifecycle transition map. Leaking memory!\n");
   }
-
-  if (!rcl_error_is_set()) {
-    RCL_SET_ERROR_MSG(
-      (fail_error_message != NULL) ?
-      fail_error_message : "Unspecified error in rcl_lifecycle_init_default_state_machine() !");
-  }
-
-  if (fail_error_message != NULL) {
-    default_allocator.deallocate(fail_error_message, default_allocator.state);
-  }
-  if (fini_error_message != NULL) {
-    default_allocator.deallocate(fini_error_message, default_allocator.state);
-  }
-
   return RCL_RET_ERROR;
 }
 
