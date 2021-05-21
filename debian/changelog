@@ -1,0 +1,117 @@
+ros-dashing-rcl-yaml-param-parser (0.7.10-1bionic) bionic; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 21 May 2021 07:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.7.9-1bionic) bionic; urgency=high
+
+  * Added rcl yaml param parser Doxyfile. (#701 <https://github.com/ros2/rcl/issues/701>)
+  * Contributors: Alejandro Hernández Cordero
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 10 Jul 2020 07:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.7.8-1bionic) bionic; urgency=high
+
+  * Avoid C4703 error on UWP. (#282 <https://github.com/ros2/rcl/issues/282>) (#536 <https://github.com/ros2/rcl/issues/536>)
+  * Contributors: Sean Kelly
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Tue, 10 Dec 2019 08:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.7.7-1bionic) bionic; urgency=high
+
+  * Increase MAX_STRING_SIZE (#487 <https://github.com/ros2/rcl/issues/487>) (#503 <https://github.com/ros2/rcl/issues/503>)
+  * Contributors: Zachary Michaels, Hyunseok Yang
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 20 Sep 2019 07:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.7.6-1bionic) bionic; urgency=high
+
+  * Accept quoted int or float values as strings. (#474 <https://github.com/ros2/rcl/issues/474>)
+  * Contributors: ivanpauno
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Thu, 01 Aug 2019 07:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.7.5-1bionic) bionic; urgency=high
+
+  * Fix memory corruption when maximum number of parameters is exceeded (#456 <https://github.com/ros2/rcl/issues/456>)
+  * Contributors: Jacob Perron
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Wed, 12 Jun 2019 07:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.7.4-1bionic) bionic; urgency=high
+
+  * Allow empty strings if they are quoted. (#450 <https://github.com/ros2/rcl/issues/450>)
+  * Contributors: Ralf Anton Beier
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Wed, 29 May 2019 07:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.7.3-1bionic) bionic; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Mon, 20 May 2019 07:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.7.2-1bionic) bionic; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Wed, 08 May 2019 07:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.7.1-1bionic) bionic; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Mon, 29 Apr 2019 07:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.7.0-1bionic) bionic; urgency=high
+
+  * Corrected bool reading from yaml files. (#415 <https://github.com/ros2/rcl/issues/415>)
+  * Added launch along with launch_testing as test dependencies. (#393 <https://github.com/ros2/rcl/issues/393>)
+  * Set symbol visibility to hidden for rcl. (#391 <https://github.com/ros2/rcl/issues/391>)
+  * Contributors: Michel Hidalgo, Sachin Suresh Bhat, ivanpauno
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Sun, 14 Apr 2019 07:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.6.4-1bionic) bionic; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 11 Jan 2019 08:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.6.3-1bionic) bionic; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Thu, 13 Dec 2018 08:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.6.2-1bionic) bionic; urgency=high
+
+
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Thu, 13 Dec 2018 08:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.6.1-1bionic) bionic; urgency=high
+
+  * No changes.
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 07 Dec 2018 08:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.6.0-1bionic) bionic; urgency=high
+
+  * Updated to use new error handling API from rcutils (#314 <https://github.com/ros2/rcl/issues/314>)
+  * Fixed FQN=//node_name when ns is / (#299 <https://github.com/ros2/rcl/issues/299>)
+  * Fixed documentation issues (#288 <https://github.com/ros2/rcl/issues/288>)
+  * Fixed to deallocate ret_val to avoid memory leak (#278 <https://github.com/ros2/rcl/issues/278>)
+  * Contributors: Chris Ye, William Woodall, dhood
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Fri, 16 Nov 2018 08:00:00 -0000
+
+ros-dashing-rcl-yaml-param-parser (0.5.0-1bionic) bionic; urgency=high
+
+  * Added functions to parse YAML parameter files. (#235 <https://github.com/ros2/rcl/issues/235>)
+  * Contributors: Shane Loretz, William Woodall, anup-pem, dhood
+
+ -- Anup Pemmaiah <anup.pemmaiah@apex.ai>  Mon, 25 Jun 2018 07:00:00 -0000
+
+
