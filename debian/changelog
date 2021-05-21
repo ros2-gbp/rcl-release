@@ -1,0 +1,131 @@
+ros-dashing-rcl-lifecycle (0.7.10-1bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Fri, 21 May 2021 07:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.7.9-1bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Fri, 10 Jul 2020 07:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.7.8-1bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Tue, 10 Dec 2019 08:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.7.7-1bionic) bionic; urgency=high
+
+  * reset error message before setting a new one, embed the original one (#501 <https://github.com/ros2/rcl/issues/501>) (#505 <https://github.com/ros2/rcl/issues/505>)
+  * Contributors: Zachary Michaels
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Fri, 20 Sep 2019 07:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.7.6-1bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Thu, 01 Aug 2019 07:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.7.5-1bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Wed, 12 Jun 2019 07:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.7.4-1bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Wed, 29 May 2019 07:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.7.3-1bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Mon, 20 May 2019 07:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.7.2-1bionic) bionic; urgency=high
+
+  * Rmw preallocate (#428 <https://github.com/ros2/rcl/issues/428>)
+  * Contributors: Michael Carroll
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Wed, 08 May 2019 07:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.7.1-1bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Mon, 29 Apr 2019 07:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.7.0-1bionic) bionic; urgency=high
+
+  * Updated to use ament_target_dependencies where possible. (#400 <https://github.com/ros2/rcl/issues/400>)
+  * Set symbol visibility to hidden for rcl. (#391 <https://github.com/ros2/rcl/issues/391>)
+  * Contributors: Sachin Suresh Bhat, ivanpauno
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Sun, 14 Apr 2019 07:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.6.4-1bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Fri, 11 Jan 2019 08:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.6.3-1bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Thu, 13 Dec 2018 08:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.6.2-1bionic) bionic; urgency=high
+
+
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Thu, 13 Dec 2018 08:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.6.1-1bionic) bionic; urgency=high
+
+  * Refactored init to not be global (#336 <https://github.com/ros2/rcl/issues/336>)
+  * Contributors: William Woodall
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Fri, 07 Dec 2018 08:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.6.0-1bionic) bionic; urgency=high
+
+  * Updated use new error handling API from rcutils (#314 <https://github.com/ros2/rcl/issues/314>)
+  * Deleted TRANSITION_SHUTDOWN (#313 <https://github.com/ros2/rcl/issues/313>)
+  * Refactored lifecycle (#298 <https://github.com/ros2/rcl/issues/298>)
+    * no static initialization of states anymore
+    * make transition labels more descriptive
+    * introduce labeled keys
+    * define default transition keys
+    * fix memory management
+    * introduce service for transition graph
+    * export transition keys
+    * remove keys, transition id unique, label ambiguous
+    * semicolon for macro call
+  * Added macro semicolons (#303 <https://github.com/ros2/rcl/issues/303>)
+  * Fixed naming of configure_error transition (#292 <https://github.com/ros2/rcl/issues/292>)
+  * Removed use of uninitialized CMake var (#268 <https://github.com/ros2/rcl/issues/268>)
+  * Fixed rosidl dependencies (#265 <https://github.com/ros2/rcl/issues/265>)
+    * [rcl_lifecycle] remove rosidl deps as this package doesnt generate any messages
+    * depend on rosidl_generator_c
+  * Contributors: Chris Lalancette, Dirk Thomas, Karsten Knese, Mikael Arguedas, William Woodall
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Fri, 16 Nov 2018 08:00:00 -0000
+
+ros-dashing-rcl-lifecycle (0.5.0-1bionic) bionic; urgency=high
+
+  * Updated code to use private substitution (``~``) in lifecycle topics and services (#260 <https://github.com/ros2/rcl/issues/260>)
+    * use ~/<topic> rather than manually constructing topics/services
+    * use check argument for null macros
+  * Fixed potential segmentation fault due to nullptr dereference (#202 <https://github.com/ros2/rcl/issues/202>)
+    * Signed-off-by: Ethan Gao <mailto:ethan.gao@linux.intel.com>
+  * Contributors: Dirk Thomas, Ethan Gao, Michael Carroll, William Woodall
+
+ -- Karsten Knese <karsten@osrfoundation.org>  Mon, 25 Jun 2018 07:00:00 -0000
+
+
