@@ -2,6 +2,11 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.2.0 (2021-09-02)
+------------------
+* Rename variable to fix name shadowing warning. (`#929 <https://github.com/ros2/rcl/issues/929>`_)
+* Contributors: Alberto Soragna
+
 3.1.2 (2021-04-26)
 ------------------
 
