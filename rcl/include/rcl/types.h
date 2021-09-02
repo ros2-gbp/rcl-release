@@ -12,12 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/// @file
+
 #ifndef RCL__TYPES_H_
 #define RCL__TYPES_H_
 
 #include <rmw/types.h>
 
+/// The type that holds an rcl return code.
 typedef rmw_ret_t rcl_ret_t;
+
 /// Success return code.
 #define RCL_RET_OK RMW_RET_OK
 /// Unspecified error return code.
@@ -50,8 +54,12 @@ typedef rmw_ret_t rcl_ret_t;
 // rcl node specific ret codes in 2XX
 /// Invalid rcl_node_t given return code.
 #define RCL_RET_NODE_INVALID 200
+/// Invalid node name return code.
 #define RCL_RET_NODE_INVALID_NAME 201
+/// Invalid node namespace return code.
 #define RCL_RET_NODE_INVALID_NAMESPACE 202
+/// Failed to find node name
+#define RCL_RET_NODE_NAME_NON_EXISTENT 203
 
 // rcl publisher specific ret codes in 3XX
 /// Invalid rcl_publisher_t given return code.
@@ -96,6 +104,8 @@ typedef rmw_ret_t rcl_ret_t;
 #define RCL_RET_INVALID_REMAP_RULE 1001
 /// Expected one type of lexeme but got another
 #define RCL_RET_WRONG_LEXEME 1002
+/// Found invalid ros argument while parsing
+#define RCL_RET_INVALID_ROS_ARGS 1003
 /// Argument is not a valid parameter rule
 #define RCL_RET_INVALID_PARAM_RULE 1010
 /// Argument is not a valid log level rule
@@ -106,6 +116,12 @@ typedef rmw_ret_t rcl_ret_t;
 #define RCL_RET_EVENT_INVALID 2000
 /// Failed to take an event from the event handle
 #define RCL_RET_EVENT_TAKE_FAILED 2001
+
+/// rcl_lifecycle state register ret codes in 30XX
+/// rcl_lifecycle state registered
+#define RCL_RET_LIFECYCLE_STATE_REGISTERED 3000
+/// rcl_lifecycle state not registered
+#define RCL_RET_LIFECYCLE_STATE_NOT_REGISTERED 3001
 
 /// typedef for rmw_serialized_message_t;
 typedef rmw_serialized_message_t rcl_serialized_message_t;

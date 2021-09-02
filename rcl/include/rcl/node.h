@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/// @file
+
 #ifndef RCL__NODE_H_
 #define RCL__NODE_H_
 
@@ -60,7 +62,7 @@ rcl_get_zero_initialized_node(void);
  * The name of the node must not be NULL and adhere to naming restrictions,
  * see the rmw_validate_node_name() function for rules.
  *
- * \todo TODO(wjwwood): node name uniqueness is no yet enforced
+ * \todo TODO(wjwwood): node name uniqueness is not yet enforced
  *
  * The name of the node cannot coincide with another node of the same name.
  * If a node of the same name is already in the domain, it will be shutdown.
@@ -72,7 +74,7 @@ rcl_get_zero_initialized_node(void);
  * slash.
  * Because there is no notion of a relative namespace, there is no difference
  * between a namespace which lacks a forward and the same namespace with a
- * leasing forward slash.
+ * leading forward slash.
  * Therefore, a namespace like ``"foo/bar"`` is automatically changed to
  * ``"/foo/bar"`` by this function.
  * Similarly, the namespace ``""`` will implicitly become ``"/"`` which is a
@@ -97,10 +99,12 @@ rcl_get_zero_initialized_node(void);
  * Expected usage:
  *
  * ```c
+ * rcl_context_t context = rcl_get_zero_initialized_context();
+ * // ... initialize the context with rcl_init()
  * rcl_node_t node = rcl_get_zero_initialized_node();
  * rcl_node_options_t node_ops = rcl_node_get_default_options();
  * // ... node options customization
- * rcl_ret_t ret = rcl_node_init(&node, "node_name", "/node_ns", &node_ops);
+ * rcl_ret_t ret = rcl_node_init(&node, "node_name", "/node_ns", &context, &node_ops);
  * // ... error handling and then use the node, but eventually deinitialize it:
  * ret = rcl_node_fini(&node);
  * // ... error handling for rcl_node_fini()
@@ -116,6 +120,7 @@ rcl_get_zero_initialized_node(void);
  * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_uint_least64_t`</i>
  *
  * \pre the node handle must be allocated, zero initialized, and invalid
+ * \pre the context handle must be allocated, initialized, and valid
  * \post the node handle is valid and can be used in other `rcl_*` functions
  *
  * \param[inout] node a preallocated rcl_node_t
@@ -127,13 +132,14 @@ rcl_get_zero_initialized_node(void);
  *   The options are deep copied into the node.
  *   The caller is always responsible for freeing memory used options they
  *   pass in.
- * \return `RCL_RET_OK` if the node was initialized successfully, or
- * \return `RCL_RET_ALREADY_INIT` if the node has already be initialized, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_NODE_INVALID_NAME` if the name is invalid, or
- * \return `RCL_RET_NODE_INVALID_NAMESPACE` if the namespace_ is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \return #RCL_RET_OK if the node was initialized successfully, or
+ * \return #RCL_RET_ALREADY_INIT if the node has already be initialized, or
+ * \return #RCL_RET_NOT_INIT if the given context is invalid, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
+ * \return #RCL_RET_NODE_INVALID_NAME if the name is invalid, or
+ * \return #RCL_RET_NODE_INVALID_NAMESPACE if the namespace_ is invalid, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -150,8 +156,13 @@ rcl_node_init(
  * Destroys any automatically created infrastructure and deallocates memory.
  * After calling, the rcl_node_t can be safely deallocated.
  *
- * Any middleware primitives created by the user, e.g. publishers, services, etc.,
- * are invalid after deinitialization.
+ * All middleware primitives created by the user, e.g. publishers, services, etc,
+ * which were created from this node must be finalized using their respective
+ * `rcl_*_fini()` functions before this is called.
+ * \sa rcl_publisher_fini()
+ * \sa rcl_subscription_fini()
+ * \sa rcl_client_fini()
+ * \sa rcl_service_fini()
  *
  * <hr>
  * Attribute          | Adherence
@@ -163,9 +174,9 @@ rcl_node_init(
  * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_uint_least64_t`</i>
  *
  * \param[in] node rcl_node_t to be finalized
- * \return `RCL_RET_OK` if node was finalized successfully, or
- * \return `RCL_RET_NODE_INVALID` if the node pointer is null, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \return #RCL_RET_OK if node was finalized successfully, or
+ * \return #RCL_RET_NODE_INVALID if the node pointer is null, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -333,8 +344,8 @@ rcl_node_get_options(const rcl_node_t * node);
  * This function returns the ROS domain ID that the node is in.
  *
  * This function should be used to determine what `domain_id` was used rather
- * than checking the domin_id field in the node options, because if
- * `RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID` is used when creating the node then
+ * than checking the domain_id field in the node options, because if
+ * #RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID is used when creating the node then
  * it is not changed after creation, but this function will return the actual
  * `domain_id` used.
  *
@@ -351,40 +362,15 @@ rcl_node_get_options(const rcl_node_t * node);
  *
  * \param[in] node the handle to the node being queried
  * \param[out] domain_id storage for the domain id
- * \return `RCL_RET_OK` if node the domain ID was retrieved successfully, or
- * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \return #RCL_RET_OK if node the domain ID was retrieved successfully, or
+ * \return #RCL_RET_NODE_INVALID if the node is invalid, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t
 rcl_node_get_domain_id(const rcl_node_t * node, size_t * domain_id);
-
-/// Manually assert that this node is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE)
-/**
- * If the rmw Liveliness policy is set to RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE, the creator of
- * this node may manually call `assert_liveliness` at some point in time to signal to the rest
- * of the system that this Node is still alive.
- * This function must be called at least as often as the qos_profile's liveliness_lease_duration
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] node handle to the node that needs liveliness to be asserted
- * \return `RCL_RET_OK` if the liveliness assertion was completed successfully, or
- * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_node_assert_liveliness(const rcl_node_t * node);
 
 /// Return the rmw node handle.
 /**
@@ -505,6 +491,47 @@ RCL_PUBLIC
 RCL_WARN_UNUSED
 const char *
 rcl_node_get_logger_name(const rcl_node_t * node);
+
+/// Expand a given name into a fully-qualified topic name and apply remapping rules.
+/**
+ * <hr>
+ * Attribute          | Adherence
+ * ------------------ | -------------
+ * Allocates Memory   | Yes
+ * Thread-Safe        | No
+ * Uses Atomics       | No
+ * Lock-Free          | Yes
+ *
+ * \param[in] node Node object. Its name, namespace, local/global command line arguments are used.
+ * \param[in] input_name Topic name to be expanded and remapped.
+ * \param[in] allocator The allocator to be used when creating the output topic.
+ * \param[in] is_service For services use `true`, for topics use `false`.
+ * \param[in] only_expand When `true`, remapping rules are ignored.
+ * \param[out] output_name Output char * pointer.
+ * \return #RCL_RET_OK if the topic name was expanded successfully, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any of input_name, node_name, node_namespace
+ *  or output_name are NULL, or
+ * \return #RCL_RET_INVALID_ARGUMENT if both local_args and global_args are NULL, or
+ * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
+ * \return #RCL_RET_TOPIC_NAME_INVALID if the given topic name is invalid
+ *  (see rcl_validate_topic_name()), or
+ * \return #RCL_RET_NODE_INVALID_NAME if the given node name is invalid
+ *  (see rmw_validate_node_name()), or
+ * \return #RCL_RET_NODE_INVALID_NAMESPACE if the given node namespace is invalid
+ *  (see rmw_validate_namespace()), or
+ * \return #RCL_RET_UNKNOWN_SUBSTITUTION for unknown substitutions in name, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
+ */
+RCL_PUBLIC
+RCL_WARN_UNUSED
+rcl_ret_t
+rcl_node_resolve_name(
+  const rcl_node_t * node,
+  const char * input_name,
+  rcl_allocator_t allocator,
+  bool is_service,
+  bool only_expand,
+  char ** output_name);
 
 #ifdef __cplusplus
 }

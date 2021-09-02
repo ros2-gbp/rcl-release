@@ -25,6 +25,7 @@ extern "C"
 #include "rcutils/logging_macros.h"
 #include "rcutils/stdatomic_helper.h"
 #include "rcutils/time.h"
+#include "tracetools/tracetools.h"
 
 typedef struct rcl_timer_impl_t
 {
@@ -32,7 +33,8 @@ typedef struct rcl_timer_impl_t
   rcl_clock_t * clock;
   // The associated context.
   rcl_context_t * context;
-  // A guard condition used to wake a wait set if using ROSTime, else zero initialized.
+  // A guard condition used to wake the associated wait set, either when
+  // ROSTime causes the timer to expire or when the timer is reset.
   rcl_guard_condition_t guard_condition;
   // The user supplied callback.
   atomic_uintptr_t callback;
@@ -140,7 +142,7 @@ rcl_timer_init(
   RCUTILS_LOG_DEBUG_NAMED(
     ROS_PACKAGE_NAME, "Initializing timer with period: %" PRIu64 "ns", period);
   if (timer->impl) {
-    RCL_SET_ERROR_MSG("timer already initailized, or memory was uninitialized");
+    RCL_SET_ERROR_MSG("timer already initialized, or memory was uninitialized");
     return RCL_RET_ALREADY_INIT;
   }
   rcl_time_point_value_t now;
@@ -152,12 +154,12 @@ rcl_timer_init(
   impl.clock = clock;
   impl.context = context;
   impl.guard_condition = rcl_get_zero_initialized_guard_condition();
+  rcl_guard_condition_options_t options = rcl_guard_condition_get_default_options();
+  rcl_ret_t ret = rcl_guard_condition_init(&(impl.guard_condition), context, options);
+  if (RCL_RET_OK != ret) {
+    return ret;
+  }
   if (RCL_ROS_TIME == impl.clock->type) {
-    rcl_guard_condition_options_t options = rcl_guard_condition_get_default_options();
-    rcl_ret_t ret = rcl_guard_condition_init(&(impl.guard_condition), context, options);
-    if (RCL_RET_OK != ret) {
-      return ret;
-    }
     rcl_jump_threshold_t threshold;
     threshold.on_clock_change = true;
     threshold.min_forward.nanoseconds = 1;
@@ -194,6 +196,7 @@ rcl_timer_init(
     return RCL_RET_BAD_ALLOC;
   }
   *timer->impl = impl;
+  TRACEPOINT(rcl_timer_init, (const void *)timer, period);
   return RCL_RET_OK;
 }
 
@@ -206,15 +209,18 @@ rcl_timer_fini(rcl_timer_t * timer)
   // Will return either RCL_RET_OK or RCL_RET_ERROR since the timer is valid.
   rcl_ret_t result = rcl_timer_cancel(timer);
   rcl_allocator_t allocator = timer->impl->allocator;
-  rcl_ret_t fail_ret = rcl_guard_condition_fini(&(timer->impl->guard_condition));
-  if (RCL_RET_OK != fail_ret) {
-    RCL_SET_ERROR_MSG("Failure to fini guard condition");
-  }
+  rcl_ret_t fail_ret;
   if (RCL_ROS_TIME == timer->impl->clock->type) {
+    // The jump callbacks use the guard condition, so we have to remove it
+    // before freeing the guard condition below.
     fail_ret = rcl_clock_remove_jump_callback(timer->impl->clock, _rcl_timer_time_jump, timer);
     if (RCL_RET_OK != fail_ret) {
       RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Failed to remove timer jump callback");
     }
+  }
+  fail_ret = rcl_guard_condition_fini(&(timer->impl->guard_condition));
+  if (RCL_RET_OK != fail_ret) {
+    RCL_SET_ERROR_MSG("Failure to fini guard condition");
   }
   allocator.deallocate(timer->impl, allocator.state);
   timer->impl = NULL;
@@ -342,6 +348,8 @@ rcl_timer_get_period(const rcl_timer_t * timer, int64_t * period)
 rcl_ret_t
 rcl_timer_exchange_period(const rcl_timer_t * timer, int64_t new_period, int64_t * old_period)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
+
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(old_period, RCL_RET_INVALID_ARGUMENT);
   *old_period = rcutils_atomic_exchange_uint64_t(&timer->impl->period, new_period);
@@ -372,6 +380,9 @@ rcl_timer_exchange_callback(rcl_timer_t * timer, const rcl_timer_callback_t new_
 rcl_ret_t
 rcl_timer_cancel(rcl_timer_t * timer)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_TIMER_INVALID);
+
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_FOR_NULL_WITH_MSG(timer->impl, "timer is invalid", return RCL_RET_TIMER_INVALID);
   rcutils_atomic_store(&timer->impl->canceled, true);
@@ -391,6 +402,8 @@ rcl_timer_is_canceled(const rcl_timer_t * timer, bool * is_canceled)
 rcl_ret_t
 rcl_timer_reset(rcl_timer_t * timer)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
+
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_FOR_NULL_WITH_MSG(timer->impl, "timer is invalid", return RCL_RET_TIMER_INVALID);
   rcl_time_point_value_t now;
@@ -401,6 +414,10 @@ rcl_timer_reset(rcl_timer_t * timer)
   int64_t period = rcutils_atomic_load_uint64_t(&timer->impl->period);
   rcutils_atomic_store(&timer->impl->next_call_time, now + period);
   rcutils_atomic_store(&timer->impl->canceled, false);
+  rcl_ret_t ret = rcl_trigger_guard_condition(&timer->impl->guard_condition);
+  if (ret != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Failed to trigger timer guard condition");
+  }
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Timer successfully reset");
   return RCL_RET_OK;
 }

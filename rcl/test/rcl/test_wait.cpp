@@ -29,6 +29,9 @@
 
 #include "rcutils/logging_macros.h"
 
+#include "./allocator_testing_utils.h"
+#include "../mocking_utils/patch.hpp"
+
 #ifdef RMW_IMPLEMENTATION
 # define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
 # define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
@@ -36,7 +39,11 @@
 # define CLASSNAME(NAME, SUFFIX) NAME
 #endif
 
+#ifndef _WIN32
 #define TOLERANCE RCL_MS_TO_NS(6)
+#else
+#define TOLERANCE RCL_MS_TO_NS(15)
+#endif
 
 class CLASSNAME (WaitSetTestFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
@@ -48,7 +55,8 @@ public:
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
     ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
       EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
     });
     this->context_ptr = new rcl_context_t;
@@ -64,6 +72,45 @@ public:
     delete this->context_ptr;
   }
 };
+
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_is_valid) {
+  // null pointers are invalid
+  EXPECT_FALSE(rcl_wait_set_is_valid(nullptr));
+
+  // uninitialized wait set is invalid
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  EXPECT_FALSE(rcl_wait_set_is_valid(&wait_set));
+
+  // initialized wait set is valid
+  rcl_ret_t ret =
+    rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 0, context_ptr, rcl_get_default_allocator());
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  EXPECT_TRUE(rcl_wait_set_is_valid(&wait_set));
+
+  // finalized wait set is invalid
+  ret = rcl_wait_set_fini(&wait_set);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  EXPECT_FALSE(rcl_wait_set_is_valid(&wait_set));
+}
+
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), test_failed_resize) {
+  // Initialize a wait set with a subscription and then resize it to zero.
+  rcl_allocator_t allocator = get_failing_allocator();
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  set_failing_allocator_is_failing(allocator, false);
+  rcl_ret_t ret =
+    rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 0, context_ptr, allocator);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+
+  set_failing_allocator_is_failing(allocator, true);
+  ret = rcl_wait_set_resize(&wait_set, 0, 1, 0, 0, 0, 0);
+  EXPECT_EQ(RCL_RET_BAD_ALLOC, ret);
+  rcl_reset_error();
+
+  set_failing_allocator_is_failing(allocator, false);
+  ret = rcl_wait_set_fini(&wait_set);
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+}
 
 TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), test_resize_to_zero) {
   // Initialize a wait set with a subscription and then resize it to zero.
@@ -111,7 +158,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), negative_timeout) {
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 1, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_wait_set_fini(&wait_set);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -121,7 +169,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), negative_timeout) {
   ret = rcl_guard_condition_init(
     &guard_cond, this->context_ptr, rcl_guard_condition_get_default_options());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_guard_condition_fini(&guard_cond);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -131,7 +180,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), negative_timeout) {
   rcl_clock_t clock;
   rcl_allocator_t allocator = rcl_get_default_allocator();
   ret = rcl_clock_init(RCL_STEADY_TIME, &clock, &allocator);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_clock_fini(&clock);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -141,7 +191,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), negative_timeout) {
   ret = rcl_timer_init(
     &timer, &clock, this->context_ptr, RCL_MS_TO_NS(10), nullptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_timer_fini(&timer);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -165,7 +216,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), zero_timeout) {
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 1, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_wait_set_fini(&wait_set);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -175,7 +227,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), zero_timeout) {
   ret = rcl_guard_condition_init(
     &guard_cond, this->context_ptr, rcl_guard_condition_get_default_options());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_guard_condition_fini(&guard_cond);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -199,7 +252,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), zero_timeout_triggered
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 1, 0, 0, 0, 0, context_ptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_wait_set_fini(&wait_set);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -208,7 +262,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), zero_timeout_triggered
   ret = rcl_guard_condition_init(
     &guard_cond, this->context_ptr, rcl_guard_condition_get_default_options());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_guard_condition_fini(&guard_cond);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -228,13 +283,57 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), zero_timeout_triggered
   EXPECT_LE(diff, TOLERANCE);
 }
 
+// Test rcl_wait with a timeout value and an overrun timer
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), zero_timeout_overrun_timer) {
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  rcl_ret_t ret =
+    rcl_wait_set_init(&wait_set, 0, 0, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    ret = rcl_wait_set_fini(&wait_set);
+    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  });
+  rcl_clock_t clock;
+  rcl_allocator_t allocator = rcl_get_default_allocator();
+  ret = rcl_clock_init(RCL_STEADY_TIME, &clock, &allocator);
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    ret = rcl_clock_fini(&clock);
+    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  });
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+
+  rcl_timer_t timer = rcl_get_zero_initialized_timer();
+  ret = rcl_timer_init(
+    &timer, &clock, this->context_ptr, 0, nullptr, rcl_get_default_allocator());
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    ret = rcl_timer_fini(&timer);
+    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  });
+  ret = rcl_wait_set_add_timer(&wait_set, &timer, NULL);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+
+  // Time spent during wait should be negligible, definitely less than the given timeout
+  std::chrono::steady_clock::time_point before_sc = std::chrono::steady_clock::now();
+  ret = rcl_wait(&wait_set, RCL_MS_TO_NS(100));
+  std::chrono::steady_clock::time_point after_sc = std::chrono::steady_clock::now();
+  // We don't expect a timeout here (since the guard condition had already been triggered)
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  int64_t diff = std::chrono::duration_cast<std::chrono::nanoseconds>(after_sc - before_sc).count();
+  EXPECT_LE(diff, RCL_MS_TO_NS(50));
+}
+
 // Check that a canceled timer doesn't wake up rcl_wait
 TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), canceled_timer) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 1, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_wait_set_fini(&wait_set);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -244,7 +343,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), canceled_timer) {
   ret = rcl_guard_condition_init(
     &guard_cond, this->context_ptr, rcl_guard_condition_get_default_options());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_guard_condition_fini(&guard_cond);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -254,7 +354,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), canceled_timer) {
   rcl_clock_t clock;
   rcl_allocator_t allocator = rcl_get_default_allocator();
   ret = rcl_clock_init(RCL_STEADY_TIME, &clock, &allocator);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_clock_fini(&clock);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -265,7 +366,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), canceled_timer) {
     &canceled_timer, &clock, this->context_ptr,
     RCL_MS_TO_NS(1), nullptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_timer_fini(&canceled_timer);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -291,7 +393,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), excess_capacity) {
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 42, 42, 42, 42, 42, 0, context_ptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_wait_set_fini(&wait_set);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -387,7 +490,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), multi_wait_set_threade
     test_set.thread_id = 0;
   }
   // Setup safe tear-down.
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     for (auto & test_set : test_sets) {
       rcl_ret_t ret = rcl_guard_condition_fini(&test_set.guard_condition);
       EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -440,7 +544,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), guard_condition) {
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 1, 0, 0, 0, 0, context_ptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_wait_set_fini(&wait_set);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -448,7 +553,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), guard_condition) {
   ret = rcl_guard_condition_init(
     &guard_cond, this->context_ptr, rcl_guard_condition_get_default_options());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_guard_condition_fini(&guard_cond);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -489,7 +595,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), add_with_index) {
   rcl_ret_t ret = rcl_wait_set_init(
     &wait_set, 0, kNumEntities, 0, 0, 0, 0, context_ptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
     ret = rcl_wait_set_fini(&wait_set);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
@@ -503,7 +610,8 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), add_with_index) {
     ret = rcl_guard_condition_init(
       &guard_conditions[i], this->context_ptr, rcl_guard_condition_get_default_options());
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT({
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
       ret = rcl_guard_condition_fini(&guard_conditions[i]);
       EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     });
@@ -513,4 +621,158 @@ TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), add_with_index) {
     EXPECT_EQ(guard_condition_index, i);
     EXPECT_EQ(&guard_conditions[i], wait_set.guard_conditions[i]);
   }
+}
+
+// Extra invalid arguments not tested
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_valid_arguments) {
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  rcl_ret_t ret =
+    rcl_wait_set_init(&wait_set, 0, 0, 0, 0, 0, 0, context_ptr, rcl_get_default_allocator());
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  EXPECT_EQ(
+    RCL_RET_WAIT_SET_EMPTY, rcl_wait(&wait_set, RCL_MS_TO_NS(1000))) << rcl_get_error_string().str;
+  rcl_reset_error();
+  EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set)) << rcl_get_error_string().str;
+
+  EXPECT_EQ(
+    RCL_RET_INVALID_ARGUMENT, rcl_wait(nullptr, RCL_MS_TO_NS(1000))) << rcl_get_error_string().str;
+  rcl_reset_error();
+  EXPECT_EQ(
+    RCL_RET_WAIT_SET_INVALID,
+    rcl_wait(&wait_set, RCL_MS_TO_NS(1000))) << rcl_get_error_string().str;
+  rcl_reset_error();
+
+  rcl_context_t not_init_context = rcl_get_zero_initialized_context();
+  ret =
+    rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 0, &not_init_context, rcl_get_default_allocator());
+  EXPECT_EQ(RCL_RET_NOT_INIT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+
+  // nullptr failures
+  ret =
+    rcl_wait_set_init(nullptr, 1, 1, 1, 1, 1, 0, context_ptr, rcl_get_default_allocator());
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  EXPECT_TRUE(rcl_error_is_set());
+  rcl_reset_error();
+
+  ret =
+    rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 0, nullptr, rcl_get_default_allocator());
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  EXPECT_TRUE(rcl_error_is_set());
+  rcl_reset_error();
+
+  rcl_allocator_t zero_init_allocator =
+    static_cast<rcl_allocator_t>(rcutils_get_zero_initialized_allocator());
+  ret =
+    rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 0, context_ptr, zero_init_allocator);
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  EXPECT_TRUE(rcl_error_is_set());
+  rcl_reset_error();
+
+  ret =
+    rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 0, context_ptr, rcl_get_default_allocator());
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  ret =
+    rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 0, context_ptr, rcl_get_default_allocator());
+  EXPECT_EQ(RCL_RET_ALREADY_INIT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
+  ret = rcl_wait_set_fini(&wait_set);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+}
+
+// Test get allocator function
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_get_allocator) {
+  rcl_allocator_t allocator_returned;
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+
+  EXPECT_EQ(
+    RCL_RET_INVALID_ARGUMENT,
+    rcl_wait_set_get_allocator(nullptr, &allocator_returned)) << rcl_get_error_string().str;
+  rcl_reset_error();
+  EXPECT_EQ(
+    RCL_RET_WAIT_SET_INVALID,
+    rcl_wait_set_get_allocator(&wait_set, &allocator_returned)) << rcl_get_error_string().str;
+  rcl_reset_error();
+
+  rcl_ret_t ret =
+    rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 0, context_ptr, rcl_get_default_allocator());
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  EXPECT_EQ(
+    RCL_RET_INVALID_ARGUMENT,
+    rcl_wait_set_get_allocator(&wait_set, nullptr)) << rcl_get_error_string().str;
+  rcl_reset_error();
+  EXPECT_EQ(RCL_RET_OK, rcl_wait_set_get_allocator(&wait_set, &allocator_returned));
+  EXPECT_TRUE(rcutils_allocator_is_valid(&allocator_returned));
+
+  ret = rcl_wait_set_fini(&wait_set);
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+}
+
+// Test wait set init failure cases using mocks
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_failed_init) {
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  // Mock rmw implementation to fail init
+  auto mock = mocking_utils::patch_and_return(
+    "lib:rcl", rmw_create_wait_set, nullptr);
+  rcl_ret_t ret =
+    rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 0, context_ptr, rcl_get_default_allocator());
+  EXPECT_EQ(RCL_RET_WAIT_SET_INVALID, ret);
+  EXPECT_TRUE(rcl_error_is_set());
+  rcl_reset_error();
+}
+
+// Test wait set fini failure cases using mocks
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_failed_fini) {
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  rcl_ret_t ret =
+    rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 0, context_ptr, rcl_get_default_allocator());
+  ASSERT_EQ(RCL_RET_OK, ret);
+  {
+    // Mock rmw implementation to fail fini
+    auto mock = mocking_utils::inject_on_return(
+      "lib:rcl", rmw_destroy_wait_set, RMW_RET_ERROR);
+    EXPECT_EQ(RCL_RET_WAIT_SET_INVALID, rcl_wait_set_fini(&wait_set));
+    EXPECT_TRUE(rcl_error_is_set());
+    rcl_reset_error();
+  }
+}
+
+// Test proper error handling with a fault injection test
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_test_maybe_init_fail) {
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  rcl_ret_t ret = RCL_RET_OK;
+  rcl_allocator_t alloc = rcl_get_default_allocator();
+
+  RCUTILS_FAULT_INJECTION_TEST(
+  {
+    // Test init in the case where guard_conditions_size + timers_size = 0
+    // (used for guard condition size)
+    ret = rcl_wait_set_init(&wait_set, 1, 0, 0, 1, 1, 0, context_ptr, alloc);
+    if (RCL_RET_OK == ret) {
+      ret = rcl_wait_set_fini(&wait_set);
+      if (ret != RCL_RET_OK) {
+        rcl_reset_error();
+      }
+    } else {
+      EXPECT_TRUE(RCL_RET_WAIT_SET_INVALID == ret || RCL_RET_BAD_ALLOC == ret);
+      rcl_reset_error();
+    }
+  });
+
+  RCUTILS_FAULT_INJECTION_TEST(
+  {
+    // Test init wait_set using at least one of each of the possible elements that receives
+    // (subs, guard conditions, timers, clients, services, events)
+    ret = rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 1, context_ptr, alloc);
+    if (RCL_RET_OK == ret) {
+      ret = rcl_wait_set_fini(&wait_set);
+      if (ret != RCL_RET_OK) {
+        rcl_reset_error();
+      }
+      EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));
+    } else {
+      EXPECT_TRUE(RCL_RET_WAIT_SET_INVALID == ret || RCL_RET_BAD_ALLOC == ret);
+      rcl_reset_error();
+    }
+  });
 }

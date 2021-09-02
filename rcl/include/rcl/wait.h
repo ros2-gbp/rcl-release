@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/// @file
+
 #ifndef RCL__WAIT_H_
 #define RCL__WAIT_H_
 
@@ -40,21 +42,27 @@ typedef struct rcl_wait_set_t
 {
   /// Storage for subscription pointers.
   const rcl_subscription_t ** subscriptions;
+  /// Number of subscriptions
   size_t size_of_subscriptions;
   /// Storage for guard condition pointers.
   const rcl_guard_condition_t ** guard_conditions;
+  /// Number of guard_conditions
   size_t size_of_guard_conditions;
   /// Storage for timer pointers.
   const rcl_timer_t ** timers;
+  /// Number of timers
   size_t size_of_timers;
   /// Storage for client pointers.
   const rcl_client_t ** clients;
+  /// Number of clients
   size_t size_of_clients;
   /// Storage for service pointers.
   const rcl_service_t ** services;
+  /// Number of services
   size_t size_of_services;
   /// Storage for event pointers.
   const rcl_event_t ** events;
+  /// Number of events
   size_t size_of_events;
   /// Implementation specific storage.
   struct rcl_wait_set_impl_t * impl;
@@ -109,14 +117,16 @@ rcl_get_zero_initialized_wait_set(void);
  * \param[in] number_of_timers non-zero size of the timers set
  * \param[in] number_of_clients non-zero size of the clients set
  * \param[in] number_of_services non-zero size of the services set
+ * \param[in] number_of_events non-zero size of the events set
  * \param[in] context the context that the wait set should be associated with
  * \param[in] allocator the allocator to use when allocating space in the sets
- * \return `RCL_RET_OK` if the wait set is initialized successfully, or
- * \return `RCL_RET_ALREADY_INIT` if the wait set is not zero initialized, or
- * \return `RCL_RET_NOT_INIT` if the given context is invalid, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \return #RCL_RET_OK if the wait set is initialized successfully, or
+ * \return #RCL_RET_ALREADY_INIT if the wait set is not zero initialized, or
+ * \return #RCL_RET_NOT_INIT if the given context is invalid, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
+ * \return #RCL_RET_WAIT_SET_INVALID if the wait set is not destroyed properly, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -153,9 +163,10 @@ rcl_wait_set_init(
  * Lock-Free          | Yes
  *
  * \param[inout] wait_set the wait set struct to be finalized.
- * \return `RCL_RET_OK` if the finalization was successful, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \return #RCL_RET_OK if the finalization was successful, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_WAIT_SET_INVALID if the wait set is not destroyed properly, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -177,9 +188,10 @@ rcl_wait_set_fini(rcl_wait_set_t * wait_set);
  *
  * \param[in] wait_set the handle to the wait set
  * \param[out] allocator the rcl_allocator_t struct to which the result is copied
- * \return `RCL_RET_OK` if the allocator was successfully retrieved, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \return #RCL_RET_OK if the allocator was successfully retrieved, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_WAIT_SET_INVALID if the wait set is invalid, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -206,11 +218,11 @@ rcl_wait_set_get_allocator(const rcl_wait_set_t * wait_set, rcl_allocator_t * al
  * \param[in] subscription the subscription to be added to the wait set
  * \param[out] index the index of the added subscription in the storage container.
  *   This parameter is optional and can be set to `NULL` to be ignored.
- * \return `RCL_RET_OK` if added successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_WAIT_SET_INVALID` if the wait set is zero initialized, or
- * \return `RCL_RET_WAIT_SET_FULL` if the subscription set is full, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \return #RCL_RET_OK if added successfully, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_WAIT_SET_INVALID if the wait set is zero initialized, or
+ * \return #RCL_RET_WAIT_SET_FULL if the subscription set is full, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -238,10 +250,10 @@ rcl_wait_set_add_subscription(
  * Lock-Free          | Yes
  *
  * \param[inout] wait_set struct to have its entities cleared
- * \return `RCL_RET_OK` if cleared successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_WAIT_SET_INVALID` if the wait set is zero initialized, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \return #RCL_RET_OK if cleared successfully, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_WAIT_SET_INVALID if the wait set is zero initialized, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -280,10 +292,11 @@ rcl_wait_set_clear(rcl_wait_set_t * wait_set);
  * \param[in] timers_size a size for the new timers set
  * \param[in] clients_size a size for the new clients set
  * \param[in] services_size a size for the new services set
- * \return `RCL_RET_OK` if resized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] events_size a size for the new events set
+ * \return #RCL_RET_OK if resized successfully, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -447,17 +460,40 @@ rcl_wait_set_add_event(
  *
  * \param[inout] wait_set the set of things to be waited on and to be pruned if not ready
  * \param[in] timeout the duration to wait for the wait set to be ready, in nanoseconds
- * \return `RCL_RET_OK` something in the wait set became ready, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_WAIT_SET_INVALID` if the wait set is zero initialized, or
- * \return `RCL_RET_WAIT_SET_EMPTY` if the wait set contains no items, or
- * \return `RCL_RET_TIMEOUT` if the timeout expired before something was ready, or
- * \return `RCL_RET_ERROR` an unspecified error occur.
+ * \return #RCL_RET_OK something in the wait set became ready, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_WAIT_SET_INVALID if the wait set is zero initialized, or
+ * \return #RCL_RET_WAIT_SET_EMPTY if the wait set contains no items, or
+ * \return #RCL_RET_TIMEOUT if the timeout expired before something was ready, or
+ * \return #RCL_RET_ERROR an unspecified error occur.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t
 rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout);
+
+/// Return `true` if the wait set is valid, else `false`.
+/**
+ * A wait set is invalid if:
+ *   - the implementation is `NULL` (rcl_wait_set_init not called or failed)
+ *   - the wait set has been finalized with rcl_wait_set_fini
+ *
+ * Also return `false` if the wait set pointer is `NULL`.
+ *
+ * <hr>
+ * Attribute          | Adherence
+ * ------------------ | -------------
+ * Allocates Memory   | No
+ * Thread-Safe        | No
+ * Uses Atomics       | No
+ * Lock-Free          | Yes
+ *
+ * \param[in] wait_set the rcl_wait_set_t to be validated
+ * \return `true` if the wait_set is valid, otherwise `false`.
+ */
+RCL_PUBLIC
+bool
+rcl_wait_set_is_valid(const rcl_wait_set_t * wait_set);
 
 #ifdef __cplusplus
 }

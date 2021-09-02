@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,46 +14,21 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
+#include "rcl/rcl.h"
+#include "./common.h"
 
-#include "../../src/rcl/common.h"
-#include "../../src/rcl/common.c"
+// This function is not part of the public API
+TEST(TestCommonFunctionality, test_rmw_ret_to_rcl_ret) {
+  EXPECT_EQ(RCL_RET_OK, rcl_convert_rmw_ret_to_rcl_ret(RMW_RET_OK));
+  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_convert_rmw_ret_to_rcl_ret(RMW_RET_INVALID_ARGUMENT));
+  EXPECT_EQ(RCL_RET_BAD_ALLOC, rcl_convert_rmw_ret_to_rcl_ret(RMW_RET_BAD_ALLOC));
+  EXPECT_EQ(RCL_RET_UNSUPPORTED, rcl_convert_rmw_ret_to_rcl_ret(RMW_RET_UNSUPPORTED));
+  EXPECT_EQ(
+    RCL_RET_NODE_NAME_NON_EXISTENT,
+    rcl_convert_rmw_ret_to_rcl_ret(RMW_RET_NODE_NAME_NON_EXISTENT));
 
-#ifdef RMW_IMPLEMENTATION
-# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
-# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
-#else
-# define CLASSNAME(NAME, SUFFIX) NAME
-#endif
-
-/* Tests the default allocator.
- *
- * Expected environment variables must be set by the calling code:
- *
- *   - EMPTY_TEST=
- *   - NORMAL_TEST=foo
- *
- * These are set in the call to `ament_add_gtest()` in the `CMakeLists.txt`.
- */
-TEST(CLASSNAME(TestCommon, RMW_IMPLEMENTATION), test_getenv) {
-  const char * env;
-  rcl_ret_t ret;
-  ret = rcl_impl_getenv("NORMAL_TEST", NULL);
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
-  rcl_reset_error();
-  ret = rcl_impl_getenv(NULL, &env);
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
-  rcl_reset_error();
-  ret = rcl_impl_getenv("SHOULD_NOT_EXIST_TEST", &env);
-  EXPECT_EQ(RCL_RET_OK, ret);
-  EXPECT_EQ("", std::string(env)) << std::string(env);
-  rcl_reset_error();
-  ret = rcl_impl_getenv("NORMAL_TEST", &env);
-  EXPECT_EQ(RCL_RET_OK, ret);
-  ASSERT_NE(nullptr, env);
-  EXPECT_EQ("foo", std::string(env));
-  ret = rcl_impl_getenv("EMPTY_TEST", &env);
-  EXPECT_EQ(RCL_RET_OK, ret);
-  ASSERT_NE(nullptr, env);
-  EXPECT_EQ("", std::string(env));
+  // Default behavior
+  EXPECT_EQ(RCL_RET_ERROR, rcl_convert_rmw_ret_to_rcl_ret(RMW_RET_ERROR));
+  EXPECT_EQ(RCL_RET_ERROR, rcl_convert_rmw_ret_to_rcl_ret(RMW_RET_TIMEOUT));
+  EXPECT_EQ(RCL_RET_ERROR, rcl_convert_rmw_ret_to_rcl_ret(RMW_RET_INCORRECT_RMW_IMPLEMENTATION));
 }

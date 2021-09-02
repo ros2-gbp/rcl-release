@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/// @file
+
 #ifndef RCL__SERVICE_H_
 #define RCL__SERVICE_H_
 
@@ -20,7 +22,7 @@ extern "C"
 {
 #endif
 
-#include "rosidl_generator_c/service_type_support_struct.h"
+#include "rosidl_runtime_c/service_type_support_struct.h"
 
 #include "rcl/macros.h"
 #include "rcl/node.h"
@@ -32,6 +34,7 @@ struct rcl_service_impl_t;
 /// Structure which encapsulates a ROS Service.
 typedef struct rcl_service_t
 {
+  /// Pointer to the service implementation
   struct rcl_service_impl_t * impl;
 } rcl_service_t;
 
@@ -49,6 +52,8 @@ typedef struct rcl_service_options_t
 /**
  * Should be called to get a null rcl_service_t before passing to
  * rcl_service_init().
+ *
+ * \return A structure with a zero initialized service.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -73,7 +78,7 @@ rcl_get_zero_initialized_service(void);
  * For C, a macro can be used (for example `example_interfaces/AddTwoInts`):
  *
  * ```c
- * #include <rosidl_generator_c/service_type_support_struct.h>
+ * #include <rosidl_runtime_c/service_type_support_struct.h>
  * #include <example_interfaces/srv/add_two_ints.h>
  * const rosidl_service_type_support_t * ts =
  *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, srv, AddTwoInts);
@@ -82,7 +87,7 @@ rcl_get_zero_initialized_service(void);
  * For C++, a template function is used:
  *
  * ```cpp
- * #include <rosidl_generator_cpp/service_type_support.hpp>
+ * #include <rosidl_runtime_cpp/service_type_support.hpp>
  * #include <example_interfaces/srv/add_two_ints.h>
  * using rosidl_typesupport_cpp::get_service_type_support_handle;
  * const rosidl_service_type_support_t * ts =
@@ -105,7 +110,7 @@ rcl_get_zero_initialized_service(void);
  *
  * ```c
  * #include <rcl/rcl.h>
- * #include <rosidl_generator_c/service_type_support_struct.h>
+ * #include <rosidl_runtime_c/service_type_support_struct.h>
  * #include <example_interfaces/srv/add_two_ints.h>
  *
  * rcl_node_t node = rcl_get_zero_initialized_node();
@@ -137,12 +142,13 @@ rcl_get_zero_initialized_service(void);
  * \param[in] type_support type support object for the service's type
  * \param[in] service_name the name of the service
  * \param[in] options service options, including quality of service settings
- * \return `RCL_RET_OK` if service was initialized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_SERVICE_NAME_INVALID` if the given service name is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \return #RCL_RET_OK if service was initialized successfully, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_ALREADY_INIT if the service is already initialized, or
+ * \return #RCL_RET_NODE_INVALID if the node is invalid, or
+ * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
+ * \return #RCL_RET_SERVICE_NAME_INVALID if the given service name is invalid, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -173,12 +179,12 @@ rcl_service_init(
  * Lock-Free          | Yes
  *
  * \param[inout] service handle to the service to be deinitialized
- * \param[in] node handle to the node used to create the service
- * \return `RCL_RET_OK` if service was deinitialized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_SERVICE_INVALID` if the service is invalid, or
- * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] node a valid (not finalized) handle to the node used to create the service
+ * \return #RCL_RET_OK if service was deinitialized successfully, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_SERVICE_INVALID if the service is invalid, or
+ * \return #RCL_RET_NODE_INVALID if the node is invalid, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -232,15 +238,39 @@ rcl_service_get_default_options(void);
  * <i>[1] only if required when filling the request, avoided for fixed sizes</i>
  *
  * \param[in] service the handle to the service from which to take
- * \param[inout] request_header ptr to the struct holding metadata about the request ID
+ * \param[inout] request_header ptr to the struct holding metadata about the request
  * \param[inout] ros_request type-erased ptr to an allocated ROS request message
- * \return `RCL_RET_OK` if the request was taken, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_SERVICE_INVALID` if the service is invalid, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_SERVICE_TAKE_FAILED` if take failed but no error occurred
+ * \return #RCL_RET_OK if the request was taken, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_SERVICE_INVALID if the service is invalid, or
+ * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
+ * \return #RCL_RET_SERVICE_TAKE_FAILED if take failed but no error occurred
  *         in the middleware, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
+ */
+RCL_PUBLIC
+RCL_WARN_UNUSED
+rcl_ret_t
+rcl_take_request_with_info(
+  const rcl_service_t * service,
+  rmw_service_info_t * request_header,
+  void * ros_request);
+
+/// Backwards compatibility function to take a pending ROS request using a rcl service.
+/**
+ * This version takes a request ID only.  See rcl_take_request_with_info() for a full
+ * explanation of what this does.
+ *
+ * \param[in] service the handle to the service from which to take
+ * \param[inout] request_header ptr to the struct holding the id of the request
+ * \param[inout] ros_request type-erased ptr to an allocated ROS request message
+ * \return #RCL_RET_OK if the request was taken, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_SERVICE_INVALID if the service is invalid, or
+ * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
+ * \return #RCL_RET_SERVICE_TAKE_FAILED if take failed but no error occurred
+ *         in the middleware, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -290,10 +320,10 @@ rcl_take_request(
  * \param[in] service handle to the service which will make the response
  * \param[inout] response_header ptr to the struct holding metadata about the request ID
  * \param[in] ros_response type-erased pointer to the ROS response message
- * \return `RCL_RET_OK` if the response was sent successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_SERVICE_INVALID` if the service is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \return #RCL_RET_OK if the response was sent successfully, or
+ * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
+ * \return #RCL_RET_SERVICE_INVALID if the service is invalid, or
+ * \return #RCL_RET_ERROR if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED

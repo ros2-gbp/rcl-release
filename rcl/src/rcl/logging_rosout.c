@@ -14,6 +14,7 @@
 
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
+#include "rcl/logging_rosout.h"
 #include "rcl/node.h"
 #include "rcl/publisher.h"
 #include "rcl/time.h"
@@ -25,14 +26,14 @@
 #include "rcutils/macros.h"
 #include "rcutils/types/hash_map.h"
 #include "rcutils/types/rcutils_ret.h"
-#include "rosidl_generator_c/string_functions.h"
+#include "rosidl_runtime_c/string_functions.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#define ROSOUT_TOPIC_NAME "rosout"
+#define ROSOUT_TOPIC_NAME "/rosout"
 
 /* Return RCL_RET_OK from this macro because we won't check throughout rcl if rosout is
  * initialized or not and in the case it's not we want things to continue working.
@@ -92,9 +93,11 @@ rcl_ret_t rcl_logging_rosout_init(
     return RCL_RET_OK;
   }
   __logger_map = rcutils_get_zero_initialized_hash_map();
-  RCL_RET_FROM_RCUTIL_RET(status,
-    rcutils_hash_map_init(&__logger_map, 2, sizeof(const char *), sizeof(rosout_map_entry_t),
-    rcutils_hash_map_string_hash_func, rcutils_hash_map_string_cmp_func, allocator));
+  RCL_RET_FROM_RCUTIL_RET(
+    status,
+    rcutils_hash_map_init(
+      &__logger_map, 2, sizeof(const char *), sizeof(rosout_map_entry_t),
+      rcutils_hash_map_string_hash_func, rcutils_hash_map_string_cmp_func, allocator));
   if (RCL_RET_OK == status) {
     __rosout_allocator = *allocator;
     __is_initialized = true;
@@ -110,8 +113,8 @@ rcl_ret_t rcl_logging_rosout_fini()
   rosout_map_entry_t entry;
 
   // fini all the outstanding publishers
-  rcutils_ret_t hashmap_ret = rcutils_hash_map_get_next_key_and_data(&__logger_map, NULL, &key,
-      &entry);
+  rcutils_ret_t hashmap_ret = rcutils_hash_map_get_next_key_and_data(
+    &__logger_map, NULL, &key, &entry);
   while (RCL_RET_OK == status && RCUTILS_RET_OK == hashmap_ret) {
     // Teardown publisher
     status = rcl_publisher_fini(&entry.publisher, entry.node);
@@ -156,7 +159,8 @@ rcl_ret_t rcl_logging_rosout_init_publisher_for_node(
   if (rcutils_hash_map_key_exists(&__logger_map, &logger_name)) {
     // @TODO(nburek) Update behavior to either enforce unique names or work with non-unique
     // names based on the outcome here: https://github.com/ros2/design/issues/187
-    RCUTILS_LOG_WARN_NAMED("rcl.logging_rosout",
+    RCUTILS_LOG_WARN_NAMED(
+      "rcl.logging_rosout",
       "Publisher already registered for provided node name. If this is due to multiple nodes "
       "with the same name then all logs for that logger name will go out over the existing "
       "publisher. As soon as any node with that name is destructed it will unregister the "
@@ -169,6 +173,12 @@ rcl_ret_t rcl_logging_rosout_init_publisher_for_node(
   const rosidl_message_type_support_t * type_support =
     rosidl_typesupport_c__get_message_type_support_handle__rcl_interfaces__msg__Log();
   rcl_publisher_options_t options = rcl_publisher_get_default_options();
+
+  // Late joining subscriptions get the user's setting of rosout qos options.
+  const rcl_node_options_t * node_options = rcl_node_get_options(node);
+  RCL_CHECK_FOR_NULL_WITH_MSG(node_options, "Node options was null.", return RCL_RET_ERROR);
+
+  options.qos = node_options->rosout_qos;
   new_entry.publisher = rcl_get_zero_initialized_publisher();
   status =
     rcl_publisher_init(&new_entry.publisher, node, type_support, ROSOUT_TOPIC_NAME, &options);
@@ -256,10 +266,10 @@ void rcl_logging_rosout_output_handler(
         log_message->stamp.nanosec = (timestamp % RCL_S_TO_NS(1));
         log_message->level = severity;
         log_message->line = (int32_t) location->line_number;
-        rosidl_generator_c__String__assign(&log_message->name, name);
-        rosidl_generator_c__String__assign(&log_message->msg, msg_array.buffer);
-        rosidl_generator_c__String__assign(&log_message->file, location->file_name);
-        rosidl_generator_c__String__assign(&log_message->function, location->function_name);
+        rosidl_runtime_c__String__assign(&log_message->name, name);
+        rosidl_runtime_c__String__assign(&log_message->msg, msg_array.buffer);
+        rosidl_runtime_c__String__assign(&log_message->file, location->file_name);
+        rosidl_runtime_c__String__assign(&log_message->function, location->function_name);
         status = rcl_publish(&entry.publisher, log_message, NULL);
         if (RCL_RET_OK != status) {
           RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to publish log message to rosout: ");
