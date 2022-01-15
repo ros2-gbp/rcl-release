@@ -1,0 +1,12 @@
+Source: ros-rolling-rcl-action
+Section: misc
+Priority: optional
+Maintainer: Ivan Paunovic <ivanpauno@ekumenlabs.com>
+Build-Depends: debhelper (>= 9.0.0), ros-rolling-action-msgs, ros-rolling-ament-cmake-gtest, ros-rolling-ament-cmake-ros, ros-rolling-ament-lint-auto, ros-rolling-ament-lint-common, ros-rolling-osrf-testing-tools-cpp, ros-rolling-rcl, ros-rolling-rcutils, ros-rolling-rmw, ros-rolling-rmw-implementation-cmake, ros-rolling-rosidl-runtime-c, ros-rolling-test-msgs, ros-rolling-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-rolling-rcl-action
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-rolling-action-msgs, ros-rolling-rcl, ros-rolling-rcutils, ros-rolling-rmw, ros-rolling-rosidl-runtime-c, ros-rolling-ros-workspace
+Description: Package containing a C-based ROS action implementation
