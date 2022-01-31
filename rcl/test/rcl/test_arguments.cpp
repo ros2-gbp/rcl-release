@@ -1021,12 +1021,9 @@ TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_param_argument_
   ASSERT_TRUE(NULL != param_value->bool_array_value);
   ASSERT_TRUE(NULL != param_value->bool_array_value->values);
   ASSERT_EQ(3U, param_value->bool_array_value->size);
-  bool bool_value = param_value->bool_array_value->values[0];
-  EXPECT_TRUE(bool_value);
-  bool_value = param_value->bool_array_value->values[1];
-  EXPECT_FALSE(bool_value);
-  bool_value = param_value->bool_array_value->values[2];
-  EXPECT_FALSE(bool_value);
+  EXPECT_TRUE(param_value->bool_array_value->values[0]);
+  EXPECT_FALSE(param_value->bool_array_value->values[1]);
+  EXPECT_FALSE(param_value->bool_array_value->values[2]);
 }
 
 TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_param_arguments_copy) {
@@ -1138,8 +1135,7 @@ TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_param_overrides
   param_value = rcl_yaml_node_struct_get("/**", "some.bool_param", params);
   ASSERT_TRUE(NULL != param_value);
   ASSERT_TRUE(NULL != param_value->bool_value);
-  bool bool_value = *param_value->bool_value;
-  EXPECT_FALSE(bool_value);
+  EXPECT_FALSE(*(param_value->bool_value));
 
   param_value = rcl_yaml_node_struct_get("some_node", "int_param", params);
   ASSERT_TRUE(NULL != param_value);
@@ -1239,7 +1235,6 @@ TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_parse_with_inte
     RCL_PARAM_FLAG, "this_node:constant:=42",
     RCL_ENCLAVE_FLAG, "fizz",
     RCL_ENCLAVE_FLAG, "buzz",  // override
-    RCL_LOG_LEVEL_FLAG, "rcl:=debug",
     RCL_EXTERNAL_LOG_CONFIG_FLAG, "flip.txt",
     RCL_EXTERNAL_LOG_CONFIG_FLAG, "flop.txt",  // override
     "--enable-" RCL_LOG_STDOUT_FLAG_SUFFIX,
@@ -1284,7 +1279,6 @@ TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_copy_with_inter
     RCL_PARAM_FLAG, "this_node:constant:=42",
     RCL_ENCLAVE_FLAG, "fizz",
     RCL_ENCLAVE_FLAG, "buzz",  // override
-    RCL_LOG_LEVEL_FLAG, "rcl:=debug",
     RCL_EXTERNAL_LOG_CONFIG_FLAG, "flip.txt",
     RCL_EXTERNAL_LOG_CONFIG_FLAG, "flop.txt",  // override
     "--enable-" RCL_LOG_STDOUT_FLAG_SUFFIX,

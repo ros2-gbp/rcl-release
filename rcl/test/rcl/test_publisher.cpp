@@ -402,8 +402,6 @@ TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_invalid_publish
 
   EXPECT_EQ(RCL_RET_OK, rcl_publisher_assert_liveliness(&publisher));
 
-  EXPECT_EQ(RCL_RET_OK, rcl_publisher_wait_for_all_acked(&publisher, 0));
-
   size_t count_size;
   test_msgs__msg__BasicTypes msg;
   rcl_serialized_message_t serialized_msg = rmw_get_zero_initialized_serialized_message();
@@ -430,8 +428,6 @@ TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_invalid_publish
     RCL_RET_PUBLISHER_INVALID, rcl_publisher_get_subscription_count(&publisher, &count_size));
   rcl_reset_error();
   EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publisher_assert_liveliness(&publisher));
-  rcl_reset_error();
-  EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publisher_wait_for_all_acked(&publisher, 10000000));
   rcl_reset_error();
   EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publish(&publisher, &msg, null_allocation_is_valid_arg));
   rcl_reset_error();
@@ -475,8 +471,6 @@ TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_invalid_publish
   rcl_reset_error();
   EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publisher_assert_liveliness(&publisher));
   rcl_reset_error();
-  EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publisher_wait_for_all_acked(&publisher, 10000000));
-  rcl_reset_error();
   EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publish(&publisher, &msg, null_allocation_is_valid_arg));
   rcl_reset_error();
   EXPECT_EQ(
@@ -508,8 +502,6 @@ TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_invalid_publish
   rcl_reset_error();
   EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publisher_assert_liveliness(&publisher));
   rcl_reset_error();
-  EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publisher_wait_for_all_acked(&publisher, 10000000));
-  rcl_reset_error();
   EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publish(&publisher, &msg, null_allocation_is_valid_arg));
   rcl_reset_error();
   EXPECT_EQ(
@@ -539,8 +531,6 @@ TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_invalid_publish
     RCL_RET_PUBLISHER_INVALID, rcl_publisher_get_subscription_count(nullptr, &count_size));
   rcl_reset_error();
   EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publisher_assert_liveliness(nullptr));
-  rcl_reset_error();
-  EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publisher_wait_for_all_acked(nullptr, 10000000));
   rcl_reset_error();
   EXPECT_EQ(RCL_RET_PUBLISHER_INVALID, rcl_publish(nullptr, &msg, null_allocation_is_valid_arg));
   rcl_reset_error();
@@ -582,65 +572,6 @@ TEST_F(CLASSNAME(TestPublisherFixtureInit, RMW_IMPLEMENTATION), test_mock_assert
   rcl_reset_error();
 }
 
-// Mocking rmw_publisher_wait_for_all_acked to make
-// rcl_publisher_wait_for_all_acked fail
-MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rmw_time_t, ==)
-MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rmw_time_t, !=)
-MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rmw_time_t, <)
-MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rmw_time_t, >)
-
-TEST_F(
-  CLASSNAME(TestPublisherFixtureInit, RMW_IMPLEMENTATION),
-  test_mock_assert_wait_for_all_acked)
-{
-#define CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_RESULT, EXPECT_RET)   do { \
-    rmw_publisher_wait_for_all_acked_return = RMW_RET_RESULT; \
-    ret = rcl_publisher_wait_for_all_acked(&publisher, 1000000); \
-    EXPECT_EQ(EXPECT_RET, ret); \
-    rcl_reset_error(); \
-} while (0)
-
-  rcl_ret_t ret;
-  rmw_ret_t rmw_publisher_wait_for_all_acked_return;
-  auto mock = mocking_utils::patch_and_return(
-    "lib:rcl", rmw_publisher_wait_for_all_acked, rmw_publisher_wait_for_all_acked_return);
-
-  {
-    // Now normal usage of the function rcl_publisher_wait_for_all_acked returning
-    // unexpected RMW_RET_TIMEOUT
-    SCOPED_TRACE("Check RCL return failed !");
-    CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_TIMEOUT, RCL_RET_TIMEOUT);
-  }
-
-  {
-    // Now normal usage of the function rcl_publisher_wait_for_all_acked returning
-    // unexpected RMW_RET_UNSUPPORTED
-    SCOPED_TRACE("Check RCL return failed !");
-    CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_UNSUPPORTED, RCL_RET_UNSUPPORTED);
-  }
-
-  {
-    // Now normal usage of the function rcl_publisher_wait_for_all_acked returning
-    // unexpected RMW_RET_INVALID_ARGUMENT
-    SCOPED_TRACE("Check RCL return failed !");
-    CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_INVALID_ARGUMENT, RCL_RET_ERROR);
-  }
-
-  {
-    // Now normal usage of the function rcl_publisher_wait_for_all_acked returning
-    // unexpected RMW_RET_INCORRECT_RMW_IMPLEMENTATION
-    SCOPED_TRACE("Check RCL return failed !");
-    CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_INCORRECT_RMW_IMPLEMENTATION, RCL_RET_ERROR);
-  }
-
-  {
-    // Now normal usage of the function rcl_publisher_wait_for_all_acked returning
-    // unexpected RMW_RET_ERROR
-    SCOPED_TRACE("Check RCL return failed !");
-    CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_ERROR, RCL_RET_ERROR);
-  }
-}
-
 // Mocking rmw_publish to make rcl_publish fail
 TEST_F(CLASSNAME(TestPublisherFixtureInit, RMW_IMPLEMENTATION), test_mock_publish) {
   auto mock = mocking_utils::patch_and_return("lib:rcl", rmw_publish, RMW_RET_ERROR);
@@ -672,9 +603,6 @@ TEST_F(
   OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
   {
     test_msgs__msg__Strings__fini(&msg);
-    ASSERT_EQ(
-      RMW_RET_OK,
-      rmw_serialized_message_fini(&serialized_msg)) << rcl_get_error_string().str;
   });
 
   ASSERT_TRUE(rosidl_runtime_c__String__assign(&msg.string_value, test_string));
@@ -853,6 +781,23 @@ TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_mocks_fail_publ
     // Internal failure when fini rcutils_string_map returns error, targets substitution_map fini
     auto mock = mocking_utils::patch_and_return(
       "lib:rcl", rcutils_string_map_fini, RCUTILS_RET_ERROR);
+    ret = rcl_publisher_init(&publisher, this->node_ptr, ts, topic_name, &publisher_options);
+    EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
+    rcl_reset_error();
+  }
+  {
+    // Internal failure when fini rcutils_string_map returns error, targets rcl_remap_topic_name
+    auto mock = mocking_utils::patch(
+      "lib:rcl", rcutils_string_map_init, [](auto...) {
+        static int counter = 1;
+        if (counter == 1) {
+          counter++;
+          return RCUTILS_RET_OK;
+        } else {
+          // This makes rcl_remap_topic_name fail
+          return RCUTILS_RET_ERROR;
+        }
+      });
     ret = rcl_publisher_init(&publisher, this->node_ptr, ts, topic_name, &publisher_options);
     EXPECT_EQ(RCL_RET_ERROR, ret) << rcl_get_error_string().str;
     rcl_reset_error();

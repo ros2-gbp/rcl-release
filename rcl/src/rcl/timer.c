@@ -27,7 +27,7 @@ extern "C"
 #include "rcutils/time.h"
 #include "tracetools/tracetools.h"
 
-struct rcl_timer_impl_s
+typedef struct rcl_timer_impl_t
 {
   // The clock providing time.
   rcl_clock_t * clock;
@@ -50,7 +50,7 @@ struct rcl_timer_impl_s
   atomic_bool canceled;
   // The user supplied allocator.
   rcl_allocator_t allocator;
-};
+} rcl_timer_impl_t;
 
 rcl_timer_t
 rcl_get_zero_initialized_timer()
@@ -60,7 +60,7 @@ rcl_get_zero_initialized_timer()
 }
 
 void _rcl_timer_time_jump(
-  const rcl_time_jump_t * time_jump,
+  const struct rcl_time_jump_t * time_jump,
   bool before_jump,
   void * user_data)
 {
@@ -209,18 +209,15 @@ rcl_timer_fini(rcl_timer_t * timer)
   // Will return either RCL_RET_OK or RCL_RET_ERROR since the timer is valid.
   rcl_ret_t result = rcl_timer_cancel(timer);
   rcl_allocator_t allocator = timer->impl->allocator;
-  rcl_ret_t fail_ret;
+  rcl_ret_t fail_ret = rcl_guard_condition_fini(&(timer->impl->guard_condition));
+  if (RCL_RET_OK != fail_ret) {
+    RCL_SET_ERROR_MSG("Failure to fini guard condition");
+  }
   if (RCL_ROS_TIME == timer->impl->clock->type) {
-    // The jump callbacks use the guard condition, so we have to remove it
-    // before freeing the guard condition below.
     fail_ret = rcl_clock_remove_jump_callback(timer->impl->clock, _rcl_timer_time_jump, timer);
     if (RCL_RET_OK != fail_ret) {
       RCUTILS_LOG_ERROR_NAMED(ROS_PACKAGE_NAME, "Failed to remove timer jump callback");
     }
-  }
-  fail_ret = rcl_guard_condition_fini(&(timer->impl->guard_condition));
-  if (RCL_RET_OK != fail_ret) {
-    RCL_SET_ERROR_MSG("Failure to fini guard condition");
   }
   allocator.deallocate(timer->impl, allocator.state);
   timer->impl = NULL;

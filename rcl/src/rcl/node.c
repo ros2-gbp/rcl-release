@@ -26,7 +26,7 @@ extern "C"
 
 #include "rcl/arguments.h"
 #include "rcl/error_handling.h"
-#include "rcl/init_options.h"
+#include "rcl/domain_id.h"
 #include "rcl/localhost.h"
 #include "rcl/logging.h"
 #include "rcl/logging_rosout.h"
@@ -37,6 +37,7 @@ extern "C"
 #include "rcutils/filesystem.h"
 #include "rcutils/find.h"
 #include "rcutils/format_string.h"
+#include "rcutils/get_env.h"
 #include "rcutils/logging_macros.h"
 #include "rcutils/macros.h"
 #include "rcutils/repl_str.h"
@@ -52,14 +53,15 @@ extern "C"
 
 #include "./context_impl.h"
 
-struct rcl_node_impl_s
+typedef struct rcl_node_impl_t
 {
   rcl_node_options_t options;
+  size_t actual_domain_id;
   rmw_node_t * rmw_node_handle;
   rcl_guard_condition_t * graph_guard_condition;
   const char * logger_name;
   const char * fq_name;
-};
+} rcl_node_impl_t;
 
 
 /// Return the logger name associated with a node given the validated node name and namespace.
@@ -118,6 +120,8 @@ rcl_node_init(
   rcl_context_t * context,
   const rcl_node_options_t * options)
 {
+  size_t domain_id = 0;
+  rmw_localhost_only_t localhost_only = RMW_LOCALHOST_ONLY_DEFAULT;
   const rmw_guard_condition_t * rmw_graph_guard_condition = NULL;
   rcl_guard_condition_options_t graph_guard_condition_options =
     rcl_guard_condition_get_default_options();
@@ -250,12 +254,24 @@ rcl_node_init(
   RCL_CHECK_FOR_NULL_WITH_MSG(
     node->impl->logger_name, "creating logger name failed", goto fail);
 
-  RCUTILS_LOG_DEBUG_NAMED(
-    ROS_PACKAGE_NAME, "Using domain ID of '%zu'", context->impl->rmw_context.actual_domain_id);
+  domain_id = node->impl->options.domain_id;
+  if (RCL_DEFAULT_DOMAIN_ID == domain_id) {
+    if (RCL_RET_OK != rcl_get_default_domain_id(&domain_id)) {
+      goto fail;
+    }
+  }
+  if (RMW_DEFAULT_DOMAIN_ID == domain_id) {
+    domain_id = 0u;
+  }
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Using domain ID of '%zu'", domain_id);
+  node->impl->actual_domain_id = domain_id;
+
+  localhost_only = context->impl->init_options.impl->rmw_init_options.localhost_only;
 
   node->impl->rmw_node_handle = rmw_create_node(
     &(node->context->impl->rmw_context),
-    name, local_namespace_);
+    name, local_namespace_, domain_id,
+    localhost_only == RMW_LOCALHOST_ONLY_ENABLED);
 
   RCL_CHECK_FOR_NULL_WITH_MSG(
     node->impl->rmw_node_handle, rmw_get_error_string().str, goto fail);
@@ -467,14 +483,12 @@ rcl_node_get_options(const rcl_node_t * node)
 rcl_ret_t
 rcl_node_get_domain_id(const rcl_node_t * node, size_t * domain_id)
 {
-  if (!rcl_node_is_valid(node)) {
-    return RCL_RET_NODE_INVALID;
+  const rcl_node_options_t * node_options = rcl_node_get_options(node);
+  if (!node_options) {
+    return RCL_RET_NODE_INVALID;  // error already set
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(domain_id, RCL_RET_INVALID_ARGUMENT);
-  rcl_ret_t ret = rcl_context_get_domain_id(node->context, domain_id);
-  if (RCL_RET_OK != ret) {
-    return ret;
-  }
+  *domain_id = node->impl->actual_domain_id;
   return RCL_RET_OK;
 }
 
@@ -496,7 +510,7 @@ rcl_node_get_rcl_instance_id(const rcl_node_t * node)
   return rcl_context_get_instance_id(node->context);
 }
 
-const rcl_guard_condition_t *
+const struct rcl_guard_condition_t *
 rcl_node_get_graph_guard_condition(const rcl_node_t * node)
 {
   if (!rcl_node_is_valid_except_context(node)) {

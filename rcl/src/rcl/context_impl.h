@@ -26,7 +26,7 @@ extern "C"
 #endif
 
 /// \internal
-struct rcl_context_impl_s
+typedef struct rcl_context_impl_t
 {
   /// Allocator used during init and shutdown.
   rcl_allocator_t allocator;
@@ -38,7 +38,7 @@ struct rcl_context_impl_s
   char ** argv;
   /// rmw context.
   rmw_context_t rmw_context;
-};
+} rcl_context_impl_t;
 
 RCL_LOCAL
 rcl_ret_t

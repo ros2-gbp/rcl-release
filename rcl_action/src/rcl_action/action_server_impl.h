@@ -19,7 +19,7 @@
 #include "rcl/rcl.h"
 
 /// Internal rcl_action implementation struct.
-typedef struct rcl_action_server_impl_s
+typedef struct rcl_action_server_impl_t
 {
   rcl_service_t goal_service;
   rcl_service_t cancel_service;

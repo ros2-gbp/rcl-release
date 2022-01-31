@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// @file
-
 #ifndef RCL__INIT_OPTIONS_H_
 #define RCL__INIT_OPTIONS_H_
 
@@ -29,13 +27,13 @@ extern "C"
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
 
-typedef struct rcl_init_options_impl_s rcl_init_options_impl_t;
+struct rcl_init_options_impl_t;
 
 /// Encapsulation of init options and implementation defined init options.
-typedef struct rcl_init_options_s
+typedef struct rcl_init_options_t
 {
   /// Implementation specific pointer.
-  rcl_init_options_impl_t * impl;
+  struct rcl_init_options_impl_t * impl;
 } rcl_init_options_t;
 
 /// Return a zero initialized rcl_init_options_t struct.
@@ -63,11 +61,11 @@ rcl_get_zero_initialized_init_options(void);
  *
  * \param[inout] init_options object to be setup
  * \param[in] allocator to be used during setup and during initialization
- * \return #RCL_RET_OK if setup is successful, or
- * \return #RCL_RET_ALREADY_INIT if init_options has already be initialized, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \return `RCL_RET_OK` if setup is successful, or
+ * \return `RCL_RET_ALREADY_INIT` if init_options has already be initialized, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
+ * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -80,10 +78,10 @@ rcl_init_options_init(rcl_init_options_t * init_options, rcl_allocator_t allocat
  * destination.
  *
  * The destination should either be zero initialized with
- * rcl_get_zero_initialized_init_options() or should have had
- * rcl_init_options_fini() called on it.
+ * `rcl_get_zero_initialized_init_options()` or should have had
+ * `rcl_init_options_fini()` called on it.
  * Giving an already initialized init options for the destination will result
- * in a failure with return code #RCL_RET_ALREADY_INIT.
+ * in a failure with return code `RCL_RET_ALREADY_INIT`.
  *
  * <hr>
  * Attribute          | Adherence
@@ -95,11 +93,11 @@ rcl_init_options_init(rcl_init_options_t * init_options, rcl_allocator_t allocat
  *
  * \param[in] src rcl_init_options_t object to be copied from
  * \param[out] dst rcl_init_options_t object to be copied into
- * \return #RCL_RET_OK if the copy is successful, or
- * \return #RCL_RET_ALREADY_INIT if the dst has already be initialized, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \return `RCL_RET_OK` if the copy is successful, or
+ * \return `RCL_RET_ALREADY_INIT` if the dst has already be initialized, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
+ * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -109,7 +107,7 @@ rcl_init_options_copy(const rcl_init_options_t * src, rcl_init_options_t * dst);
 /// Finalize the given init_options.
 /**
  * The given init_options must be non-`NULL` and valid, i.e. had
- * rcl_init_options_init() called on it but not this function yet.
+ * `rcl_init_options_init()` called on it but not this function yet.
  *
  * <hr>
  * Attribute          | Adherence
@@ -120,9 +118,9 @@ rcl_init_options_copy(const rcl_init_options_t * src, rcl_init_options_t * dst);
  * Lock-Free          | Yes
  *
  * \param[inout] init_options object to be setup
- * \return #RCL_RET_OK if setup is successful, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \return `RCL_RET_OK` if setup is successful, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
+ * \return `RCL_RET_ERROR` if an unspecified error occurs.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -143,13 +141,13 @@ rcl_init_options_fini(rcl_init_options_t * init_options);
  *
  * \param[in] init_options object from which the domain id should be retrieved.
  * \param[out] domain_id domain id to be set in init_options object.
- * \return #RCL_RET_OK if successful, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid.
+ * \return `RCL_RET_OK` if successful, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t
-rcl_init_options_get_domain_id(const rcl_init_options_t * init_options, size_t * domain_id);
+rcl_init_options_get_domain_id(rcl_init_options_t * init_options, size_t * domain_id);
 
 /// Set a domain id in the init options provided.
 /**
@@ -165,8 +163,8 @@ rcl_init_options_get_domain_id(const rcl_init_options_t * init_options, size_t *
  *
  * \param[in] init_options objects in which to set the specified domain id.
  * \param[in] domain_id domain id to be set in init_options object.
- * \return #RCL_RET_OK if successful, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid.
+ * \return `RCL_RET_OK` if successful, or
+ * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED

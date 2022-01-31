@@ -25,14 +25,11 @@
 #include "rcl/subscription.h"
 #include "rcl/error_handling.h"
 #include "rmw/incompatible_qos_events_statuses.h"
-#include "rmw/event.h"
 
 #include "test_msgs/msg/strings.h"
 #include "rosidl_runtime_c/string_functions.h"
 
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
-
-#include "./event_impl.h"
 
 using namespace std::chrono_literals;
 using std::chrono::seconds;
@@ -606,6 +603,7 @@ TEST_F(TestEventFixture, test_pubsub_liveliness_kill_pub)
 
 /*
  * Basic test of publisher and subscriber incompatible qos callback events.
+ * Only implemented in opensplice at the moment.
  */
 TEST_P(TestEventFixture, test_pubsub_incompatible_qos)
 {
@@ -725,100 +723,11 @@ TEST_F(TestEventFixture, test_bad_event_ini)
 }
 
 /*
- * Test cases for the event_is_valid function
+ * Passing bad argument to get_rmw_handle
  */
-TEST_F(TestEventFixture, test_event_is_valid)
+TEST_F(TestEventFixture, test_bad_get_handle)
 {
-  EXPECT_FALSE(rcl_event_is_valid(nullptr));
-  EXPECT_TRUE(rcl_error_is_set());
-  rcl_reset_error();
-
-  setup_publisher_subscriber(default_qos_profile, default_qos_profile);
-  rcl_event_t publisher_event_test = rcl_get_zero_initialized_event();
-  EXPECT_FALSE(rcl_event_is_valid(&publisher_event_test));
-  EXPECT_TRUE(rcl_error_is_set());
-  rcl_reset_error();
-
-  rcl_ret_t ret = rcl_publisher_event_init(
-    &publisher_event_test, &publisher, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-  EXPECT_TRUE(rcl_event_is_valid(&publisher_event_test));
-
-  rmw_event_type_t saved_event_type = publisher_event_test.impl->rmw_handle.event_type;
-  publisher_event_test.impl->rmw_handle.event_type = RMW_EVENT_INVALID;
-  EXPECT_FALSE(rcl_event_is_valid(&publisher_event_test));
-  EXPECT_TRUE(rcl_error_is_set());
-  rcl_reset_error();
-  publisher_event_test.impl->rmw_handle.event_type = saved_event_type;
-
-  rcl_allocator_t saved_alloc = publisher_event_test.impl->allocator;
-  rcl_allocator_t bad_alloc = rcutils_get_zero_initialized_allocator();
-  publisher_event_test.impl->allocator = bad_alloc;
-  EXPECT_FALSE(rcl_event_is_valid(&publisher_event_test));
-  EXPECT_TRUE(rcl_error_is_set());
-  rcl_reset_error();
-  publisher_event_test.impl->allocator = saved_alloc;
-
-  ret = rcl_event_fini(&publisher_event_test);
-  EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-  tear_down_publisher_subscriber();
-}
-
-/*
- * Test passing not init to take_event/get_handle
- */
-TEST_F(TestEventFixture, test_event_is_invalid) {
-  // nullptr
-  rmw_offered_deadline_missed_status_t deadline_status;
-  EXPECT_EQ(RCL_RET_EVENT_INVALID, rcl_take_event(NULL, &deadline_status));
   EXPECT_EQ(NULL, rcl_event_get_rmw_handle(NULL));
-
-  // Zero Init, invalid
-  rcl_event_t publisher_event_test = rcl_get_zero_initialized_event();
-  EXPECT_EQ(RCL_RET_EVENT_INVALID, rcl_take_event(&publisher_event_test, &deadline_status));
-  EXPECT_EQ(NULL, rcl_event_get_rmw_handle(&publisher_event_test));
-}
-
-/*
- * Basic test subscriber event message lost
- */
-TEST_F(TestEventFixture, test_sub_message_lost_event)
-{
-  const rmw_qos_profile_t subscription_qos_profile = default_qos_profile;
-
-  rcl_ret_t ret = setup_subscriber(subscription_qos_profile);
-  ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-
-  subscription_event = rcl_get_zero_initialized_event();
-  ret = rcl_subscription_event_init(
-    &subscription_event,
-    &subscription,
-    RCL_SUBSCRIPTION_MESSAGE_LOST);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    ret = rcl_event_fini(&subscription_event);
-    EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-    ret = rcl_subscription_fini(&subscription, this->node_ptr);
-    EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-  });
-
-  if (is_fastrtps) {
-    // Check not supported
-    EXPECT_EQ(ret, RCL_RET_UNSUPPORTED);
-
-    // clean up and exit test early
-    return;
-  } else {
-    EXPECT_EQ(ret, RCL_RET_OK);
-  }
-
-  // Can't reproduce reliably this event
-  // Test that take_event is able to read the configured event
-  rmw_message_lost_status_t message_lost_status;
-  ret = rcl_take_event(&subscription_event, &message_lost_status);
-  EXPECT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
-  EXPECT_EQ(message_lost_status.total_count, 0u);
-  EXPECT_EQ(message_lost_status.total_count_change, 0u);
 }
 
 static
@@ -877,7 +786,7 @@ get_test_pubsub_incompatible_qos_inputs()
   return inputs;
 }
 
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_CASE_P(
   TestPubSubIncompatibilityWithDifferentQosSettings,
   TestEventFixture,
   ::testing::ValuesIn(get_test_pubsub_incompatible_qos_inputs()),
