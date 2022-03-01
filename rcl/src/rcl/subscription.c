@@ -435,7 +435,31 @@ rcl_subscription_can_loan_messages(const rcl_subscription_t * subscription)
   if (!rcl_subscription_is_valid(subscription)) {
     return false;  // error message already set
   }
+
+  bool disable_loaned_message = false;
+  rcl_ret_t ret = rcl_get_disable_loaned_message(&disable_loaned_message);
+  if (ret == RCL_RET_OK && disable_loaned_message) {
+    return false;
+  }
+
   return subscription->impl->rmw_handle->can_loan_messages;
+}
+
+rcl_ret_t
+rcl_subscription_set_on_new_message_callback(
+  const rcl_subscription_t * subscription,
+  rcl_event_callback_t callback,
+  const void * user_data)
+{
+  if (!rcl_subscription_is_valid(subscription)) {
+    // error state already set
+    return RCL_RET_INVALID_ARGUMENT;
+  }
+
+  return rmw_subscription_set_on_new_message_callback(
+    subscription->impl->rmw_handle,
+    callback,
+    user_data);
 }
 
 #ifdef __cplusplus
