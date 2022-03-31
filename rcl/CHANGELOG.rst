@@ -2,6 +2,11 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.2.1 (2022-03-31)
+------------------
+* Add additional null check for timer argument (`#973 <https://github.com/ros2/rcl/issues/973>`_)
+* Contributors: NoyZuberi
+
 5.2.0 (2022-03-24)
 ------------------
 * Allow forward slashes within a parameter name rule in argument parsing (`#860 <https://github.com/ros2/rcl/issues/860>`_)
