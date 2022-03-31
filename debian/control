@@ -1,0 +1,12 @@
+Source: ros-rolling-rcl-yaml-param-parser
+Section: misc
+Priority: optional
+Maintainer: Ivan Paunovic <ivanpauno@ekumenlabs.com>
+Build-Depends: debhelper (>= 9.0.0), libyaml-dev, ros-rolling-ament-cmake-gtest, ros-rolling-ament-cmake-ros, ros-rolling-ament-lint-auto, ros-rolling-ament-lint-common, ros-rolling-libyaml-vendor, ros-rolling-mimick-vendor, ros-rolling-osrf-testing-tools-cpp, ros-rolling-performance-test-fixture, ros-rolling-rcpputils, ros-rolling-rcutils, ros-rolling-rmw, ros-rolling-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-rolling-rcl-yaml-param-parser
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libyaml-dev, ros-rolling-libyaml-vendor, ros-rolling-rmw, ros-rolling-ros-workspace
+Description: Parse a YAML parameter file and populate the C data structure.
