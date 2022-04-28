@@ -26,7 +26,7 @@ extern "C"
 #endif
 
 /// \internal
-struct rcl_arguments_impl_s
+typedef struct rcl_arguments_impl_t
 {
   /// Array of indices to unknown ROS specific arguments.
   int * unparsed_ros_args;
@@ -67,7 +67,7 @@ struct rcl_arguments_impl_s
 
   /// Allocator used to allocate objects in this struct
   rcl_allocator_t allocator;
-};
+} rcl_arguments_impl_t;
 
 #ifdef __cplusplus
 }

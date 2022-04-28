@@ -45,8 +45,7 @@ public:
     rcl_ret_t ret = rcl_lexer_analyze(text, &actual_lexeme, &length); \
     ASSERT_EQ(RCL_RET_OK, ret); \
     EXPECT_EQ(expected_lexeme, actual_lexeme); \
-    std::string actual_text(text, 0u, length); \
-    EXPECT_EQ(length, actual_text.size()); \
+    std::string actual_text(text, length); \
     EXPECT_STREQ(expected_text, actual_text.c_str()); \
   } while (false)
 

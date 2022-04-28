@@ -27,7 +27,7 @@ extern "C"
 #include "rcutils/time.h"
 #include "tracetools/tracetools.h"
 
-struct rcl_timer_impl_s
+typedef struct rcl_timer_impl_t
 {
   // The clock providing time.
   rcl_clock_t * clock;
@@ -50,7 +50,7 @@ struct rcl_timer_impl_s
   atomic_bool canceled;
   // The user supplied allocator.
   rcl_allocator_t allocator;
-};
+} rcl_timer_impl_t;
 
 rcl_timer_t
 rcl_get_zero_initialized_timer()
@@ -60,7 +60,7 @@ rcl_get_zero_initialized_timer()
 }
 
 void _rcl_timer_time_jump(
-  const rcl_time_jump_t * time_jump,
+  const struct rcl_time_jump_t * time_jump,
   bool before_jump,
   void * user_data)
 {
@@ -244,7 +244,6 @@ rcl_timer_call(rcl_timer_t * timer)
 {
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Calling timer");
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(timer->impl, RCL_RET_TIMER_INVALID);
   if (rcutils_atomic_load_bool(&timer->impl->canceled)) {
     RCL_SET_ERROR_MSG("timer is canceled");
     return RCL_RET_TIMER_CANCELED;
@@ -295,17 +294,13 @@ rcl_ret_t
 rcl_timer_is_ready(const rcl_timer_t * timer, bool * is_ready)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(timer->impl, RCL_RET_TIMER_INVALID);
   RCL_CHECK_ARGUMENT_FOR_NULL(is_ready, RCL_RET_INVALID_ARGUMENT);
   int64_t time_until_next_call;
   rcl_ret_t ret = rcl_timer_get_time_until_next_call(timer, &time_until_next_call);
-  if (ret == RCL_RET_TIMER_CANCELED) {
-    *is_ready = false;
-    return RCL_RET_OK;
-  } else if (ret != RCL_RET_OK) {
+  if (ret != RCL_RET_OK) {
     return ret;  // rcl error state should already be set.
   }
-  *is_ready = (time_until_next_call <= 0);
+  *is_ready = (time_until_next_call <= 0) && !rcutils_atomic_load_bool(&timer->impl->canceled);
   return RCL_RET_OK;
 }
 
@@ -313,11 +308,7 @@ rcl_ret_t
 rcl_timer_get_time_until_next_call(const rcl_timer_t * timer, int64_t * time_until_next_call)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(timer->impl, RCL_RET_TIMER_INVALID);
   RCL_CHECK_ARGUMENT_FOR_NULL(time_until_next_call, RCL_RET_INVALID_ARGUMENT);
-  if (rcutils_atomic_load_bool(&timer->impl->canceled)) {
-    return RCL_RET_TIMER_CANCELED;
-  }
   rcl_time_point_value_t now;
   rcl_ret_t ret = rcl_clock_get_now(timer->impl->clock, &now);
   if (ret != RCL_RET_OK) {
@@ -334,7 +325,6 @@ rcl_timer_get_time_since_last_call(
   rcl_time_point_value_t * time_since_last_call)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(timer->impl, RCL_RET_TIMER_INVALID);
   RCL_CHECK_ARGUMENT_FOR_NULL(time_since_last_call, RCL_RET_INVALID_ARGUMENT);
   rcl_time_point_value_t now;
   rcl_ret_t ret = rcl_clock_get_now(timer->impl->clock, &now);
@@ -350,7 +340,6 @@ rcl_ret_t
 rcl_timer_get_period(const rcl_timer_t * timer, int64_t * period)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(timer->impl, RCL_RET_TIMER_INVALID);
   RCL_CHECK_ARGUMENT_FOR_NULL(period, RCL_RET_INVALID_ARGUMENT);
   *period = rcutils_atomic_load_uint64_t(&timer->impl->period);
   return RCL_RET_OK;
@@ -362,7 +351,6 @@ rcl_timer_exchange_period(const rcl_timer_t * timer, int64_t new_period, int64_t
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
 
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(timer->impl, RCL_RET_TIMER_INVALID);
   RCL_CHECK_ARGUMENT_FOR_NULL(old_period, RCL_RET_INVALID_ARGUMENT);
   *old_period = rcutils_atomic_exchange_uint64_t(&timer->impl->period, new_period);
   RCUTILS_LOG_DEBUG_NAMED(
@@ -406,7 +394,6 @@ rcl_ret_t
 rcl_timer_is_canceled(const rcl_timer_t * timer, bool * is_canceled)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(timer->impl, RCL_RET_TIMER_INVALID);
   RCL_CHECK_ARGUMENT_FOR_NULL(is_canceled, RCL_RET_INVALID_ARGUMENT);
   *is_canceled = rcutils_atomic_load_bool(&timer->impl->canceled);
   return RCL_RET_OK;

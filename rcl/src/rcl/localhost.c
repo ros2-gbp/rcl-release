@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rcutils/env.h"
+#include "rcutils/get_env.h"
 
 #include "rcl/error_handling.h"
 #include "rcl/types.h"
