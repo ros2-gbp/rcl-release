@@ -1,0 +1,12 @@
+Source: ros-galactic-rcl-yaml-param-parser
+Section: misc
+Priority: optional
+Maintainer: Ivan Paunovic <ivanpauno@ekumenlabs.com>
+Build-Depends: debhelper (>= 9.0.0), libyaml-dev, ros-galactic-ament-cmake-gtest <!nocheck>, ros-galactic-ament-cmake-ros, ros-galactic-ament-lint-auto <!nocheck>, ros-galactic-ament-lint-common <!nocheck>, ros-galactic-libyaml-vendor, ros-galactic-mimick-vendor <!nocheck>, ros-galactic-osrf-testing-tools-cpp <!nocheck>, ros-galactic-performance-test-fixture <!nocheck>, ros-galactic-rcpputils <!nocheck>, ros-galactic-rcutils, ros-galactic-rmw, ros-galactic-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-galactic-rcl-yaml-param-parser
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libyaml-dev, ros-galactic-libyaml-vendor, ros-galactic-rmw, ros-galactic-ros-workspace
+Description: Parse a YAML parameter file and populate the C data structure.
