@@ -2,7 +2,39 @@
 Changelog for package rcl_yaml_param_parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-3.1.3 (2022-04-28)
+5.4.0 (2022-04-29)
+------------------
+
+5.3.1 (2022-04-26)
+------------------
+
+5.3.0 (2022-04-05)
+------------------
+
+5.2.1 (2022-03-31)
+------------------
+
+5.2.0 (2022-03-24)
+------------------
+
+5.1.0 (2022-03-01)
+------------------
+* Install includes it include/${PROJECT_NAME} (`#959 <https://github.com/ros2/rcl/issues/959>`_)
+* Contributors: Shane Loretz
+
+5.0.1 (2022-01-14)
+------------------
+
+5.0.0 (2021-12-14)
+------------------
+* Update maintainers to Ivan Paunovic and William Woodall (`#952 <https://github.com/ros2/rcl/issues/952>`_)
+* Tweak rcl_yaml_param_parser documentation (`#939 <https://github.com/ros2/rcl/issues/939>`_)
+* Contributors: Audrow Nash, Michel Hidalgo
+
+4.0.0 (2021-09-16)
+------------------
+
+3.2.0 (2021-09-02)
 ------------------
 
 3.1.2 (2021-04-26)

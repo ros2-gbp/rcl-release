@@ -74,8 +74,10 @@ rcl_logging_configure_with_output_handler(
   g_rcl_logging_num_out_handlers = 0;
 
   if (log_levels) {
-    default_level = (int)log_levels->default_logger_level;
-    rcutils_logging_set_default_logger_level(default_level);
+    if (log_levels->default_logger_level != RCUTILS_LOG_SEVERITY_UNSET) {
+      default_level = (int)log_levels->default_logger_level;
+      rcutils_logging_set_default_logger_level(default_level);
+    }
 
     for (size_t i = 0; i < log_levels->num_logger_settings; ++i) {
       rcutils_ret_t rcutils_status = rcutils_logging_set_logger_level(
@@ -100,11 +102,9 @@ rcl_logging_configure_with_output_handler(
   if (g_rcl_logging_ext_lib_enabled) {
     status = rcl_logging_external_initialize(config_file, g_logging_allocator);
     if (RCL_RET_OK == status) {
-      // TODO(dirk-thomas) the return value should be typed and compared to
-      // constants instead of zero
-      int logging_status = rcl_logging_external_set_logger_level(
+      rcl_logging_ret_t logging_status = rcl_logging_external_set_logger_level(
         NULL, default_level);
-      if (logging_status != 0) {
+      if (RCL_LOGGING_RET_OK != logging_status) {
         status = RCL_RET_ERROR;
       }
       g_rcl_logging_out_handlers[g_rcl_logging_num_out_handlers++] =
@@ -165,8 +165,11 @@ static
 void
 rcl_logging_ext_lib_output_handler(
   const rcutils_log_location_t * location,
-  int severity, const char * name, rcutils_time_point_value_t timestamp,
-  const char * format, va_list * args)
+  int severity,
+  const char * name,
+  rcutils_time_point_value_t timestamp,
+  const char * format,
+  va_list * args)
 {
   rcl_ret_t status;
   char msg_buf[1024] = "";
@@ -188,7 +191,9 @@ rcl_logging_ext_lib_output_handler(
   };
 
   va_list args_clone;
-  va_copy(args_clone, *args);
+  // The args are initialized, but clang-tidy cannot tell.
+  // It may be related to this bug: https://bugs.llvm.org/show_bug.cgi?id=41311
+  va_copy(args_clone, *args);  // NOLINT(clang-analyzer-valist.Uninitialized)
   status = rcutils_char_array_vsprintf(&msg_array, format, args_clone);
   va_end(args_clone);
 
