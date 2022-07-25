@@ -1,0 +1,12 @@
+Source: ros-foxy-rcl-yaml-param-parser
+Section: misc
+Priority: optional
+Maintainer: Anup Pemmaiah <anup.pemmaiah@apex.ai>
+Build-Depends: debhelper (>= 9.0.0), libyaml-dev, ros-foxy-ament-cmake-gtest, ros-foxy-ament-cmake-ros, ros-foxy-ament-lint-auto, ros-foxy-ament-lint-common, ros-foxy-libyaml-vendor, ros-foxy-mimick-vendor, ros-foxy-osrf-testing-tools-cpp, ros-foxy-performance-test-fixture, ros-foxy-rcpputils, ros-foxy-rcutils, ros-foxy-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-foxy-rcl-yaml-param-parser
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libyaml-dev, ros-foxy-libyaml-vendor, ros-foxy-ros-workspace
+Description: Parse a YAML parameter file and populate the C data structure.
