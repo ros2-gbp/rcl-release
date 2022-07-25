@@ -24,12 +24,12 @@ extern "C"
 
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
-#include "rcl/node.h"
+#include "rcl/expand_topic_name.h"
+#include "rcl/remap.h"
 #include "rcutils/logging_macros.h"
 #include "rcutils/macros.h"
-#include "rcl/time.h"
-#include "rmw/time.h"
 #include "rmw/error_handling.h"
+#include "rmw/validate_full_topic_name.h"
 #include "tracetools/tracetools.h"
 
 #include "./common.h"
@@ -78,26 +78,90 @@ rcl_publisher_init(
   RCUTILS_LOG_DEBUG_NAMED(
     ROS_PACKAGE_NAME, "Initializing publisher for topic name '%s'", topic_name);
 
-  // Expand and remap the given topic name.
+
+  // Expand the given topic name.
+  rcutils_allocator_t rcutils_allocator = *allocator;  // implicit conversion to rcutils version
+  rcutils_string_map_t substitutions_map = rcutils_get_zero_initialized_string_map();
+  rcutils_ret_t rcutils_ret = rcutils_string_map_init(&substitutions_map, 0, rcutils_allocator);
+  if (rcutils_ret != RCUTILS_RET_OK) {
+    RCL_SET_ERROR_MSG(rcutils_get_error_string().str);
+    if (rcutils_ret == RCUTILS_RET_BAD_ALLOC) {
+      return RCL_RET_BAD_ALLOC;
+    }
+    return RCL_RET_ERROR;
+  }
+  rcl_ret_t ret = rcl_get_default_topic_name_substitutions(&substitutions_map);
+  if (ret != RCL_RET_OK) {
+    rcutils_ret = rcutils_string_map_fini(&substitutions_map);
+    if (rcutils_ret != RCUTILS_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        ROS_PACKAGE_NAME,
+        "failed to fini string_map (%d) during error handling: %s",
+        rcutils_ret,
+        rcutils_get_error_string().str);
+    }
+    if (ret == RCL_RET_BAD_ALLOC) {
+      return ret;
+    }
+    return RCL_RET_ERROR;
+  }
+  char * expanded_topic_name = NULL;
   char * remapped_topic_name = NULL;
-  rcl_ret_t ret = rcl_node_resolve_name(
-    node,
+  ret = rcl_expand_topic_name(
     topic_name,
+    rcl_node_get_name(node),
+    rcl_node_get_namespace(node),
+    &substitutions_map,
     *allocator,
-    false,
-    false,
-    &remapped_topic_name);
+    &expanded_topic_name);
+  rcutils_ret = rcutils_string_map_fini(&substitutions_map);
+  if (rcutils_ret != RCUTILS_RET_OK) {
+    RCL_SET_ERROR_MSG(rcutils_get_error_string().str);
+    ret = RCL_RET_ERROR;
+    goto cleanup;
+  }
   if (ret != RCL_RET_OK) {
     if (ret == RCL_RET_TOPIC_NAME_INVALID || ret == RCL_RET_UNKNOWN_SUBSTITUTION) {
       ret = RCL_RET_TOPIC_NAME_INVALID;
-    } else if (ret != RCL_RET_BAD_ALLOC) {
+    } else {
       ret = RCL_RET_ERROR;
     }
     goto cleanup;
   }
-  RCUTILS_LOG_DEBUG_NAMED(
-    ROS_PACKAGE_NAME, "Expanded and remapped topic name '%s'", remapped_topic_name);
+  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Expanded topic name '%s'", expanded_topic_name);
 
+  const rcl_node_options_t * node_options = rcl_node_get_options(node);
+  if (NULL == node_options) {
+    ret = RCL_RET_ERROR;
+    goto cleanup;
+  }
+  rcl_arguments_t * global_args = NULL;
+  if (node_options->use_global_arguments) {
+    global_args = &(node->context->global_arguments);
+  }
+  ret = rcl_remap_topic_name(
+    &(node_options->arguments), global_args, expanded_topic_name,
+    rcl_node_get_name(node), rcl_node_get_namespace(node), *allocator, &remapped_topic_name);
+  if (RCL_RET_OK != ret) {
+    goto fail;
+  } else if (NULL == remapped_topic_name) {
+    remapped_topic_name = expanded_topic_name;
+    expanded_topic_name = NULL;
+  }
+
+  // Validate the expanded topic name.
+  int validation_result;
+  rmw_ret_t rmw_ret = rmw_validate_full_topic_name(remapped_topic_name, &validation_result, NULL);
+  if (rmw_ret != RMW_RET_OK) {
+    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
+    ret = RCL_RET_ERROR;
+    goto cleanup;
+  }
+  if (validation_result != RMW_TOPIC_VALID) {
+    RCL_SET_ERROR_MSG(rmw_full_topic_name_validation_result_string(validation_result));
+    ret = RCL_RET_TOPIC_NAME_INVALID;
+    goto cleanup;
+  }
   // Allocate space for the implementation struct.
   publisher->impl = (rcl_publisher_impl_t *)allocator->allocate(
     sizeof(rcl_publisher_impl_t), allocator->state);
@@ -116,11 +180,12 @@ rcl_publisher_init(
   RCL_CHECK_FOR_NULL_WITH_MSG(
     publisher->impl->rmw_handle, rmw_get_error_string().str, goto fail);
   // get actual qos, and store it
-  rmw_ret_t rmw_ret = rmw_publisher_get_actual_qos(
+  rmw_ret = rmw_publisher_get_actual_qos(
     publisher->impl->rmw_handle,
     &publisher->impl->actual_qos);
   if (RMW_RET_OK != rmw_ret) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
+    ret = RCL_RET_ERROR;
     goto fail;
   }
   publisher->impl->actual_qos.avoid_ros_namespace_conventions =
@@ -156,7 +221,12 @@ fail:
   ret = fail_ret;
   // Fall through to cleanup
 cleanup:
-  allocator->deallocate(remapped_topic_name, allocator->state);
+  if (NULL != expanded_topic_name) {
+    allocator->deallocate(expanded_topic_name, allocator->state);
+  }
+  if (NULL != remapped_topic_name) {
+    allocator->deallocate(remapped_topic_name, allocator->state);
+  }
   return ret;
 }
 
@@ -245,7 +315,6 @@ rcl_publish(
     return RCL_RET_PUBLISHER_INVALID;  // error already set
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_message, RCL_RET_INVALID_ARGUMENT);
-  TRACEPOINT(rcl_publish, (const void *)publisher, (const void *)ros_message);
   if (rmw_publish(publisher->impl->rmw_handle, ros_message, allocation) != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     return RCL_RET_ERROR;
@@ -303,41 +372,6 @@ rcl_publisher_assert_liveliness(const rcl_publisher_t * publisher)
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     return RCL_RET_ERROR;
   }
-  return RCL_RET_OK;
-}
-
-rcl_ret_t
-rcl_publisher_wait_for_all_acked(const rcl_publisher_t * publisher, rcl_duration_value_t timeout)
-{
-  if (!rcl_publisher_is_valid(publisher)) {
-    return RCL_RET_PUBLISHER_INVALID;  // error already set
-  }
-
-  rmw_time_t rmw_timeout;
-  if (timeout > 0) {
-    rmw_timeout.sec = RCL_NS_TO_S(timeout);
-    rmw_timeout.nsec = timeout % 1000000000;
-  } else if (timeout < 0) {
-    rmw_time_t infinite = RMW_DURATION_INFINITE;
-    rmw_timeout = infinite;
-  } else {
-    rmw_time_t zero = RMW_DURATION_UNSPECIFIED;
-    rmw_timeout = zero;
-  }
-
-  rmw_ret_t ret = rmw_publisher_wait_for_all_acked(publisher->impl->rmw_handle, rmw_timeout);
-  if (ret != RMW_RET_OK) {
-    if (ret == RMW_RET_TIMEOUT) {
-      return RCL_RET_TIMEOUT;
-    }
-    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
-    if (ret == RMW_RET_UNSUPPORTED) {
-      return RCL_RET_UNSUPPORTED;
-    } else {
-      return RCL_RET_ERROR;
-    }
-  }
-
   return RCL_RET_OK;
 }
 
@@ -440,13 +474,6 @@ rcl_publisher_can_loan_messages(const rcl_publisher_t * publisher)
   if (!rcl_publisher_is_valid(publisher)) {
     return false;  // error message already set
   }
-
-  bool disable_loaned_message = false;
-  rcl_ret_t ret = rcl_get_disable_loaned_message(&disable_loaned_message);
-  if (ret == RCL_RET_OK && disable_loaned_message) {
-    return false;
-  }
-
   return publisher->impl->rmw_handle->can_loan_messages;
 }
 

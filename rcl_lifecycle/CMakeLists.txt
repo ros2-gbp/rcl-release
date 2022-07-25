@@ -9,7 +9,6 @@ find_package(rcl REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
-find_package(tracetools REQUIRED)
 
 # Default to C11
 if(NOT CMAKE_C_STANDARD)
@@ -22,10 +21,7 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(
-    -Wall -Wextra -Wpedantic
-    -Wformat=2 -Wconversion -Wshadow -Wsign-conversion
-  )
+  add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 set(rcl_lifecycle_sources
@@ -45,7 +41,7 @@ add_library(
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+  "$<INSTALL_INTERFACE:include>")
 
 # specific order: dependents before dependencies
 ament_target_dependencies(rcl_lifecycle
@@ -53,7 +49,6 @@ ament_target_dependencies(rcl_lifecycle
   "rcl"
   "rcutils"
   "rosidl_runtime_c"
-  "tracetools"
 )
 
 rcl_set_symbol_visibility_hidden(${PROJECT_NAME} LANGUAGE "C")
@@ -125,22 +120,17 @@ if(BUILD_TESTING)
   endif()
 endif()
 
-# Export old-style CMake variables
-ament_export_include_directories("include/${PROJECT_NAME}")
-ament_export_libraries(${PROJECT_NAME})
-
-# Export modern CMake targets
-ament_export_targets(${PROJECT_NAME})
-
 # specific order: dependents before dependencies
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_targets(${PROJECT_NAME})
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(lifecycle_msgs)
 ament_export_dependencies(rcl)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rosidl_runtime_c)
-ament_export_dependencies(tracetools)
 ament_package()
 
 install(
   DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME})
+  DESTINATION include)

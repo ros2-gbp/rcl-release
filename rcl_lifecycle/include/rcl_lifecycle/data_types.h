@@ -19,22 +19,20 @@
 
 #include "rcl_lifecycle/visibility_control.h"
 
-#include "lifecycle_msgs/msg/transition_event.h"
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-typedef struct rcl_lifecycle_transition_s rcl_lifecycle_transition_t;
+typedef struct rcl_lifecycle_transition_t rcl_lifecycle_transition_t;
 
 /// It contains the state of the lifecycle state machine
-typedef struct rcl_lifecycle_state_s
+typedef struct rcl_lifecycle_state_t
 {
   /// String with state name: Unconfigured, Inactive, Active or Finalized
   const char * label;
   /// Identifier of the state
-  uint8_t id;
+  unsigned int id;
 
   /// Pointer to a struct with the valid transitions
   rcl_lifecycle_transition_t * valid_transitions;
@@ -43,7 +41,7 @@ typedef struct rcl_lifecycle_state_s
 } rcl_lifecycle_state_t;
 
 /// It contains the transitions of the lifecycle state machine
-typedef struct rcl_lifecycle_transition_s
+typedef struct rcl_lifecycle_transition_t
 {
   /// String with transition name: configuring, cleaningup, activating, deactivating,
   /// errorprocessing or shuttingdown.
@@ -57,7 +55,7 @@ typedef struct rcl_lifecycle_transition_s
 } rcl_lifecycle_transition_t;
 
 /// It contains the transition map states and transitions
-typedef struct rcl_lifecycle_transition_map_s
+typedef struct rcl_lifecycle_transition_map_t
 {
   /// States used to generate the transition map
   rcl_lifecycle_state_t * states;
@@ -70,7 +68,7 @@ typedef struct rcl_lifecycle_transition_map_s
 } rcl_lifecycle_transition_map_t;
 
 /// It contains the communication interfac with the ROS world
-typedef struct rcl_lifecycle_com_interface_s
+typedef struct rcl_lifecycle_com_interface_t
 {
   /// Handle to the node used to create the publisher and the services
   rcl_node_t * node_handle;
@@ -86,23 +84,10 @@ typedef struct rcl_lifecycle_com_interface_s
   rcl_service_t srv_get_available_transitions;
   /// Service that allows to get transitions from the graph
   rcl_service_t srv_get_transition_graph;
-  /// Cached transition event message.
-  lifecycle_msgs__msg__TransitionEvent msg;
 } rcl_lifecycle_com_interface_t;
 
-/// It contains various options to configure the rcl_lifecycle_state_machine_t instance
-typedef struct rcl_lifecycle_state_machine_options_s
-{
-  /// Flag indicating whether the state machine shall be initialized with default states
-  bool initialize_default_states;
-  /// Flag indicating whether the com interface shall be used or not
-  bool enable_com_interface;
-  /// Allocator used for allocating states and transitions
-  rcl_allocator_t allocator;
-} rcl_lifecycle_state_machine_options_t;
-
 /// It contains the state machine data
-typedef struct rcl_lifecycle_state_machine_s
+typedef struct rcl_lifecycle_state_machine_t
 {
   /// Current state of the state machine
   const rcl_lifecycle_state_t * current_state;
@@ -110,8 +95,6 @@ typedef struct rcl_lifecycle_state_machine_s
   rcl_lifecycle_transition_map_t transition_map;
   /// Communication interface into a ROS world
   rcl_lifecycle_com_interface_t com_interface;
-  /// Options struct with which the state machine was initialized
-  rcl_lifecycle_state_machine_options_t options;
 } rcl_lifecycle_state_machine_t;
 
 #ifdef __cplusplus

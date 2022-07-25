@@ -149,15 +149,10 @@ TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), check_known_vs_unkno
   EXPECT_TRUE(are_known_ros_args({"--ros-args", "-r", "rostopic:///rosservice:=rostopic"}));
   EXPECT_TRUE(are_known_ros_args({"--ros-args", "-r", "rostopic:///foo/bar:=baz"}));
   EXPECT_TRUE(are_known_ros_args({"--ros-args", "-p", "foo:=bar"}));
-  // TODO(ivanpauno): Currently, we're accepting `/`, as they're being accepted by qos overrides.
-  //                  We might need to revisit qos overrides parameters names if ROS 2 URIs get
-  //                  modified.
-  EXPECT_TRUE(
-    are_known_ros_args(
-      {"--ros-args", "-p", "qos_overrides./foo/bar.publisher.history:=keep_last"}));
   // TODO(hidmic): restore tests (and drop the following ones) when parameter names
   //               are standardized to use slashes in lieu of dots.
   // EXPECT_TRUE(are_known_ros_args({"--ros-args", "-p", "~/foo:=~/bar"}));
+  // EXPECT_TRUE(are_known_ros_args({"--ros-args", "-p", "/foo/bar:=bar"}));
   // EXPECT_TRUE(are_known_ros_args({"--ros-args", "-p", "foo:=/bar"}));
   // EXPECT_TRUE(are_known_ros_args({"--ros-args", "-p", "/foo123:=/bar123"}));
   EXPECT_TRUE(are_known_ros_args({"--ros-args", "-p", "foo.bar:=bar"}));
@@ -1026,12 +1021,9 @@ TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_param_argument_
   ASSERT_TRUE(NULL != param_value->bool_array_value);
   ASSERT_TRUE(NULL != param_value->bool_array_value->values);
   ASSERT_EQ(3U, param_value->bool_array_value->size);
-  bool bool_value = param_value->bool_array_value->values[0];
-  EXPECT_TRUE(bool_value);
-  bool_value = param_value->bool_array_value->values[1];
-  EXPECT_FALSE(bool_value);
-  bool_value = param_value->bool_array_value->values[2];
-  EXPECT_FALSE(bool_value);
+  EXPECT_TRUE(param_value->bool_array_value->values[0]);
+  EXPECT_FALSE(param_value->bool_array_value->values[1]);
+  EXPECT_FALSE(param_value->bool_array_value->values[2]);
 }
 
 TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_param_arguments_copy) {
@@ -1143,8 +1135,7 @@ TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_param_overrides
   param_value = rcl_yaml_node_struct_get("/**", "some.bool_param", params);
   ASSERT_TRUE(NULL != param_value);
   ASSERT_TRUE(NULL != param_value->bool_value);
-  bool bool_value = *param_value->bool_value;
-  EXPECT_FALSE(bool_value);
+  EXPECT_FALSE(*(param_value->bool_value));
 
   param_value = rcl_yaml_node_struct_get("some_node", "int_param", params);
   ASSERT_TRUE(NULL != param_value);
@@ -1244,7 +1235,6 @@ TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_parse_with_inte
     RCL_PARAM_FLAG, "this_node:constant:=42",
     RCL_ENCLAVE_FLAG, "fizz",
     RCL_ENCLAVE_FLAG, "buzz",  // override
-    RCL_LOG_LEVEL_FLAG, "rcl:=debug",
     RCL_EXTERNAL_LOG_CONFIG_FLAG, "flip.txt",
     RCL_EXTERNAL_LOG_CONFIG_FLAG, "flop.txt",  // override
     "--enable-" RCL_LOG_STDOUT_FLAG_SUFFIX,
@@ -1289,7 +1279,6 @@ TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_copy_with_inter
     RCL_PARAM_FLAG, "this_node:constant:=42",
     RCL_ENCLAVE_FLAG, "fizz",
     RCL_ENCLAVE_FLAG, "buzz",  // override
-    RCL_LOG_LEVEL_FLAG, "rcl:=debug",
     RCL_EXTERNAL_LOG_CONFIG_FLAG, "flip.txt",
     RCL_EXTERNAL_LOG_CONFIG_FLAG, "flop.txt",  // override
     "--enable-" RCL_LOG_STDOUT_FLAG_SUFFIX,

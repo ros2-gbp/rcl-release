@@ -246,24 +246,14 @@ TEST_F(TestTimerFixture, test_two_timers) {
     ret = rcl_wait_set_fini(&wait_set);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
-  // The loop is needed because the rcl_wait_set might suffer spurious
-  // awakes when timers are involved.
-  // The loop can be removed if spurious awakes are fixed in the future.
-  // This issue particularly happens on Windows.
+  ret = rcl_wait(&wait_set, RCL_MS_TO_NS(100));
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   uint8_t nonnull_timers = 0;
-  auto start = std::chrono::system_clock::now();
-  do {
-    ret = rcl_wait(&wait_set, RCL_MS_TO_NS(100));
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    for (uint8_t i = 0; i < wait_set.size_of_timers; i++) {
-      if (wait_set.timers[i] != NULL) {
-        nonnull_timers++;
-      }
+  for (uint8_t i = 0; i < wait_set.size_of_timers; i++) {
+    if (wait_set.timers[i] != NULL) {
+      nonnull_timers++;
     }
-  } while (
-    nonnull_timers == 0u ||
-    std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::system_clock::now() - start).count() > 100u);
+  }
   bool is_ready = false;
   ret = rcl_timer_is_ready(&timer, &is_ready);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -314,24 +304,14 @@ TEST_F(TestTimerFixture, test_two_timers_ready_before_timeout) {
     ret = rcl_wait_set_fini(&wait_set);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   });
-  // The loop is needed because the rcl_wait_set might suffer spurious
-  // awakes when timers are involved.
-  // The loop can be removed if spurious awakes are fixed in the future.
-  // This issue particularly happens on Windows.
-  uint8_t nonnull_timers = 0u;
-  auto start = std::chrono::system_clock::now();
-  do {
-    ret = rcl_wait(&wait_set, RCL_MS_TO_NS(100));
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    for (uint8_t i = 0; i < wait_set.size_of_timers; i++) {
-      if (wait_set.timers[i] != NULL) {
-        nonnull_timers++;
-      }
+  ret = rcl_wait(&wait_set, RCL_MS_TO_NS(100));
+  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  uint8_t nonnull_timers = 0;
+  for (uint8_t i = 0; i < wait_set.size_of_timers; i++) {
+    if (wait_set.timers[i] != NULL) {
+      nonnull_timers++;
     }
-  } while (
-    nonnull_timers == 0u ||
-    std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::system_clock::now() - start).count() > 100u);
+  }
   bool is_ready = false;
   ret = rcl_timer_is_ready(&timer, &is_ready);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -496,10 +476,6 @@ TEST_F(TestTimerFixture, test_canceled_timer) {
 
   ret = rcl_timer_cancel(&timer);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-
-  int64_t time_until_next_call = 0;
-  ret = rcl_timer_get_time_until_next_call(&timer, &time_until_next_call);
-  EXPECT_EQ(RCL_RET_TIMER_CANCELED, ret) << rcl_get_error_string().str;
 
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   ret = rcl_wait_set_init(&wait_set, 0, 0, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());

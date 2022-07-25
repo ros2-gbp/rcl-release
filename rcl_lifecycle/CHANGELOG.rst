@@ -2,114 +2,48 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-5.4.0 (2022-04-29)
-------------------
+1.1.14 (2022-07-25)
+-------------------
 
-5.3.1 (2022-04-26)
-------------------
+1.1.13 (2022-02-04)
+-------------------
 
-5.3.0 (2022-04-05)
-------------------
+1.1.12 (2022-01-31)
+-------------------
 
-5.2.1 (2022-03-31)
-------------------
+1.1.11 (2021-04-14)
+-------------------
+* Update quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#910 <https://github.com/ros2/rcl/issues/910>`_)
+* Contributors: Simon Honigmann
 
-5.2.0 (2022-03-24)
-------------------
+1.1.10 (2020-12-09)
+-------------------
+* Update build.ros2.org links (`#868 <https://github.com/ros2/rcl/issues/868>`_)
+* Update QD to QL 1 (`#867 <https://github.com/ros2/rcl/issues/867>`_)
+* Update QD (`#843 <https://github.com/ros2/rcl/issues/843>`_)
+* Contributors: Alejandro Hernández Cordero, Christophe Bedard, Jorge Perez, Stephen Brawner
 
-5.1.0 (2022-03-01)
+1.1.9 (2020-11-03)
 ------------------
-* Install includes it include/${PROJECT_NAME} (`#959 <https://github.com/ros2/rcl/issues/959>`_)
-* Contributors: Shane Loretz
-
-5.0.1 (2022-01-14)
-------------------
-* [rcl_lifecycle] Do not share transition event message between nodes (`#956 <https://github.com/ros2/rcl/issues/956>`_)
-* Contributors: Ivan Santiago Paunovic
-
-5.0.0 (2021-12-14)
-------------------
-* Update maintainers to Ivan Paunovic and William Woodall (`#952 <https://github.com/ros2/rcl/issues/952>`_)
-* Fix up documentation build for rcl_lifecycle when using rosdoc2 (`#938 <https://github.com/ros2/rcl/issues/938>`_)
-* Contributors: Audrow Nash, Michel Hidalgo
-
-4.0.0 (2021-09-16)
-------------------
-
-3.2.0 (2021-09-02)
-------------------
-* Rename variable to fix name shadowing warning (`#929 <https://github.com/ros2/rcl/issues/929>`_)
-* Contributors: Alberto Soragna
-
-3.1.2 (2021-04-26)
-------------------
-
-3.1.1 (2021-04-12)
-------------------
-
-3.1.0 (2021-04-06)
-------------------
-* updating quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#909 <https://github.com/ros2/rcl/issues/909>`_)
-* Contributors: shonigmann
-
-3.0.1 (2021-03-25)
-------------------
-
-3.0.0 (2021-03-23)
-------------------
-* make rcl_lifecycle_com_interface optional in lifecycle nodes (`#882 <https://github.com/ros2/rcl/issues/882>`_)
-* Contributors: Karsten Knese
-
-2.6.0 (2021-03-18)
-------------------
-
-2.5.2 (2021-02-05)
-------------------
-
-2.5.1 (2021-01-25)
-------------------
-
-2.5.0 (2020-12-08)
-------------------
-* Update QDs to QL 1 (`#866 <https://github.com/ros2/rcl/issues/866>`_)
-* Update QL (`#858 <https://github.com/ros2/rcl/issues/858>`_)
-* Make sure to always check return values (`#840 <https://github.com/ros2/rcl/issues/840>`_)
-* Update tracetools QL and add to rcl_lifecycle's QD (`#845 <https://github.com/ros2/rcl/issues/845>`_)
-* Add compiler warnings (`#830 <https://github.com/ros2/rcl/issues/830>`_)
-* Contributors: Alejandro Hernández Cordero, Audrow Nash, Chris Lalancette, Christophe Bedard, Stephen Brawner
-
-2.4.0 (2020-10-19)
-------------------
+* Make sure to always check return values. (`#840 <https://github.com/ros2/rcl/issues/840>`_)
 * Make sure to check the return value of rcl APIs. (`#838 <https://github.com/ros2/rcl/issues/838>`_)
-* Contributors: Chris Lalancette
-
-2.3.0 (2020-10-19)
-------------------
-* Add lifecycle node state transition instrumentation (`#804 <https://github.com/ros2/rcl/issues/804>`_)
-* Update maintainers (`#825 <https://github.com/ros2/rcl/issues/825>`_)
-* Improve error messages in rcl_lifecycle (`#742 <https://github.com/ros2/rcl/issues/742>`_)
 * Fix test_rcl_lifecycle (`#788 <https://github.com/ros2/rcl/issues/788>`_)
-* Contributors: Christophe Bedard, Ivan Santiago Paunovic, Lei Liu, brawner
-
-2.2.0 (2020-09-02)
-------------------
 * Add fault injection macros and unit tests to rcl_lifecycle (`#731 <https://github.com/ros2/rcl/issues/731>`_)
-* Remove std::cout line from test_rcl_lifecycle.cpp (`#773 <https://github.com/ros2/rcl/issues/773>`_)
-* Set transition_map->states/transition size to 0 on fini (`#729 <https://github.com/ros2/rcl/issues/729>`_)
-* Contributors: brawner
+* Contributors: Chris Lalancette, brawner
 
-2.1.0 (2020-07-22)
+1.1.8 (2020-10-07)
 ------------------
-* Topic fix rcl lifecycle test issue (`#715 <https://github.com/ros2/rcl/issues/715>`_)
-* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_)
-* Contributors: Alejandro Hernández Cordero, Barry Xu
+* Set transition_map->states/transition size to 0 on fini (`#729 <https://github.com/ros2/rcl/issues/729>`_) (`#821 <https://github.com/ros2/rcl/issues/821>`_)
+* Topic fix rcl lifecycle test issue (`#715 <https://github.com/ros2/rcl/issues/715>`_) (`#796 <https://github.com/ros2/rcl/issues/796>`_)
+* Remove std::cout line from test_rcl_lifecycle.cpp (`#773 <https://github.com/ros2/rcl/issues/773>`_) (`#774 <https://github.com/ros2/rcl/issues/774>`_)
+* Contributors: Shane Loretz, Stephen Brawner
 
-2.0.0 (2020-07-09)
+1.1.7 (2020-08-03)
 ------------------
-* Update quality declaration and coverage (`#674 <https://github.com/ros2/rcl/issues/674>`_)
+* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_) (`#724 <https://github.com/ros2/rcl/issues/724>`_)
 * Contributors: Alejandro Hernández Cordero
 
-1.2.0 (2020-06-18)
+1.1.6 (2020-07-07)
 ------------------
 
 1.1.5 (2020-06-03)

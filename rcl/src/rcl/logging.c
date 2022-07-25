@@ -26,7 +26,7 @@ extern "C"
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
 #include "rcl/logging.h"
-#include "rcl_logging_interface/rcl_logging_interface.h"
+#include "rcl/logging_external_interface.h"
 #include "rcl/logging_rosout.h"
 #include "rcl/macros.h"
 #include "rcutils/logging.h"
@@ -64,8 +64,7 @@ rcl_logging_configure_with_output_handler(
   RCL_CHECK_ARGUMENT_FOR_NULL(output_handler, RCL_RET_INVALID_ARGUMENT);
   RCUTILS_LOGGING_AUTOINIT;
   g_logging_allocator = *allocator;
-  int default_level = -1;
-  rcl_log_levels_t * log_levels = &global_args->impl->log_levels;
+  int default_level = global_args->impl->log_level;
   const char * config_file = global_args->impl->external_log_config_file;
   g_rcl_logging_stdout_enabled = !global_args->impl->log_stdout_disabled;
   g_rcl_logging_rosout_enabled = !global_args->impl->log_rosout_disabled;
@@ -73,20 +72,8 @@ rcl_logging_configure_with_output_handler(
   rcl_ret_t status = RCL_RET_OK;
   g_rcl_logging_num_out_handlers = 0;
 
-  if (log_levels) {
-    if (log_levels->default_logger_level != RCUTILS_LOG_SEVERITY_UNSET) {
-      default_level = (int)log_levels->default_logger_level;
-      rcutils_logging_set_default_logger_level(default_level);
-    }
-
-    for (size_t i = 0; i < log_levels->num_logger_settings; ++i) {
-      rcutils_ret_t rcutils_status = rcutils_logging_set_logger_level(
-        log_levels->logger_settings[i].name,
-        (int)log_levels->logger_settings[i].level);
-      if (RCUTILS_RET_OK != rcutils_status) {
-        return RCL_RET_ERROR;
-      }
-    }
+  if (default_level >= 0) {
+    rcutils_logging_set_default_logger_level(default_level);
   }
   if (g_rcl_logging_stdout_enabled) {
     g_rcl_logging_out_handlers[g_rcl_logging_num_out_handlers++] =
@@ -102,9 +89,11 @@ rcl_logging_configure_with_output_handler(
   if (g_rcl_logging_ext_lib_enabled) {
     status = rcl_logging_external_initialize(config_file, g_logging_allocator);
     if (RCL_RET_OK == status) {
-      rcl_logging_ret_t logging_status = rcl_logging_external_set_logger_level(
+      // TODO(dirk-thomas) the return value should be typed and compared to
+      // constants instead of zero
+      int logging_status = rcl_logging_external_set_logger_level(
         NULL, default_level);
-      if (RCL_LOGGING_RET_OK != logging_status) {
+      if (logging_status != 0) {
         status = RCL_RET_ERROR;
       }
       g_rcl_logging_out_handlers[g_rcl_logging_num_out_handlers++] =
@@ -122,16 +111,10 @@ rcl_logging_configure(const rcl_arguments_t * global_args, const rcl_allocator_t
     global_args, allocator, &rcl_logging_multiple_output_handler);
 }
 
-rcl_ret_t rcl_logging_fini(void)
+rcl_ret_t rcl_logging_fini()
 {
   rcl_ret_t status = RCL_RET_OK;
   rcutils_logging_set_output_handler(rcutils_logging_console_output_handler);
-  // In order to output log message to `rcutils_logging_console_output_handler`
-  // and `rcl_logging_ext_lib_output_handler` is not called after `rcl_logging_fini`,
-  // in addition to calling `rcutils_logging_set_output_handler`,
-  // the `g_rcl_logging_num_out_handlers` and `g_rcl_logging_out_handlers` must be updated.
-  g_rcl_logging_num_out_handlers = 1;
-  g_rcl_logging_out_handlers[0] = rcutils_logging_console_output_handler;
 
   if (g_rcl_logging_rosout_enabled) {
     status = rcl_logging_rosout_fini();
@@ -143,7 +126,7 @@ rcl_ret_t rcl_logging_fini(void)
   return status;
 }
 
-bool rcl_logging_rosout_enabled(void)
+bool rcl_logging_rosout_enabled()
 {
   return g_rcl_logging_rosout_enabled;
 }
@@ -165,11 +148,8 @@ static
 void
 rcl_logging_ext_lib_output_handler(
   const rcutils_log_location_t * location,
-  int severity,
-  const char * name,
-  rcutils_time_point_value_t timestamp,
-  const char * format,
-  va_list * args)
+  int severity, const char * name, rcutils_time_point_value_t timestamp,
+  const char * format, va_list * args)
 {
   rcl_ret_t status;
   char msg_buf[1024] = "";
@@ -191,9 +171,7 @@ rcl_logging_ext_lib_output_handler(
   };
 
   va_list args_clone;
-  // The args are initialized, but clang-tidy cannot tell.
-  // It may be related to this bug: https://bugs.llvm.org/show_bug.cgi?id=41311
-  va_copy(args_clone, *args);  // NOLINT(clang-analyzer-valist.Uninitialized)
+  va_copy(args_clone, *args);
   status = rcutils_char_array_vsprintf(&msg_array, format, args_clone);
   va_end(args_clone);
 

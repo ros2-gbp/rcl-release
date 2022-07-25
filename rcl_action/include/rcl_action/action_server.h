@@ -23,7 +23,6 @@ extern "C"
 #include "rcl_action/goal_handle.h"
 #include "rcl_action/types.h"
 #include "rcl_action/visibility_control.h"
-#include "rcl/event_callback.h"
 #include "rcl/macros.h"
 #include "rcl/node.h"
 #include "rcl/time.h"
@@ -31,17 +30,17 @@ extern "C"
 #include "rosidl_runtime_c/action_type_support_struct.h"
 
 /// Internal rcl_action implementation struct.
-typedef struct rcl_action_server_impl_s rcl_action_server_impl_t;
+struct rcl_action_server_impl_t;
 
 /// Structure which encapsulates a ROS Action Server.
-typedef struct rcl_action_server_s
+typedef struct rcl_action_server_t
 {
   /// Pointer to the action server implementation
-  rcl_action_server_impl_t * impl;
+  struct rcl_action_server_impl_t * impl;
 } rcl_action_server_t;
 
 /// Options available for a rcl_action_server_t.
-typedef struct rcl_action_server_options_s
+typedef struct rcl_action_server_options_t
 {
   /// Middleware quality of service settings for the action server.
   /// Goal service quality of service
@@ -930,30 +929,6 @@ RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
 bool
 rcl_action_server_is_valid_except_context(const rcl_action_server_t * action_server);
-
-RCL_ACTION_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_server_set_goal_service_callback(
-  const rcl_action_server_t * action_server,
-  rcl_event_callback_t callback,
-  const void * user_data);
-
-RCL_ACTION_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_server_set_cancel_service_callback(
-  const rcl_action_server_t * action_server,
-  rcl_event_callback_t callback,
-  const void * user_data);
-
-RCL_ACTION_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_server_set_result_service_callback(
-  const rcl_action_server_t * action_server,
-  rcl_event_callback_t callback,
-  const void * user_data);
 
 #ifdef __cplusplus
 }

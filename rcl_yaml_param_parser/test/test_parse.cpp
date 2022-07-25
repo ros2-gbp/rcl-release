@@ -32,7 +32,6 @@ TEST(TestParse, parse_value) {
   yaml_event_t event;
   event.type = YAML_NO_EVENT;
   event.start_mark = {0u, 0u, 0u};
-  event.end_mark = {0u, 0u, 0u};
   event.data.scalar = {NULL, NULL, NULL, 1u, 0, 0, YAML_ANY_SCALAR_STYLE};
 
   bool is_seq = false;
@@ -121,7 +120,6 @@ TEST(TestParse, parse_value_sequence) {
   yaml_event_t event;
   event.type = YAML_NO_EVENT;
   event.start_mark = {0u, 0u, 0u};
-  event.end_mark = {0u, 0u, 0u};
   event.data.scalar = {NULL, NULL, NULL, 1u, 0, 0, YAML_ANY_SCALAR_STYLE};
 
   bool is_seq = true;
@@ -282,7 +280,6 @@ TEST(TestParse, parse_value_bad_args) {
   yaml_event_t event;
   event.type = YAML_NO_EVENT;
   event.start_mark = {0u, 0u, 0u};
-  event.end_mark = {0u, 0u, 0u};
   event.data.scalar = {NULL, NULL, NULL, 1u, 0, 0, YAML_ANY_SCALAR_STYLE};
 
   bool is_seq = false;
@@ -359,7 +356,6 @@ TEST(TestParse, parse_key_bad_args)
   yaml_event_t event;
   event.type = YAML_NO_EVENT;
   event.start_mark = {0u, 0u, 0u};
-  event.end_mark = {0u, 0u, 0u};
 
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
   uint32_t map_level = MAP_NODE_NAME_LVL;
