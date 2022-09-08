@@ -2,51 +2,117 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.1.14 (2022-07-25)
--------------------
+5.3.2 (2022-09-08)
+------------------
 
-1.1.13 (2022-02-04)
--------------------
-* Fix expired goals capacity of action server (`#931 <https://github.com/ros2/rcl/issues/931>`_) (`#957 <https://github.com/ros2/rcl/issues/957>`_)
+5.3.1 (2022-04-26)
+------------------
+
+5.3.0 (2022-04-05)
+------------------
+
+5.2.1 (2022-03-31)
+------------------
+
+5.2.0 (2022-03-24)
+------------------
+
+5.1.0 (2022-03-01)
+------------------
+* Add Events Executor (`#839 <https://github.com/ros2/rcl/issues/839>`_)
+* Install includes it include/${PROJECT_NAME} (`#959 <https://github.com/ros2/rcl/issues/959>`_)
+* Contributors: Shane Loretz, iRobot ROS
+
+5.0.1 (2022-01-14)
+------------------
+
+5.0.0 (2021-12-14)
+------------------
+* Fix up documentation build for rcl_action when using rosdoc2 (`#937 <https://github.com/ros2/rcl/issues/937>`_)
+* Contributors: Michel Hidalgo
+
+4.0.0 (2021-09-16)
+------------------
+* Fix expired goals capacity of action server (`#931 <https://github.com/ros2/rcl/issues/931>`_)
 * Contributors: spiralray
 
-1.1.12 (2022-01-31)
--------------------
-
-1.1.11 (2021-04-14)
--------------------
-* Update quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#910 <https://github.com/ros2/rcl/issues/910>`_)
-* Contributors: Simon Honigmann
-
-1.1.10 (2020-12-09)
--------------------
-* rcl_action: address various clang static analysis fixes (`#864 <https://github.com/ros2/rcl/issues/864>`_) (`#875 <https://github.com/ros2/rcl/issues/875>`_)
-* Update build.ros2.org links (`#868 <https://github.com/ros2/rcl/issues/868>`_)
-* Update QD to QL 1 (`#867 <https://github.com/ros2/rcl/issues/867>`_)
-* Update QD (`#843 <https://github.com/ros2/rcl/issues/843>`_)
-* Contributors: Alejandro Hernández Cordero, Christophe Bedard, Jorge Perez, Stephen Brawner
-
-1.1.9 (2020-11-03)
+3.2.0 (2021-09-02)
 ------------------
-* Make sure to always check return values. (`#840 <https://github.com/ros2/rcl/issues/840>`_)
+* Wait for action server in rcl_action comm tests. (`#919 <https://github.com/ros2/rcl/issues/919>`_)
+* Contributors: Michel Hidalgo
+
+3.1.2 (2021-04-26)
+------------------
+
+3.1.1 (2021-04-12)
+------------------
+
+3.1.0 (2021-04-06)
+------------------
+* updating quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#909 <https://github.com/ros2/rcl/issues/909>`_)
+* Contributors: shonigmann
+
+3.0.1 (2021-03-25)
+------------------
+
+3.0.0 (2021-03-23)
+------------------
+
+2.6.0 (2021-03-18)
+------------------
+* Don't expect RCL_RET_TIMEOUT to set an error string (`#900 <https://github.com/ros2/rcl/issues/900>`_)
+* Add support for rmw_connextdds (`#895 <https://github.com/ros2/rcl/issues/895>`_)
+* Contributors: Andrea Sorbini
+
+2.5.2 (2021-02-05)
+------------------
+* Avoid setting error message twice. (`#887 <https://github.com/ros2/rcl/issues/887>`_)
+* Contributors: Chen Lihui
+
+2.5.1 (2021-01-25)
+------------------
+
+2.5.0 (2020-12-08)
+------------------
+* Address various clang static analysis fixes (`#864 <https://github.com/ros2/rcl/issues/864>`_)
+* Update QDs to QL 1 (`#866 <https://github.com/ros2/rcl/issues/866>`_)
+* Update QL (`#858 <https://github.com/ros2/rcl/issues/858>`_)
+* Make sure to always check return values (`#840 <https://github.com/ros2/rcl/issues/840>`_)
+* Update deprecated gtest macros (`#818 <https://github.com/ros2/rcl/issues/818>`_)
+* Contributors: Alejandro Hernández Cordero, Audrow Nash, Chris Lalancette, Stephen Brawner
+
+2.4.0 (2020-10-19)
+------------------
 * Make sure to check the return value of rcl APIs. (`#838 <https://github.com/ros2/rcl/issues/838>`_)
+* Contributors: Chris Lalancette
+
+2.3.0 (2020-10-19)
+------------------
+* Update maintainers (`#825 <https://github.com/ros2/rcl/issues/825>`_)
+* Store reference to rcl_clock_t instead of copy (`#797 <https://github.com/ros2/rcl/issues/797>`_)
+* Use valid clock in case of issue in rcl_timer_init (`#795 <https://github.com/ros2/rcl/issues/795>`_)
+* Contributors: Ivan Santiago Paunovic, Shane Loretz, brawner
+
+2.2.0 (2020-09-02)
+------------------
 * Add fault injection macros and unit tests to rcl_action (`#730 <https://github.com/ros2/rcl/issues/730>`_)
+* Change some EXPECT_EQ to ASSERT_EQ in test_action_server. (`#759 <https://github.com/ros2/rcl/issues/759>`_)
 * Contributors: Chris Lalancette, brawner
 
-1.1.8 (2020-10-07)
+2.1.0 (2020-07-22)
 ------------------
-* Fix action client test failure on Windows by zero initializing pointers and freeing memory (`#717 <https://github.com/ros2/rcl/issues/717>`_) (`#820 <https://github.com/ros2/rcl/issues/820>`_)
-* Use valid clock in case of issue in rcl_timer_init (`#795 <https://github.com/ros2/rcl/issues/795>`_) Store reference to rcl_clock_t instead of copy (`#797 <https://github.com/ros2/rcl/issues/797>`_) (`#805 <https://github.com/ros2/rcl/issues/805>`_)
-* Contributors: Shane Loretz, Stephen Brawner
+* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_)
+* Address issue 716 by zero initializing pointers and freeing memory (`#717 <https://github.com/ros2/rcl/issues/717>`_)
+* Contributors: Alejandro Hernández Cordero, brawner
 
-1.1.7 (2020-08-03)
+2.0.0 (2020-07-09)
 ------------------
-* Removed doxygen warnings (`#712 <https://github.com/ros2/rcl/issues/712>`_) (`#724 <https://github.com/ros2/rcl/issues/724>`_)
+* Update quality declaration and coverage (`#674 <https://github.com/ros2/rcl/issues/674>`_)
 * Contributors: Alejandro Hernández Cordero
 
-1.1.6 (2020-07-07)
+1.2.0 (2020-06-18)
 ------------------
-* Fixed doxygen warnings (`#677 <https://github.com/ros2/rcl/issues/677>`_) (`#696 <https://github.com/ros2/rcl/issues/696>`_)
+* Fixed doxygen warnings (`#677 <https://github.com/ros2/rcl/issues/677>`_)
 * Contributors: Alejandro Hernández Cordero
 
 1.1.5 (2020-06-03)

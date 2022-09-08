@@ -4,6 +4,7 @@ project(rcl_yaml_param_parser)
 
 find_package(ament_cmake_ros REQUIRED)
 find_package(rcutils REQUIRED)
+find_package(rmw REQUIRED)
 find_package(libyaml_vendor REQUIRED)
 
 # Default to C++14
@@ -12,7 +13,10 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(
+    -Wall -Wextra -Wpedantic
+    -Wformat=2 -Wconversion -Wsign-conversion
+  )
 endif()
 
 set(rcl_yaml_parser_sources
@@ -29,8 +33,8 @@ add_library(
   ${rcl_yaml_parser_sources})
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include>")
-ament_target_dependencies(${PROJECT_NAME} "libyaml_vendor" "rcutils")
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+ament_target_dependencies(${PROJECT_NAME} "libyaml_vendor" "rcutils" "rmw")
 
 # Set the visibility to hidden by default if possible
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
@@ -123,15 +127,33 @@ if(BUILD_TESTING)
     target_compile_definitions(test_parser PUBLIC RCUTILS_ENABLE_FAULT_INJECTION)
   endif()
 
-  add_performance_test(benchmark_parse_yaml test/benchmark/benchmark_parse_yaml.cpp
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-  if(TARGET benchmark_parse_yaml)
-    target_link_libraries(benchmark_parse_yaml ${PROJECT_NAME})
-    ament_target_dependencies(benchmark_parse_yaml
-      "rcpputils"
+  ament_add_gtest(test_parser_multiple_nodes
+    test/test_parser_multiple_nodes.cpp
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    TIMEOUT 240  # Large timeout to wait for fault injection tests
+  )
+  if(TARGET test_parser_multiple_nodes)
+    ament_target_dependencies(test_parser_multiple_nodes
       "rcutils"
+      "osrf_testing_tools_cpp"
     )
+    target_link_libraries(test_parser_multiple_nodes ${PROJECT_NAME} mimick)
+    target_compile_definitions(test_parser_multiple_nodes PUBLIC RCUTILS_ENABLE_FAULT_INJECTION)
   endif()
+
+  ament_add_gtest(test_parser_multiple_params
+    test/test_parser_multiple_params.cpp
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+  )
+  if(TARGET test_parser_multiple_params)
+    ament_target_dependencies(test_parser_multiple_params
+      "rcutils"
+      "osrf_testing_tools_cpp"
+    )
+    target_link_libraries(test_parser_multiple_params ${PROJECT_NAME} mimick)
+    target_compile_definitions(test_parser_multiple_params PUBLIC RCUTILS_ENABLE_FAULT_INJECTION)
+  endif()
+
   ament_add_gtest(test_yaml_variant
     test/test_yaml_variant.cpp
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -143,14 +165,37 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_yaml_variant ${PROJECT_NAME})
   endif()
+
+  add_performance_test(benchmark_parse_yaml test/benchmark/benchmark_parse_yaml.cpp
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+  if(TARGET benchmark_parse_yaml)
+    target_link_libraries(benchmark_parse_yaml ${PROJECT_NAME})
+    ament_target_dependencies(benchmark_parse_yaml
+      "rcpputils"
+      "rcutils"
+    )
+  endif()
+
+  add_performance_test(benchmark_variant test/benchmark/benchmark_variant.cpp)
+  if(TARGET benchmark_variant)
+    target_link_libraries(benchmark_variant ${PROJECT_NAME})
+    ament_target_dependencies(benchmark_variant
+      "rcutils"
+    )
+  endif()
 endif()
 
+# Export old-style CMake variables
+ament_export_include_directories("include/${PROJECT_NAME}")
+ament_export_libraries(${PROJECT_NAME})
+
+# Export modern CMake targets
+ament_export_targets(${PROJECT_NAME})
+
 ament_export_dependencies(ament_cmake libyaml_vendor)
-ament_export_include_directories(include)
+ament_export_dependencies(rmw)
 install(
   DIRECTORY include/
-  DESTINATION include
+  DESTINATION include/${PROJECT_NAME}
 )
-ament_export_libraries(${PROJECT_NAME})
-ament_export_targets(${PROJECT_NAME})
 ament_package()

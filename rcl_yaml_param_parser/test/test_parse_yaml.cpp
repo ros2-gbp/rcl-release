@@ -15,6 +15,8 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <string>
+#include <vector>
 
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
 
@@ -78,11 +80,14 @@ TEST(test_parser, correct_syntax) {
     rcl_variant_t * param_value = rcl_yaml_node_struct_get("lidar_ns/lidar_2", "is_back", params);
     ASSERT_TRUE(NULL != param_value) << rcutils_get_error_string().str;
     ASSERT_TRUE(NULL != param_value->bool_value);
-    EXPECT_TRUE(*param_value->bool_value);
+    // Assigning to local to avoid clang analysis warning "Forming reference to null pointer"
+    bool bool_value = *param_value->bool_value;
+    EXPECT_TRUE(bool_value);
     res = rcl_parse_yaml_value("lidar_ns/lidar_2", "is_back", "false", params);
     EXPECT_TRUE(res) << rcutils_get_error_string().str;
     ASSERT_TRUE(NULL != param_value->bool_value);
-    EXPECT_FALSE(*param_value->bool_value);
+    bool_value = *param_value->bool_value;
+    EXPECT_FALSE(bool_value);
 
     param_value = rcl_yaml_node_struct_get("lidar_ns/lidar_2", "id", params);
     ASSERT_TRUE(NULL != param_value) << rcutils_get_error_string().str;
@@ -484,34 +489,6 @@ TEST(test_file_parser, indented_ns) {
   EXPECT_FALSE(res);
 }
 
-// Regression test for https://github.com/ros2/rcl/issues/419
-TEST(test_file_parser, maximum_number_parameters) {
-  rcutils_reset_error();
-  EXPECT_TRUE(rcutils_get_cwd(cur_dir, 1024)) << rcutils_get_error_string().str;
-  rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  char * test_path = rcutils_join_path(cur_dir, "test", allocator);
-  ASSERT_TRUE(NULL != test_path) << rcutils_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    allocator.deallocate(test_path, allocator.state);
-  });
-  char * path = rcutils_join_path(test_path, "max_num_params.yaml", allocator);
-  ASSERT_TRUE(NULL != path) << rcutils_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    allocator.deallocate(path, allocator.state);
-  });
-  ASSERT_TRUE(rcutils_exists(path)) << "No test YAML file found at " << path;
-  rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
-  ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    rcl_yaml_node_struct_fini(params_hdl);
-  });
-  bool res = rcl_parse_yaml_file(path, params_hdl);
-  EXPECT_FALSE(res);
-}
-
 // Test special float point(https://github.com/ros2/rcl/issues/555).
 TEST(test_file_parser, special_float_point) {
   rcutils_reset_error();
@@ -557,6 +534,131 @@ TEST(test_file_parser, special_float_point) {
   EXPECT_TRUE(std::isinf(param_value->double_array_value->values[4]));
   EXPECT_TRUE(std::isinf(param_value->double_array_value->values[5]));
   EXPECT_TRUE(std::isinf(param_value->double_array_value->values[6]));
+}
+
+TEST(test_file_parser, empty_name_in_ns) {
+  rcutils_reset_error();
+  EXPECT_TRUE(rcutils_get_cwd(cur_dir, 1024));
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  char * test_path = rcutils_join_path(cur_dir, "test", allocator);
+  ASSERT_TRUE(NULL != test_path) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    allocator.deallocate(test_path, allocator.state);
+  });
+  char * path = rcutils_join_path(test_path, "empty_name_in_ns.yaml", allocator);
+  ASSERT_TRUE(NULL != path) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    allocator.deallocate(path, allocator.state);
+  });
+  EXPECT_TRUE(rcutils_exists(path));
+  rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
+  ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_yaml_node_struct_fini(params_hdl);
+  });
+  bool res = rcl_parse_yaml_file(path, params_hdl);
+  EXPECT_FALSE(res);
+}
+
+TEST(test_file_parser, wildcards) {
+  rcutils_reset_error();
+  EXPECT_TRUE(rcutils_get_cwd(cur_dir, 1024));
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  char * test_path = rcutils_join_path(cur_dir, "test", allocator);
+  ASSERT_TRUE(NULL != test_path) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    allocator.deallocate(test_path, allocator.state);
+  });
+  char * path = rcutils_join_path(test_path, "wildcards.yaml", allocator);
+  ASSERT_TRUE(NULL != path) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    allocator.deallocate(path, allocator.state);
+  });
+  EXPECT_TRUE(rcutils_exists(path));
+  rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
+  ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_yaml_node_struct_fini(params_hdl);
+  });
+  bool res = rcl_parse_yaml_file(path, params_hdl);
+  EXPECT_TRUE(res) << rcutils_get_error_string().str;
+}
+
+TEST(test_file_parser, wildcards_node_slash) {
+  rcutils_reset_error();
+  EXPECT_TRUE(rcutils_get_cwd(cur_dir, 1024));
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  char * test_path = rcutils_join_path(cur_dir, "test", allocator);
+  ASSERT_TRUE(NULL != test_path) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    allocator.deallocate(test_path, allocator.state);
+  });
+  char * path = rcutils_join_path(test_path, "wildcards_node_slash.yaml", allocator);
+  ASSERT_TRUE(NULL != path) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    allocator.deallocate(path, allocator.state);
+  });
+  EXPECT_TRUE(rcutils_exists(path));
+  rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
+  ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcl_yaml_node_struct_fini(params_hdl);
+  });
+  bool res = rcl_parse_yaml_file(path, params_hdl);
+  EXPECT_FALSE(res);
+}
+
+TEST(test_file_parser, wildcards_partial) {
+  rcutils_reset_error();
+  EXPECT_TRUE(rcutils_get_cwd(cur_dir, 1024));
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  char * test_path = rcutils_join_path(cur_dir, "test", allocator);
+  ASSERT_TRUE(NULL != test_path) << rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    allocator.deallocate(test_path, allocator.state);
+  });
+  const std::vector<std::string> filenames = {
+    "wildcards_partial_01.yaml",
+    "wildcards_partial_02.yaml",
+    "wildcards_partial_03.yaml",
+    "wildcards_partial_04.yaml",
+    "wildcards_partial_05.yaml",
+    "wildcards_partial_06.yaml",
+    "wildcards_partial_07.yaml",
+    "wildcards_partial_08.yaml",
+    "wildcards_partial_09.yaml",
+    "wildcards_partial_10.yaml",
+    "wildcards_partial_11.yaml",
+    "wildcards_partial_12.yaml"
+  };
+
+  for (auto & filename : filenames) {
+    char * path = rcutils_join_path(test_path, filename.c_str(), allocator);
+    ASSERT_TRUE(NULL != path) << rcutils_get_error_string().str;
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
+      allocator.deallocate(path, allocator.state);
+    });
+    EXPECT_TRUE(rcutils_exists(path));
+    rcl_params_t * params_hdl = rcl_yaml_node_struct_init(allocator);
+    ASSERT_TRUE(NULL != params_hdl) << rcutils_get_error_string().str;
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
+      rcl_yaml_node_struct_fini(params_hdl);
+    });
+    bool res = rcl_parse_yaml_file(path, params_hdl);
+    EXPECT_FALSE(res);
+  }
 }
 
 int32_t main(int32_t argc, char ** argv)

@@ -36,7 +36,7 @@ typedef enum rcl_remap_type_t
   RCL_NAMESPACE_REMAP = 1u << 3
 } rcl_remap_type_t;
 
-typedef struct rcl_remap_impl_t
+struct rcl_remap_impl_s
 {
   /// Bitmask indicating what type of rule this is.
   rcl_remap_type_t type;
@@ -49,7 +49,20 @@ typedef struct rcl_remap_impl_t
 
   /// Allocator used to allocate objects in this struct
   rcl_allocator_t allocator;
-} rcl_remap_impl_t;
+};
+
+RCL_LOCAL
+rcl_ret_t
+rcl_remap_name(
+  const rcl_arguments_t * local_arguments,
+  const rcl_arguments_t * global_arguments,
+  rcl_remap_type_t type_bitmask,
+  const char * name,
+  const char * node_name,
+  const char * node_namespace,
+  const rcutils_string_map_t * substitutions,
+  rcl_allocator_t allocator,
+  char ** output_name);
 
 #ifdef __cplusplus
 }

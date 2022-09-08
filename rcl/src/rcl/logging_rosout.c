@@ -173,11 +173,12 @@ rcl_ret_t rcl_logging_rosout_init_publisher_for_node(
   const rosidl_message_type_support_t * type_support =
     rosidl_typesupport_c__get_message_type_support_handle__rcl_interfaces__msg__Log();
   rcl_publisher_options_t options = rcl_publisher_get_default_options();
-  // Late joining subscriptions get the last 10 seconds of logs, up to 1000 logs.
-  options.qos.depth = 1000;
-  options.qos.durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
-  options.qos.lifespan.sec = 10;
-  options.qos.lifespan.nsec = 0;
+
+  // Late joining subscriptions get the user's setting of rosout qos options.
+  const rcl_node_options_t * node_options = rcl_node_get_options(node);
+  RCL_CHECK_FOR_NULL_WITH_MSG(node_options, "Node options was null.", return RCL_RET_ERROR);
+
+  options.qos = node_options->rosout_qos;
   new_entry.publisher = rcl_get_zero_initialized_publisher();
   status =
     rcl_publisher_init(&new_entry.publisher, node, type_support, ROSOUT_TOPIC_NAME, &options);
@@ -230,8 +231,11 @@ rcl_ret_t rcl_logging_rosout_fini_publisher_for_node(
 
 void rcl_logging_rosout_output_handler(
   const rcutils_log_location_t * location,
-  int severity, const char * name, rcutils_time_point_value_t timestamp,
-  const char * format, va_list * args)
+  int severity,
+  const char * name,
+  rcutils_time_point_value_t timestamp,
+  const char * format,
+  va_list * args)
 {
   rosout_map_entry_t entry;
   rcl_ret_t status = RCL_RET_OK;
@@ -250,7 +254,9 @@ void rcl_logging_rosout_output_handler(
     };
 
     va_list args_clone;
-    va_copy(args_clone, *args);
+    // The args are initialized, but clang-tidy cannot tell.
+    // It may be related to this bug: https://bugs.llvm.org/show_bug.cgi?id=41311
+    va_copy(args_clone, *args);  // NOLINT(clang-analyzer-valist.Uninitialized)
     RCL_RET_FROM_RCUTIL_RET(status, rcutils_char_array_vsprintf(&msg_array, format, args_clone));
     va_end(args_clone);
     if (RCL_RET_OK != status) {
