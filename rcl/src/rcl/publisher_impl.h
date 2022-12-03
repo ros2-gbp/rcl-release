@@ -19,12 +19,12 @@
 
 #include "rcl/publisher.h"
 
-struct rcl_publisher_impl_s
+typedef struct rcl_publisher_impl_t
 {
   rcl_publisher_options_t options;
   rmw_qos_profile_t actual_qos;
   rcl_context_t * context;
   rmw_publisher_t * rmw_handle;
-};
+} rcl_publisher_impl_t;
 
 #endif  // RCL__PUBLISHER_IMPL_H_

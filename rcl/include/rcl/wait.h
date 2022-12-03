@@ -35,10 +35,10 @@ extern "C"
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
 
-typedef struct rcl_wait_set_impl_s rcl_wait_set_impl_t;
+struct rcl_wait_set_impl_t;
 
 /// Container for subscription's, guard condition's, etc to be waited on.
-typedef struct rcl_wait_set_s
+typedef struct rcl_wait_set_t
 {
   /// Storage for subscription pointers.
   const rcl_subscription_t ** subscriptions;
@@ -65,7 +65,7 @@ typedef struct rcl_wait_set_s
   /// Number of events
   size_t size_of_events;
   /// Implementation specific storage.
-  rcl_wait_set_impl_t * impl;
+  struct rcl_wait_set_impl_t * impl;
 } rcl_wait_set_t;
 
 /// Return a rcl_wait_set_t struct with members set to `NULL`.

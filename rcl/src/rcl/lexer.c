@@ -140,7 +140,7 @@ digraph remapping_lexer {
 
 /// Represents a transition from one state to another
 /// \internal
-typedef struct rcl_lexer_transition_s
+typedef struct rcl_lexer_transition_t
 {
   /// Index of a state to transition to
   const unsigned char to_state;
@@ -152,7 +152,7 @@ typedef struct rcl_lexer_transition_s
 
 /// Represents a non-terminal state
 /// \internal
-typedef struct rcl_lexer_state_s
+typedef struct rcl_lexer_state_t
 {
   /// Transition to this state if no other transition matches
   const unsigned char else_state;

@@ -19,10 +19,10 @@
 
 #include "rcl/event.h"
 
-struct rcl_event_impl_s
+typedef struct rcl_event_impl_t
 {
   rmw_event_t rmw_handle;
   rcl_allocator_t allocator;
-};
+} rcl_event_impl_t;
 
 #endif  // RCL__EVENT_IMPL_H_

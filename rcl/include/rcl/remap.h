@@ -28,13 +28,13 @@ extern "C"
 {
 #endif
 
-typedef struct rcl_remap_impl_s rcl_remap_impl_t;
+struct rcl_remap_impl_t;
 
 /// Hold remapping rules.
-typedef struct rcl_remap_s
+typedef struct rcl_remap_t
 {
   /// Private implementation pointer.
-  rcl_remap_impl_t * impl;
+  struct rcl_remap_impl_t * impl;
 } rcl_remap_t;
 
 /// Return a rcl_remap_t struct with members initialized to `NULL`.

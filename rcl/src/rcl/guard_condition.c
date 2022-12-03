@@ -26,12 +26,12 @@ extern "C"
 
 #include "./context_impl.h"
 
-struct rcl_guard_condition_impl_s
+typedef struct rcl_guard_condition_impl_t
 {
   rmw_guard_condition_t * rmw_handle;
   bool allocated_rmw_guard_condition;
   rcl_guard_condition_options_t options;
-};
+} rcl_guard_condition_impl_t;
 
 rcl_guard_condition_t
 rcl_get_zero_initialized_guard_condition()

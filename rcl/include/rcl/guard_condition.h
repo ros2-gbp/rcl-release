@@ -29,20 +29,20 @@ extern "C"
 #include "rcl/visibility_control.h"
 
 /// Internal rcl guard condition implementation struct.
-typedef struct rcl_guard_condition_impl_s rcl_guard_condition_impl_t;
+struct rcl_guard_condition_impl_t;
 
 /// Handle for a rcl guard condition.
-typedef struct rcl_guard_condition_s
+typedef struct rcl_guard_condition_t
 {
   /// Context associated with this guard condition.
   rcl_context_t * context;
 
   /// Pointer to the guard condition implementation
-  rcl_guard_condition_impl_t * impl;
+  struct rcl_guard_condition_impl_t * impl;
 } rcl_guard_condition_t;
 
 /// Options available for a rcl guard condition.
-typedef struct rcl_guard_condition_options_s
+typedef struct rcl_guard_condition_options_t
 {
   /// Custom allocator for the guard condition, used for internal allocations.
   rcl_allocator_t allocator;
