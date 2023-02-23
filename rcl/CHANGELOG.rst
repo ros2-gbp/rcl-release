@@ -2,6 +2,11 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+5.8.0 (2023-02-23)
+------------------
+* use parent logger (`#921 <https://github.com/ros2/rcl/issues/921>`_)
+* Contributors: Chen Lihui
+
 5.7.0 (2023-02-13)
 ------------------
 * Add timer on reset callback (`#995 <https://github.com/ros2/rcl/issues/995>`_)
