@@ -2,6 +2,11 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.1 (2023-04-18)
+------------------
+* fix flaky test (`#1063 <https://github.com/ros2/rcl/issues/1063>`_)
+* Contributors: Chen Lihui
+
 6.0.0 (2023-04-12)
 ------------------
 * Add enable_type_description_service node option - API only (`#1060 <https://github.com/ros2/rcl/issues/1060>`_)
