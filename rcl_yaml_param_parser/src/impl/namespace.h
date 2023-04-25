@@ -15,11 +15,12 @@
 #ifndef IMPL__NAMESPACE_H_
 #define IMPL__NAMESPACE_H_
 
-#include "rcutils/allocator.h"
-#include "rcutils/macros.h"
-#include "rcutils/types/rcutils_ret.h"
+#include <yaml.h>
+
+#include "rcutils/types.h"
 
 #include "./types.h"
+#include "rcl_yaml_param_parser/types.h"
 #include "rcl_yaml_param_parser/visibility_control.h"
 
 #ifdef __cplusplus

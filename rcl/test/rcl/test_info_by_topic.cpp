@@ -141,7 +141,6 @@ TEST_F(
     nullptr, &allocator, this->topic_name, false,
     &this->topic_endpoint_info_array);
   EXPECT_EQ(RCL_RET_NODE_INVALID, ret);
-  rcl_reset_error();
 }
 
 /*
@@ -157,7 +156,6 @@ TEST_F(
     nullptr, &allocator, this->topic_name, false,
     &this->topic_endpoint_info_array);
   EXPECT_EQ(RCL_RET_NODE_INVALID, ret);
-  rcl_reset_error();
 }
 
 /*
@@ -174,7 +172,6 @@ TEST_F(
     &this->old_node, &allocator, this->topic_name, false,
     &this->topic_endpoint_info_array);
   EXPECT_EQ(RCL_RET_NODE_INVALID, ret);
-  rcl_reset_error();
 }
 
 /*
@@ -191,7 +188,6 @@ TEST_F(
     &this->old_node, &allocator, this->topic_name, false,
     &this->topic_endpoint_info_array);
   EXPECT_EQ(RCL_RET_NODE_INVALID, ret);
-  rcl_reset_error();
 }
 
 /*
@@ -206,7 +202,6 @@ TEST_F(
     &this->node, nullptr, this->topic_name, false,
     &this->topic_endpoint_info_array);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
-  rcl_reset_error();
 }
 
 /*
@@ -221,7 +216,6 @@ TEST_F(
     &this->node, nullptr, this->topic_name, false,
     &this->topic_endpoint_info_array);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
-  rcl_reset_error();
 }
 
 /*
@@ -236,7 +230,6 @@ TEST_F(
   const auto ret = rcl_get_publishers_info_by_topic(
     &this->node, &allocator, nullptr, false, &this->topic_endpoint_info_array);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
-  rcl_reset_error();
 }
 
 /*
@@ -251,7 +244,6 @@ TEST_F(
   const auto ret = rcl_get_subscriptions_info_by_topic(
     &this->node, &allocator, nullptr, false, &this->topic_endpoint_info_array);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
-  rcl_reset_error();
 }
 
 /*
@@ -266,7 +258,6 @@ TEST_F(
   const auto ret = rcl_get_publishers_info_by_topic(
     &this->node, &allocator, this->topic_name, false, nullptr);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
-  rcl_reset_error();
 }
 
 /*
@@ -281,7 +272,6 @@ TEST_F(
   const auto ret = rcl_get_subscriptions_info_by_topic(
     &this->node, &allocator, this->topic_name, false, nullptr);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
-  rcl_reset_error();
 }
 
 /*
@@ -304,7 +294,6 @@ TEST_F(
     &this->node, &allocator, this->topic_name, false,
     &this->topic_endpoint_info_array);
   EXPECT_EQ(RCL_RET_ERROR, ret);
-  rcl_reset_error();
 }
 
 /*
@@ -327,7 +316,6 @@ TEST_F(
     &this->node, &allocator, this->topic_name, false,
     &this->topic_endpoint_info_array);
   EXPECT_EQ(RCL_RET_ERROR, ret);
-  rcl_reset_error();
 }
 
 TEST_F(
