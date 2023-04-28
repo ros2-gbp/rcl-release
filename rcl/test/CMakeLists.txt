@@ -1,16 +1,12 @@
 find_package(ament_cmake_gtest REQUIRED)
+
 find_package(launch_testing_ament_cmake REQUIRED)
-
 find_package(mimick_vendor REQUIRED)
-find_package(test_msgs REQUIRED)
-
-find_package(mimick_vendor REQUIRED)
-
+find_package(osrf_testing_tools_cpp REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
-
-find_package(osrf_testing_tools_cpp REQUIRED)
+find_package(test_msgs REQUIRED)
 
 get_target_property(memory_tools_ld_preload_env_var
   osrf_testing_tools_cpp::memory_tools LIBRARY_PRELOAD_ENVIRONMENT_VARIABLE)
@@ -319,6 +315,15 @@ function(test_target_function)
     AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
+  rcl_add_custom_gtest(test_service_event_publisher${target_suffix}
+    SRCS rcl/test_service_event_publisher.cpp
+    ENV ${rmw_implementation_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
+    LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+  )
+
   # Launch tests
 
   rcl_add_custom_executable(service_fixture${target_suffix}
@@ -393,6 +398,12 @@ rcl_add_custom_gtest(test_validate_enclave_name
   LIBRARIES ${PROJECT_NAME} mimick
 )
 
+rcl_add_custom_gtest(test_discovery_options
+  SRCS rcl/test_discovery_options.cpp
+  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+  LIBRARIES ${PROJECT_NAME}
+)
+
 rcl_add_custom_gtest(test_domain_id
   SRCS rcl/test_domain_id.cpp
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
@@ -408,7 +419,8 @@ rcl_add_custom_gtest(test_localhost
 rcl_add_custom_gtest(test_logging
   SRCS rcl/test_logging.cpp
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME} mimick
+  LIBRARIES ${PROJECT_NAME} mimick ${rcl_interfaces_TARGETS}
+    rcl_logging_interface::rcl_logging_interface ${RCL_LOGGING_IMPL}::${RCL_LOGGING_IMPL}
   AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
 )
 
@@ -450,4 +462,10 @@ rcl_add_custom_gtest(test_subscription_content_filter_options
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
   LIBRARIES ${PROJECT_NAME}
   AMENT_DEPENDENCIES "osrf_testing_tools_cpp" "test_msgs"
+)
+
+rcl_add_custom_gtest(test_type_hash
+  SRCS rcl/test_type_hash.cpp
+  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+  LIBRARIES ${PROJECT_NAME}
 )
