@@ -2,6 +2,11 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.1.0 (2023-04-28)
+------------------
+* Fix a format-security warning when building with clang. (`#1064 <https://github.com/ros2/rcl/issues/1064>`_)
+* Contributors: Chris Lalancette
+
 6.0.1 (2023-04-18)
 ------------------
 * fix flaky test (`#1063 <https://github.com/ros2/rcl/issues/1063>`_)
