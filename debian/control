@@ -1,0 +1,12 @@
+Source: ros-iron-rcl-yaml-param-parser
+Section: misc
+Priority: optional
+Maintainer: Audrow Nash <audrow@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), libyaml-dev, ros-iron-ament-cmake-gtest <!nocheck>, ros-iron-ament-cmake-ros, ros-iron-ament-lint-auto <!nocheck>, ros-iron-ament-lint-common <!nocheck>, ros-iron-libyaml-vendor, ros-iron-mimick-vendor <!nocheck>, ros-iron-osrf-testing-tools-cpp <!nocheck>, ros-iron-performance-test-fixture <!nocheck>, ros-iron-rcpputils <!nocheck>, ros-iron-rcutils, ros-iron-rmw, ros-iron-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-iron-rcl-yaml-param-parser
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libyaml-dev, ros-iron-libyaml-vendor, ros-iron-rcutils, ros-iron-rmw, ros-iron-ros-workspace
+Description: Parse a YAML parameter file and populate the C data structure.
