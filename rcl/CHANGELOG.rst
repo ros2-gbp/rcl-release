@@ -2,10 +2,22 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-6.0.2 (2023-05-19)
+6.2.0 (2023-06-07)
 ------------------
-* Honor ROS_LOCALHOST_ONLY if enabled. (`#1071 <https://github.com/ros2/rcl/issues/1071>`_)
-* Contributors: Tomoya Fujita
+* fix comment (`#1073 <https://github.com/ros2/rcl/issues/1073>`_)
+* localhost_only prevails auto discovery options if enabled. (`#1069 <https://github.com/ros2/rcl/issues/1069>`_)
+* Avoid dynamic allocation of message before sending over rosout (`#1067 <https://github.com/ros2/rcl/issues/1067>`_)
+* Contributors: Chen Lihui, Christopher Wecht, Tomoya Fujita
+
+6.1.1 (2023-05-11)
+------------------
+* clarify `rcl_node_init` return code (`#1066 <https://github.com/ros2/rcl/issues/1066>`_)
+* Contributors: Eric W
+
+6.1.0 (2023-04-28)
+------------------
+* Fix a format-security warning when building with clang. (`#1064 <https://github.com/ros2/rcl/issues/1064>`_)
+* Contributors: Chris Lalancette
 
 6.0.1 (2023-04-18)
 ------------------
