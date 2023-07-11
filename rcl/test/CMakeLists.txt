@@ -6,6 +6,7 @@ find_package(osrf_testing_tools_cpp REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
+find_package(rosidl_runtime_cpp REQUIRED)
 find_package(test_msgs REQUIRED)
 
 get_target_property(memory_tools_ld_preload_env_var
@@ -240,7 +241,10 @@ function(test_target_function)
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers
-    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+    AMENT_DEPENDENCIES ${rmw_implementation}
+      "osrf_testing_tools_cpp"
+      "rosidl_runtime_cpp"
+      "test_msgs"
     TIMEOUT 120
   )
   # TODO(asorbini) Enable message timestamp tests for rmw_connextdds on Windows
@@ -322,6 +326,32 @@ function(test_target_function)
     INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
     LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers
     AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+  )
+
+  rcl_add_custom_gtest(test_type_description_conversions${target_suffix}
+    SRCS rcl/test_type_description_conversions.cpp
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES "test_msgs"
+  )
+
+  rcl_add_custom_gtest(test_node_type_cache${target_suffix}
+    SRCS rcl/test_node_type_cache.cpp
+    ENV ${rmw_implementation_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
+    LIBRARIES ${PROJECT_NAME} mimick
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+  )
+
+  rcl_add_custom_gtest(test_get_type_description_service${target_suffix}
+    SRCS rcl/test_get_type_description_service.cpp
+    ENV ${rmw_implementation_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
+    LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "type_description_interfaces"
   )
 
   # Launch tests
