@@ -1,0 +1,12 @@
+Source: ros-humble-rcl-yaml-param-parser
+Section: misc
+Priority: optional
+Maintainer: Ivan Paunovic <ivanpauno@ekumenlabs.com>
+Build-Depends: debhelper (>= 9.0.0), libyaml-dev, ros-humble-ament-cmake-gtest <!nocheck>, ros-humble-ament-cmake-ros, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-libyaml-vendor, ros-humble-mimick-vendor <!nocheck>, ros-humble-osrf-testing-tools-cpp <!nocheck>, ros-humble-performance-test-fixture <!nocheck>, ros-humble-rcpputils <!nocheck>, ros-humble-rcutils, ros-humble-rmw, ros-humble-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-rcl-yaml-param-parser
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libyaml-dev, ros-humble-libyaml-vendor, ros-humble-rmw, ros-humble-ros-workspace
+Description: Parse a YAML parameter file and populate the C data structure.
