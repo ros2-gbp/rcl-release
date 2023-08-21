@@ -2,6 +2,9 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+7.1.0 (2023-08-21)
+------------------
+
 7.0.0 (2023-07-11)
 ------------------
 * Add `~/get_type_description` service (rep2011) (`#1052 <https://github.com/ros2/rcl/issues/1052>`_)
