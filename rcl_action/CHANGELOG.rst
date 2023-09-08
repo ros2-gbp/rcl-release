@@ -2,28 +2,13 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-7.1.1 (2023-09-07)
+6.0.3 (2023-09-08)
 ------------------
+* rcl_send_response returns RCL_RET_TIMEOUT. (`#1090 <https://github.com/ros2/rcl/issues/1090>`_)
+* Add `~/get_type_description` service (rep2011) (`#1082 <https://github.com/ros2/rcl/issues/1082>`_)
+* Contributors: Hans-Joachim Krauch, Tomoya Fujita
 
-7.1.0 (2023-08-21)
-------------------
-
-7.0.0 (2023-07-11)
-------------------
-* Add `~/get_type_description` service (rep2011) (`#1052 <https://github.com/ros2/rcl/issues/1052>`_)
-* Modifies timers API to select autostart state (`#1004 <https://github.com/ros2/rcl/issues/1004>`_)
-* Contributors: Eloy Briceno, Hans-Joachim Krauch
-
-6.3.0 (2023-06-12)
-------------------
-
-6.2.0 (2023-06-07)
-------------------
-
-6.1.1 (2023-05-11)
-------------------
-
-6.1.0 (2023-04-28)
+6.0.2 (2023-05-19)
 ------------------
 
 6.0.1 (2023-04-18)

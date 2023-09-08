@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "rcl/node.h"
 
 #include <limits.h>
@@ -157,21 +162,24 @@ rcl_node_init(
   }
 
   // Process the namespace.
-  const char * local_namespace_ = NULL;
-  if (namespace_[0] == '\0') {
-    // If the namespace is just an empty string, replace with "/"
-    local_namespace_ = rcutils_strdup("/", *allocator);
-  } else if (namespace_[0] == '/') {
-    local_namespace_ = rcutils_strdup(namespace_, *allocator);
-  } else {
-    // If the namespace does not start with a /, add one.
-    local_namespace_ = rcutils_format_string(*allocator, "/%s", namespace_);
+  size_t namespace_length = strlen(namespace_);
+  const char * local_namespace_ = namespace_;
+  bool should_free_local_namespace_ = false;
+  // If the namespace is just an empty string, replace with "/"
+  if (namespace_length == 0) {
+    // Have this special case to avoid a memory allocation when "" is passed.
+    local_namespace_ = "/";
   }
-  RCL_CHECK_FOR_NULL_WITH_MSG(
-    local_namespace_,
-    "failed to format node namespace string",
-    return RCL_RET_BAD_ALLOC);
 
+  // If the namespace does not start with a /, add one.
+  if (namespace_length > 0 && namespace_[0] != '/') {
+    local_namespace_ = rcutils_format_string(*allocator, "/%s", namespace_);
+    RCL_CHECK_FOR_NULL_WITH_MSG(
+      local_namespace_,
+      "failed to format node namespace string",
+      ret = RCL_RET_BAD_ALLOC; goto cleanup);
+    should_free_local_namespace_ = true;
+  }
   // Make sure the node namespace is valid.
   validation_result = 0;
   ret = rmw_validate_namespace(local_namespace_, &validation_result, NULL);
@@ -225,7 +233,10 @@ rcl_node_init(
   if (RCL_RET_OK != ret) {
     goto fail;
   } else if (NULL != remapped_namespace) {
-    allocator->deallocate((char *)local_namespace_, allocator->state);
+    if (should_free_local_namespace_) {
+      allocator->deallocate((char *)local_namespace_, allocator->state);
+    }
+    should_free_local_namespace_ = true;
     local_namespace_ = remapped_namespace;
   }
 
@@ -291,7 +302,7 @@ rcl_node_init(
   }
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Node initialized");
   ret = RCL_RET_OK;
-  TRACETOOLS_TRACEPOINT(
+  TRACEPOINT(
     rcl_node_init,
     (const void *)node,
     (const void *)rcl_node_get_rmw_handle(node),
@@ -354,9 +365,10 @@ fail:
   ret = fail_ret;
   // fall through from fail -> cleanup
 cleanup:
-  allocator->deallocate((char *)local_namespace_, allocator->state);
-  local_namespace_ = NULL;
-
+  if (should_free_local_namespace_) {
+    allocator->deallocate((char *)local_namespace_, allocator->state);
+    local_namespace_ = NULL;
+  }
   if (NULL != remapped_node_name) {
     allocator->deallocate(remapped_node_name, allocator->state);
   }
@@ -681,3 +693,7 @@ rcl_ret_t rcl_node_get_type_description_service(
   *service_out = &node->impl->get_type_description_service;
   return RCL_RET_OK;
 }
+
+#ifdef __cplusplus
+}
+#endif

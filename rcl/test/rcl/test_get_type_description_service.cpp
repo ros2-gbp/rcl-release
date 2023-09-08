@@ -14,9 +14,7 @@
 
 #include <gtest/gtest.h>
 
-#include <chrono>
 #include <cstring>
-#include <thread>
 
 #include "rcl/error_handling.h"
 #include "rcl/graph.h"
@@ -53,61 +51,87 @@ static bool string_in_array(rcutils_string_array_t * array, const char * pattern
 
 static bool service_exists(
   const rcl_node_t * node_ptr, const char * service_name,
-  const char * service_type, std::chrono::milliseconds timeout)
+  const char * service_type)
 {
   rcl_allocator_t allocator = rcl_get_default_allocator();
 
-  // Wait for a maximum of timeout seconds for the service to show up
-  auto start_time = std::chrono::system_clock::now();
-  while (std::chrono::system_clock::now() - start_time < timeout) {
-    rcl_names_and_types_t srv_names_and_types = rcl_get_zero_initialized_names_and_types();
+  rcl_names_and_types_t * srv_names_and_types =
+    static_cast<rcl_names_and_types_t *>(allocator.allocate(
+      sizeof(rcl_names_and_types_t),
+      allocator.state));
+  if (nullptr == srv_names_and_types) {
+    return false;
+  }
+  EXPECT_EQ(RCL_RET_OK, rcl_names_and_types_init(srv_names_and_types, 0, &allocator));
+  srv_names_and_types->names.data = NULL;
+  srv_names_and_types->names.size = 0;
+  srv_names_and_types->types = NULL;
 
-    if (
-      RCL_RET_OK != rcl_get_service_names_and_types(
-        node_ptr,
-        &allocator, &srv_names_and_types))
-    {
-      return false;
-    }
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    EXPECT_EQ(RCL_RET_OK, rcl_names_and_types_fini(srv_names_and_types));
+    allocator.deallocate(srv_names_and_types, allocator.state);
+  });
 
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-    {
-      EXPECT_EQ(RCL_RET_OK, rcl_names_and_types_fini(&srv_names_and_types));
-    });
-
-    if (srv_names_and_types.names.size >= 1) {
-      if (string_in_array(&(srv_names_and_types.names), service_name)) {
-        for (size_t i = 0; i < srv_names_and_types.names.size; ++i) {
-          if (string_in_array(&(srv_names_and_types.types[i]), service_type)) {
-            return true;
-          }
-        }
-      }
-    }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  if (
+    RCL_RET_OK != rcl_get_service_names_and_types(
+      node_ptr,
+      &allocator, srv_names_and_types))
+  {
+    return false;
   }
 
-  return false;
+  if (srv_names_and_types->names.size < 1) {
+    return false;
+  }
+
+  const bool srv_name_found = string_in_array(
+    &srv_names_and_types->names,
+    service_name);
+
+  if (!srv_name_found) {return false;}
+
+  bool type_name_found = false;
+  for (size_t i = 0; i < srv_names_and_types->names.size; ++i) {
+    type_name_found = string_in_array(
+      &srv_names_and_types->types[i],
+      service_type);
+    if (type_name_found) {
+      break;
+    }
+  }
+
+  return type_name_found;
 }
 
 class CLASSNAME (TestGetTypeDescSrvFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
+  rcl_context_t * context_ptr;
+  rcl_node_t * node_ptr;
+  char get_type_description_service_name[256];
+
+  virtual bool get_type_description_service_enabled() const
+  {
+    return true;
+  }
+
   void SetUp()
   {
     rcl_ret_t ret;
-    rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
-    ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
-    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
     {
-      EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
-    });
-    this->context_ptr = new rcl_context_t;
-    *this->context_ptr = rcl_get_zero_initialized_context();
-    ret = rcl_init(0, nullptr, &init_options, this->context_ptr);
-    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+      rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
+      ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
+      ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+      OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+      {
+        EXPECT_EQ(RCL_RET_OK, rcl_init_options_fini(&init_options)) << rcl_get_error_string().str;
+      });
+      this->context_ptr = new rcl_context_t;
+      *this->context_ptr = rcl_get_zero_initialized_context();
+      ret = rcl_init(0, nullptr, &init_options, this->context_ptr);
+      ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+    }
     this->node_ptr = new rcl_node_t;
     *this->node_ptr = rcl_get_zero_initialized_node();
     const char * name = "test_service_node";
@@ -125,9 +149,7 @@ public:
 
   void TearDown()
   {
-    rcl_ret_t ret = rcl_node_type_description_service_fini(node_ptr);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    ret = rcl_node_fini(this->node_ptr);
+    rcl_ret_t ret = rcl_node_fini(this->node_ptr);
     delete this->node_ptr;
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
     ret = rcl_shutdown(this->context_ptr);
@@ -136,11 +158,6 @@ public:
     delete this->context_ptr;
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   }
-
-protected:
-  rcl_context_t * context_ptr;
-  rcl_node_t * node_ptr;
-  char get_type_description_service_name[256];
 };
 
 
@@ -151,19 +168,19 @@ TEST_F(
   EXPECT_TRUE(
     service_exists(
       this->node_ptr, this->get_type_description_service_name,
-      GET_TYPE_DESCRIPTION_SRV_TYPE_NAME, std::chrono::seconds(5)));
+      GET_TYPE_DESCRIPTION_SRV_TYPE_NAME));
   EXPECT_EQ(RCL_RET_OK, rcl_node_type_description_service_fini(this->node_ptr));
   EXPECT_FALSE(
     service_exists(
       this->node_ptr, this->get_type_description_service_name,
-      GET_TYPE_DESCRIPTION_SRV_TYPE_NAME, std::chrono::milliseconds(100)));
+      GET_TYPE_DESCRIPTION_SRV_TYPE_NAME));
   EXPECT_EQ(RCL_RET_NOT_INIT, rcl_node_type_description_service_fini(this->node_ptr));
 
   EXPECT_EQ(RCL_RET_OK, rcl_node_type_description_service_init(this->node_ptr));
   EXPECT_TRUE(
     service_exists(
       this->node_ptr, this->get_type_description_service_name,
-      GET_TYPE_DESCRIPTION_SRV_TYPE_NAME, std::chrono::seconds(5)));
+      GET_TYPE_DESCRIPTION_SRV_TYPE_NAME));
   EXPECT_EQ(RCL_RET_ALREADY_INIT, rcl_node_type_description_service_init(this->node_ptr));
 }
 

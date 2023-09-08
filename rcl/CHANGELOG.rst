@@ -2,57 +2,16 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-7.1.1 (2023-09-07)
+6.0.3 (2023-09-08)
 ------------------
-* Cut down the amount of time for test_logging_rosout. (`#1098 <https://github.com/ros2/rcl/issues/1098>`_)
-* Simplify local_namespace handling in rcl_node_init. (`#1097 <https://github.com/ros2/rcl/issues/1097>`_)
-* Reduce the number of tests we run (`#1096 <https://github.com/ros2/rcl/issues/1096>`_)
-* Adding duplicate node information (`#1088 <https://github.com/ros2/rcl/issues/1088>`_)
-* Revamp the test_get_type_description_service. (`#1095 <https://github.com/ros2/rcl/issues/1095>`_)
-* Cleanup network flow endpoints test. (`#1094 <https://github.com/ros2/rcl/issues/1094>`_)
-* Reduce the failure timeout time for namespaces. (`#1093 <https://github.com/ros2/rcl/issues/1093>`_)
-* Shorten wait time for a subscription not being ready. (`#1092 <https://github.com/ros2/rcl/issues/1092>`_)
-* Contributors: Chris Lalancette, Lucas Wendland
+* rcl_send_response returns RCL_RET_TIMEOUT. (`#1090 <https://github.com/ros2/rcl/issues/1090>`_)
+* Add `~/get_type_description` service (rep2011) (`#1082 <https://github.com/ros2/rcl/issues/1082>`_)
+* Contributors: Hans-Joachim Krauch, Tomoya Fujita
 
-7.1.0 (2023-08-21)
+6.0.2 (2023-05-19)
 ------------------
-* rcl_send_response returns RCL_RET_TIMEOUT. (`#1048 <https://github.com/ros2/rcl/issues/1048>`_)
-* Move test_namespace into the correct directory. (`#1087 <https://github.com/ros2/rcl/issues/1087>`_)
-* Reset errors in tests to reduce warnings (`#1085 <https://github.com/ros2/rcl/issues/1085>`_)
-* Cleanup error reporting in the type hash code. (`#1084 <https://github.com/ros2/rcl/issues/1084>`_)
-* Instrument loaned message publication code path (`#1083 <https://github.com/ros2/rcl/issues/1083>`_)
-* Contributors: Chris Lalancette, Christophe Bedard, Tomoya Fujita
-
-7.0.0 (2023-07-11)
-------------------
-* Add `~/get_type_description` service (rep2011) (`#1052 <https://github.com/ros2/rcl/issues/1052>`_)
-* Modifies timers API to select autostart state (`#1004 <https://github.com/ros2/rcl/issues/1004>`_)
-* test publisher/subscription with the c/cpp typesupport for test_msgs::msg::array (`#1074 <https://github.com/ros2/rcl/issues/1074>`_)
-* validation result should be used to print the error message. (`#1077 <https://github.com/ros2/rcl/issues/1077>`_)
-* Contributors: Chen Lihui, Eloy Briceno, Hans-Joachim Krauch, Tomoya Fujita
-
-6.3.0 (2023-06-12)
-------------------
-* improve error msg of `rcl_expand_topic_name` (`#1076 <https://github.com/ros2/rcl/issues/1076>`_)
-* Use TRACETOOLS\_ prefix for tracepoint-related macros (`#1058 <https://github.com/ros2/rcl/issues/1058>`_)
-* Contributors: Christophe Bedard, Eric W
-
-6.2.0 (2023-06-07)
-------------------
-* fix comment (`#1073 <https://github.com/ros2/rcl/issues/1073>`_)
-* localhost_only prevails auto discovery options if enabled. (`#1069 <https://github.com/ros2/rcl/issues/1069>`_)
-* Avoid dynamic allocation of message before sending over rosout (`#1067 <https://github.com/ros2/rcl/issues/1067>`_)
-* Contributors: Chen Lihui, Christopher Wecht, Tomoya Fujita
-
-6.1.1 (2023-05-11)
-------------------
-* clarify `rcl_node_init` return code (`#1066 <https://github.com/ros2/rcl/issues/1066>`_)
-* Contributors: Eric W
-
-6.1.0 (2023-04-28)
-------------------
-* Fix a format-security warning when building with clang. (`#1064 <https://github.com/ros2/rcl/issues/1064>`_)
-* Contributors: Chris Lalancette
+* Honor ROS_LOCALHOST_ONLY if enabled. (`#1071 <https://github.com/ros2/rcl/issues/1071>`_)
+* Contributors: Tomoya Fujita
 
 6.0.1 (2023-04-18)
 ------------------

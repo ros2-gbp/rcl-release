@@ -178,15 +178,9 @@ rcl_client_init(
   client->impl->options = *options;
   atomic_init(&client->impl->sequence_number, 0);
 
-  const rosidl_type_hash_t * hash = type_support->get_type_hash_func(type_support);
-  if (hash == NULL) {
-    RCL_SET_ERROR_MSG("Failed to get the type hash");
-    ret = RCL_RET_INVALID_ARGUMENT;
-    goto destroy_client;
-  }
-
   if (RCL_RET_OK != rcl_node_type_cache_register_type(
-      node, hash, type_support->get_type_description_func(type_support),
+      node, type_support->get_type_hash_func(type_support),
+      type_support->get_type_description_func(type_support),
       type_support->get_type_description_sources_func(type_support)))
   {
     rcutils_reset_error();
@@ -194,10 +188,10 @@ rcl_client_init(
     ret = RCL_RET_ERROR;
     goto destroy_client;
   }
-  client->impl->type_hash = *hash;
+  client->impl->type_hash = *type_support->get_type_hash_func(type_support);
 
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Client initialized");
-  TRACETOOLS_TRACEPOINT(
+  TRACEPOINT(
     rcl_client_init,
     (const void *)client,
     (const void *)node,

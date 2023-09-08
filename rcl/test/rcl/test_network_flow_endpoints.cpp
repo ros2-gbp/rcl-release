@@ -408,11 +408,9 @@ TEST_F(
           strcmp_ret);
       }
     }
-
-    // Release resources
-    rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array_1);
-    rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array_2);
-  } else {
-    rcl_reset_error();
   }
+
+  // Release resources
+  rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array_1);
+  rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array_2);
 }

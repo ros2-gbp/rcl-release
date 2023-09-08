@@ -6,7 +6,6 @@ find_package(osrf_testing_tools_cpp REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
-find_package(rosidl_runtime_cpp REQUIRED)
 find_package(test_msgs REQUIRED)
 
 get_target_property(memory_tools_ld_preload_env_var
@@ -62,6 +61,14 @@ function(test_target_function)
     AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
+  rcl_add_custom_gtest(test_time${target_suffix}
+    SRCS rcl/test_time.cpp
+    ENV ${rmw_implementation_env_var} ${memory_tools_ld_preload_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
+    AMENT_DEPENDENCIES ${rmw_implementation}
+  )
+
   rcl_add_custom_gtest(test_timer${target_suffix}
     SRCS rcl/test_timer.cpp
     ENV ${rmw_implementation_env_var}
@@ -80,6 +87,22 @@ function(test_target_function)
 
   rcl_add_custom_gtest(test_get_node_names${target_suffix}
     SRCS rcl/test_get_node_names.cpp
+    ENV ${rmw_implementation_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
+  )
+
+  rcl_add_custom_gtest(test_lexer${target_suffix}
+    SRCS rcl/test_lexer.cpp
+    ENV ${rmw_implementation_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation}
+  )
+
+  rcl_add_custom_gtest(test_lexer_lookahead${target_suffix}
+    SRCS rcl/test_lexer_lookahead.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
@@ -146,6 +169,15 @@ function(test_target_function)
     TIMEOUT 240  # Large timeout to wait for fault injection tests
   )
 
+  rcl_add_custom_gtest(test_arguments${target_suffix}
+    SRCS rcl/test_arguments.cpp
+    ENV ${rmw_implementation_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
+    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
+    AMENT_DEPENDENCIES "osrf_testing_tools_cpp" "rcpputils"
+  )
+
   rcl_add_custom_gtest(test_remap${target_suffix}
     SRCS rcl/test_remap.cpp
     ENV ${rmw_implementation_env_var}
@@ -208,10 +240,7 @@ function(test_target_function)
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers
-    AMENT_DEPENDENCIES ${rmw_implementation}
-      "osrf_testing_tools_cpp"
-      "rosidl_runtime_cpp"
-      "test_msgs"
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
     TIMEOUT 120
   )
   # TODO(asorbini) Enable message timestamp tests for rmw_connextdds on Windows
@@ -262,7 +291,7 @@ function(test_target_function)
   )
 
   rcl_add_custom_gtest(test_namespace${target_suffix}
-    SRCS rcl/test_namespace.cpp
+    SRCS test_namespace.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME}
@@ -388,34 +417,6 @@ target_link_libraries(wait_for_entity_helpers PRIVATE
   rcutils::rcutils)
 
 call_for_each_rmw_implementation(test_target)
-
-rcl_add_custom_gtest(test_arguments
-  SRCS rcl/test_arguments.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-  LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
-  AMENT_DEPENDENCIES "osrf_testing_tools_cpp" "rcpputils"
-)
-
-rcl_add_custom_gtest(test_time
-  SRCS rcl/test_time.cpp
-  ENV ${memory_tools_ld_preload_env_var}
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
-)
-
-rcl_add_custom_gtest(test_lexer
-  SRCS rcl/test_lexer.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME}
-)
-
-rcl_add_custom_gtest(test_lexer_lookahead
-  SRCS rcl/test_lexer_lookahead.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME}
-  AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
-)
 
 rcl_add_custom_gtest(test_validate_enclave_name
   SRCS rcl/test_validate_enclave_name.cpp
