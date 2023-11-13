@@ -1,12 +1,16 @@
 find_package(ament_cmake_gtest REQUIRED)
-
 find_package(launch_testing_ament_cmake REQUIRED)
+
 find_package(mimick_vendor REQUIRED)
-find_package(osrf_testing_tools_cpp REQUIRED)
+find_package(test_msgs REQUIRED)
+
+find_package(mimick_vendor REQUIRED)
+
+find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
-find_package(rosidl_runtime_cpp REQUIRED)
-find_package(test_msgs REQUIRED)
+
+find_package(osrf_testing_tools_cpp REQUIRED)
 
 get_target_property(memory_tools_ld_preload_env_var
   osrf_testing_tools_cpp::memory_tools LIBRARY_PRELOAD_ENVIRONMENT_VARIABLE)
@@ -57,7 +61,15 @@ function(test_target_function)
     SRCS rcl/test_client.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
+  )
+
+  rcl_add_custom_gtest(test_time${target_suffix}
+    SRCS rcl/test_time.cpp
+    ENV ${rmw_implementation_env_var} ${memory_tools_ld_preload_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
     AMENT_DEPENDENCIES ${rmw_implementation}
   )
 
@@ -81,16 +93,32 @@ function(test_target_function)
     SRCS rcl/test_get_node_names.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
+  )
+
+  rcl_add_custom_gtest(test_lexer${target_suffix}
+    SRCS rcl/test_lexer.cpp
+    ENV ${rmw_implementation_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    LIBRARIES ${PROJECT_NAME}
     AMENT_DEPENDENCIES ${rmw_implementation}
+  )
+
+  rcl_add_custom_gtest(test_lexer_lookahead${target_suffix}
+    SRCS rcl/test_lexer_lookahead.cpp
+    ENV ${rmw_implementation_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
   )
 
   rcl_add_custom_gtest(test_graph${target_suffix}
     SRCS rcl/test_graph.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
     TIMEOUT 120
   )
 
@@ -98,24 +126,24 @@ function(test_target_function)
     SRCS rcl/test_info_by_topic.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} wait_for_entity_helpers osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME} wait_for_entity_helpers
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   rcl_add_custom_gtest(test_count_matched${target_suffix}
     SRCS rcl/test_count_matched.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   rcl_add_custom_gtest(test_get_actual_qos${target_suffix}
     SRCS rcl/test_get_actual_qos.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation} "test_msgs" "osrf_testing_tools_cpp"
   )
 
   rcl_add_custom_gtest(test_init${target_suffix}
@@ -141,8 +169,17 @@ function(test_target_function)
     ENV ${rmw_implementation_env_var} ${memory_tools_ld_preload_env_var} ${gtest_filter_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
     TIMEOUT 240  # Large timeout to wait for fault injection tests
+  )
+
+  rcl_add_custom_gtest(test_arguments${target_suffix}
+    SRCS rcl/test_arguments.cpp
+    ENV ${rmw_implementation_env_var}
+    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
+    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
+    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
+    AMENT_DEPENDENCIES "osrf_testing_tools_cpp" "rcpputils"
   )
 
   rcl_add_custom_gtest(test_remap${target_suffix}
@@ -150,7 +187,8 @@ function(test_target_function)
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
   )
 
   rcl_add_custom_gtest(test_remap_integration${target_suffix}
@@ -158,7 +196,8 @@ function(test_target_function)
     TIMEOUT 200
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES "osrf_testing_tools_cpp" "test_msgs"
   )
 
   rcl_add_custom_gtest(test_guard_condition${target_suffix}
@@ -166,7 +205,7 @@ function(test_target_function)
     ENV ${rmw_implementation_env_var} ${memory_tools_ld_preload_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     LIBRARIES ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
   )
 
   rcl_add_custom_gtest(test_publisher${target_suffix}
@@ -174,8 +213,8 @@ function(test_target_function)
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-    LIBRARIES ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME} mimick
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   rcl_add_custom_gtest(test_publisher_wait_all_ack${target_suffix}
@@ -183,26 +222,29 @@ function(test_target_function)
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-    LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers osrf_testing_tools_cpp::memory_tools rcutils::rcutils
-      rosidl_runtime_c::rosidl_runtime_c ${test_msgs_TARGETS}
+    LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers
     AMENT_DEPENDENCIES ${rmw_implementation}
+      "osrf_testing_tools_cpp"
+      "rcpputils"
+      "rcutils"
+      "rosidl_runtime_c"
+      "test_msgs"
   )
 
   rcl_add_custom_gtest(test_service${target_suffix}
     SRCS rcl/test_service.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   rcl_add_custom_gtest(test_subscription${target_suffix}
     SRCS rcl/test_subscription.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers osrf_testing_tools_cpp::memory_tools rosidl_runtime_cpp::rosidl_runtime_cpp
-      ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
     TIMEOUT 120
   )
   # TODO(asorbini) Enable message timestamp tests for rmw_connextdds on Windows
@@ -232,32 +274,32 @@ function(test_target_function)
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   rcl_add_custom_gtest(test_wait${target_suffix}
     SRCS rcl/test_wait.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME} mimick
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp"
   )
 
   rcl_add_custom_gtest(test_logging_rosout${target_suffix}
     SRCS rcl/test_logging_rosout.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools ${rcl_interfaces_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "rcl_interfaces"
   )
 
   rcl_add_custom_gtest(test_namespace${target_suffix}
-    SRCS rcl/test_namespace.cpp
+    SRCS test_namespace.cpp
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME}
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   rcl_add_custom_gtest(test_rmw_impl_id_check_func${target_suffix}
@@ -273,54 +315,22 @@ function(test_target_function)
     ENV ${rmw_implementation_env_var}
     APPEND_LIBRARY_DIRS ${extra_lib_dirs}
     INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-    LIBRARIES ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
-  )
-
-  rcl_add_custom_gtest(test_service_event_publisher${target_suffix}
-    SRCS rcl/test_service_event_publisher.cpp
-    ENV ${rmw_implementation_env_var}
-    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-    LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
-  )
-
-  rcl_add_custom_gtest(test_type_description_conversions${target_suffix}
-    SRCS rcl/test_type_description_conversions.cpp
-    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-    LIBRARIES ${PROJECT_NAME} ${test_msgs_TARGETS}
-  )
-
-  rcl_add_custom_gtest(test_node_type_cache${target_suffix}
-    SRCS rcl/test_node_type_cache.cpp
-    ENV ${rmw_implementation_env_var}
-    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-    LIBRARIES ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
-  )
-
-  rcl_add_custom_gtest(test_get_type_description_service${target_suffix}
-    SRCS rcl/test_get_type_description_service.cpp
-    ENV ${rmw_implementation_env_var}
-    APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-    INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-    LIBRARIES ${PROJECT_NAME} mimick wait_for_entity_helpers osrf_testing_tools_cpp::memory_tools ${type_description_interfaces_TARGETS}
-    AMENT_DEPENDENCIES ${rmw_implementation}
+    LIBRARIES ${PROJECT_NAME} mimick
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   # Launch tests
 
   rcl_add_custom_executable(service_fixture${target_suffix}
     SRCS rcl/service_fixture.cpp
-    LIBRARIES ${PROJECT_NAME} wait_for_entity_helpers osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS} rcutils::rcutils
+    LIBRARIES ${PROJECT_NAME} wait_for_entity_helpers
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   rcl_add_custom_executable(client_fixture${target_suffix}
     SRCS rcl/client_fixture.cpp
-    LIBRARIES ${PROJECT_NAME} wait_for_entity_helpers osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
+    LIBRARIES ${PROJECT_NAME} wait_for_entity_helpers
+    AMENT_DEPENDENCIES ${rmw_implementation} "osrf_testing_tools_cpp" "test_msgs"
   )
 
   rcl_add_custom_launch_test(test_services
@@ -377,42 +387,10 @@ target_link_libraries(wait_for_entity_helpers PRIVATE
 
 call_for_each_rmw_implementation(test_target)
 
-rcl_add_custom_gtest(test_arguments
-  SRCS rcl/test_arguments.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../src/rcl/
-  LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
-)
-
-rcl_add_custom_gtest(test_time
-  SRCS rcl/test_time.cpp
-  ENV ${memory_tools_ld_preload_env_var}
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
-)
-
-rcl_add_custom_gtest(test_lexer
-  SRCS rcl/test_lexer.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME}
-)
-
-rcl_add_custom_gtest(test_lexer_lookahead
-  SRCS rcl/test_lexer_lookahead.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
-)
-
 rcl_add_custom_gtest(test_validate_enclave_name
   SRCS rcl/test_validate_enclave_name.cpp
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
   LIBRARIES ${PROJECT_NAME} mimick
-)
-
-rcl_add_custom_gtest(test_discovery_options
-  SRCS rcl/test_discovery_options.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools
 )
 
 rcl_add_custom_gtest(test_domain_id
@@ -430,8 +408,8 @@ rcl_add_custom_gtest(test_localhost
 rcl_add_custom_gtest(test_logging
   SRCS rcl/test_logging.cpp
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME} mimick ${rcl_interfaces_TARGETS}
-    rcl_logging_interface::rcl_logging_interface ${RCL_LOGGING_IMPL}::${RCL_LOGGING_IMPL} osrf_testing_tools_cpp::memory_tools
+  LIBRARIES ${PROJECT_NAME} mimick
+  AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
 )
 
 rcl_add_custom_gtest(test_validate_topic_name
@@ -449,7 +427,8 @@ rcl_add_custom_gtest(test_expand_topic_name
 rcl_add_custom_gtest(test_security
   SRCS rcl/test_security.cpp
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools
+  LIBRARIES ${PROJECT_NAME} mimick
+  AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
 )
 
 rcl_add_custom_gtest(test_common
@@ -462,17 +441,13 @@ rcl_add_custom_gtest(test_common
 rcl_add_custom_gtest(test_log_level
   SRCS rcl/test_log_level.cpp
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME} mimick osrf_testing_tools_cpp::memory_tools
+  LIBRARIES ${PROJECT_NAME} mimick
+  AMENT_DEPENDENCIES "osrf_testing_tools_cpp"
 )
 
 rcl_add_custom_gtest(test_subscription_content_filter_options
   SRCS rcl/test_subscription_content_filter_options.cpp
   APPEND_LIBRARY_DIRS ${extra_lib_dirs}
-  LIBRARIES ${PROJECT_NAME} osrf_testing_tools_cpp::memory_tools ${test_msgs_TARGETS}
-)
-
-rcl_add_custom_gtest(test_type_hash
-  SRCS rcl/test_type_hash.cpp
-  APPEND_LIBRARY_DIRS ${extra_lib_dirs}
   LIBRARIES ${PROJECT_NAME}
+  AMENT_DEPENDENCIES "osrf_testing_tools_cpp" "test_msgs"
 )

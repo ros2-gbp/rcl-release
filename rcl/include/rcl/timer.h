@@ -26,12 +26,10 @@ extern "C"
 
 #include "rcl/allocator.h"
 #include "rcl/context.h"
-#include "rcl/event_callback.h"
 #include "rcl/guard_condition.h"
 #include "rcl/macros.h"
 #include "rcl/time.h"
 #include "rcl/types.h"
-#include "rcutils/logging_macros.h"
 #include "rmw/rmw.h"
 
 typedef struct rcl_timer_impl_s rcl_timer_impl_t;
@@ -42,14 +40,6 @@ typedef struct rcl_timer_s
   /// Private implementation pointer.
   rcl_timer_impl_t * impl;
 } rcl_timer_t;
-
-/// Structure which encapsulates the on reset callback data
-typedef struct rcl_timer_on_reset_callback_data_s
-{
-  rcl_event_callback_t on_reset_callback;
-  const void * user_data;
-  size_t reset_counter;
-} rcl_timer_on_reset_callback_data_t;
 
 /// User callback signature for timers.
 /**
@@ -126,8 +116,8 @@ rcl_get_zero_initialized_timer(void);
  * // ... error handling
  *
  * rcl_timer_t timer = rcl_get_zero_initialized_timer();
- * ret = rcl_timer_init2(
- *   &timer, &clock, context, RCL_MS_TO_NS(100), my_timer_callback, allocator, true);
+ * ret = rcl_timer_init(
+ *   &timer, &clock, context, RCL_MS_TO_NS(100), my_timer_callback, allocator);
  * // ... error handling, use the timer with a wait set, or poll it manually, then cleanup
  * ret = rcl_timer_fini(&timer);
  * // ... error handling
@@ -152,7 +142,6 @@ rcl_get_zero_initialized_timer(void);
  * \param[in] period the duration between calls to the callback in nanoseconds
  * \param[in] callback the user defined function to be called every period
  * \param[in] allocator the allocator to use for allocations
- * \param[in] autostart the state of the timer at initialization
  * \return #RCL_RET_OK if the timer was initialized successfully, or
  * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
  * \return #RCL_RET_ALREADY_INIT if the timer was already initialized, or
@@ -161,22 +150,6 @@ rcl_get_zero_initialized_timer(void);
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_init2(
-  rcl_timer_t * timer,
-  rcl_clock_t * clock,
-  rcl_context_t * context,
-  int64_t period,
-  const rcl_timer_callback_t callback,
-  rcl_allocator_t allocator,
-  bool autostart);
-
-/**
- * \deprecated `rcl_timer_init` implementation was removed.
- *   Refer to `rcl_timer_init2`.
- */
-RCL_PUBLIC
-RCUTILS_DEPRECATED_WITH_MSG("Call rcl_timer_init2 instead")
 rcl_ret_t
 rcl_timer_init(
   rcl_timer_t * timer,
@@ -616,34 +589,6 @@ RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_guard_condition_t *
 rcl_timer_get_guard_condition(const rcl_timer_t * timer);
-
-/// Set the on reset callback function for the timer.
-/**
- * This API sets the callback function to be called whenever the
- * timer is reset.
- * If the timer has already been reset, the callback will be called.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | No
- *
- * \param[in] timer The handle to the timer on which to set the callback
- * \param[in] on_reset_callback The callback to be called when timer is reset
- * \param[in] user_data Given to the callback when called later, may be NULL
- * \return `RCL_RET_OK` if successful, or
- * \return `RCL_RET_INVALID_ARGUMENT` if `timer` is NULL
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_set_on_reset_callback(
-  const rcl_timer_t * timer,
-  rcl_event_callback_t on_reset_callback,
-  const void * user_data);
 
 #ifdef __cplusplus
 }

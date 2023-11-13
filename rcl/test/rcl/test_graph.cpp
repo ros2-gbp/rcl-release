@@ -31,7 +31,6 @@
 #include "rcl/error_handling.h"
 #include "rcl/graph.h"
 #include "rcl/logging.h"
-#include "rcl/logging_rosout.h"
 #include "rcl/rcl.h"
 
 #include "rcutils/logging_macros.h"
@@ -100,10 +99,6 @@ public:
     const char * name = "test_graph_node";
     ret = rcl_node_init(this->node_ptr, name, "", this->context_ptr, &node_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    if (rcl_logging_rosout_enabled() && node_options.enable_rosout) {
-      ret = rcl_logging_rosout_init_publisher_for_node(this->node_ptr);
-      ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    }
 
     this->wait_set_ptr = new rcl_wait_set_t;
     *this->wait_set_ptr = rcl_get_zero_initialized_wait_set();
@@ -123,11 +118,6 @@ public:
     delete this->wait_set_ptr;
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
-    const rcl_node_options_t * node_ops = rcl_node_get_options(this->node_ptr);
-    if (rcl_logging_rosout_enabled() && node_ops->enable_rosout) {
-      ret = rcl_logging_rosout_fini_publisher_for_node(this->node_ptr);
-      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    }
     ret = rcl_node_fini(this->node_ptr);
     delete this->node_ptr;
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -716,80 +706,6 @@ TEST_F(
   rcl_reset_error();
 }
 
-/* Test the rcl_count_clients function.
- *
- * This does not test content of the response.
- */
-TEST_F(
-  CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION),
-  test_rcl_count_clients
-) {
-  rcl_ret_t ret;
-  rcl_node_t zero_node = rcl_get_zero_initialized_node();
-  const char * service_name = "/topic_test_rcl_count_clients";
-  size_t count;
-  // invalid node
-  ret = rcl_count_clients(nullptr, service_name, &count);
-  EXPECT_EQ(RCL_RET_NODE_INVALID, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-  ret = rcl_count_clients(&zero_node, service_name, &count);
-  EXPECT_EQ(RCL_RET_NODE_INVALID, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-  ret = rcl_count_clients(this->old_node_ptr, service_name, &count);
-  EXPECT_EQ(RCL_RET_NODE_INVALID, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-  // invalid topic name
-  ret = rcl_count_clients(this->node_ptr, nullptr, &count);
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-  // TODO(wjwwood): test valid strings with invalid topic names in them
-  // invalid count
-  ret = rcl_count_clients(this->node_ptr, service_name, nullptr);
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-  // valid call
-  ret = rcl_count_clients(this->node_ptr, service_name, &count);
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-}
-
-/* Test the rcl_count_services function.
- *
- * This does not test content of the response.
- */
-TEST_F(
-  CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION),
-  test_rcl_count_services
-) {
-  rcl_ret_t ret;
-  rcl_node_t zero_node = rcl_get_zero_initialized_node();
-  const char * service_name = "/topic_test_rcl_count_services";
-  size_t count;
-  // invalid node
-  ret = rcl_count_services(nullptr, service_name, &count);
-  EXPECT_EQ(RCL_RET_NODE_INVALID, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-  ret = rcl_count_services(&zero_node, service_name, &count);
-  EXPECT_EQ(RCL_RET_NODE_INVALID, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-  ret = rcl_count_services(this->old_node_ptr, service_name, &count);
-  EXPECT_EQ(RCL_RET_NODE_INVALID, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-  // invalid topic name
-  ret = rcl_count_services(this->node_ptr, nullptr, &count);
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-  // TODO(wjwwood): test valid strings with invalid topic names in them
-  // invalid count
-  ret = rcl_count_services(this->node_ptr, service_name, nullptr);
-  EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-  // valid call
-  ret = rcl_count_services(this->node_ptr, service_name, &count);
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  rcl_reset_error();
-}
-
 /* Test the rcl_wait_for_publishers function.
  */
 TEST_F(
@@ -963,11 +879,7 @@ void expect_topics_types(
   rcl_names_and_types_t nat{};
   nat = rcl_get_zero_initialized_names_and_types();
   ret = func(node, topic_name, &nat);
-  // Ignore the `RCL_RET_NODE_NAME_NON_EXISTENT` result since the discovery may be asynchronous
-  // that the node information is not updated immediately into the graph cache.
-  if (ret != RCL_RET_NODE_NAME_NON_EXISTENT) {
-    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  }
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
   is_success &= num_topics == nat.names.size;
   if (expect) {
@@ -1033,11 +945,6 @@ public:
       remote_node_ptr, remote_node_name, "", this->remote_context_ptr,
       &node_options);
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    if (rcl_logging_rosout_enabled() && node_options.enable_rosout) {
-      ret = rcl_logging_rosout_init_publisher_for_node(remote_node_ptr);
-      ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    }
-
     sub_func = std::bind(
       rcl_get_subscriber_names_and_types_by_node,
       std::placeholders::_1,
@@ -1075,11 +982,6 @@ public:
   {
     rcl_ret_t ret;
     CLASSNAME(TestGraphFixture, RMW_IMPLEMENTATION) ::TearDown();
-    const rcl_node_options_t * node_ops = rcl_node_get_options(this->remote_node_ptr);
-    if (rcl_logging_rosout_enabled() && node_ops->enable_rosout) {
-      ret = rcl_logging_rosout_fini_publisher_for_node(this->remote_node_ptr);
-      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    }
     ret = rcl_node_fini(this->remote_node_ptr);
 
     delete this->remote_node_ptr;
