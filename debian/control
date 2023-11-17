@@ -1,0 +1,12 @@
+Source: ros-iron-rcl-action
+Section: misc
+Priority: optional
+Maintainer: Audrow Nash <audrow@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), ros-iron-action-msgs, ros-iron-ament-cmake-gtest <!nocheck>, ros-iron-ament-cmake-ros, ros-iron-ament-lint-auto <!nocheck>, ros-iron-ament-lint-common <!nocheck>, ros-iron-osrf-testing-tools-cpp <!nocheck>, ros-iron-rcl, ros-iron-rcutils, ros-iron-rmw, ros-iron-rmw-implementation-cmake <!nocheck>, ros-iron-rosidl-runtime-c, ros-iron-test-msgs <!nocheck>, ros-iron-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-iron-rcl-action
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-iron-action-msgs, ros-iron-rcl, ros-iron-rcutils, ros-iron-rmw, ros-iron-rosidl-runtime-c, ros-iron-ros-workspace
+Description: Package containing a C-based ROS action implementation
