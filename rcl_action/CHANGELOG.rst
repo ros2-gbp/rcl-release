@@ -2,6 +2,9 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.4 (2023-11-17)
+------------------
+
 6.0.3 (2023-09-08)
 ------------------
 * rcl_send_response returns RCL_RET_TIMEOUT. (`#1090 <https://github.com/ros2/rcl/issues/1090>`_)
