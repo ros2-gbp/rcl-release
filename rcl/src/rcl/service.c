@@ -202,7 +202,7 @@ rcl_service_init(
   service->impl->type_hash = *type_support->get_type_hash_func(type_support);
 
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Service initialized");
-  TRACEPOINT(
+  TRACETOOLS_TRACEPOINT(
     rcl_service_init,
     (const void *)service,
     (const void *)node,
