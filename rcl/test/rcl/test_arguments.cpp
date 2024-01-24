@@ -13,12 +13,12 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
-#include <filesystem>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
+#include "rcpputils/filesystem_helper.hpp"
 
 #include "rcl/rcl.h"
 #include "rcl/arguments.h"
@@ -31,7 +31,14 @@
 #include "./allocator_testing_utils.h"
 #include "./arguments_impl.h"
 
-class TestArgumentsFixture : public ::testing::Test
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+class CLASSNAME (TestArgumentsFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   void SetUp()
@@ -43,8 +50,7 @@ public:
   {
   }
 
-protected:
-  std::filesystem::path test_path{TEST_RESOURCES_DIRECTORY};
+  rcpputils::fs::path test_path{TEST_RESOURCES_DIRECTORY};
 };
 
 #define EXPECT_UNPARSED(parsed_args, ...) \
@@ -122,7 +128,7 @@ are_known_ros_args(std::vector<const char *> argv)
   return is_valid;
 }
 
-TEST_F(TestArgumentsFixture, check_known_vs_unknown_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), check_known_vs_unknown_args) {
   EXPECT_TRUE(are_known_ros_args({"--ros-args", "-r", "__node:=node_name"}));
   EXPECT_TRUE(are_known_ros_args({"--ros-args", "-r", "old_name:__node:=node_name"}));
   EXPECT_TRUE(are_known_ros_args({"--ros-args", "-r", "old_name:__node:=nodename123"}));
@@ -213,7 +219,7 @@ are_valid_ros_args(std::vector<const char *> argv)
   return true;
 }
 
-TEST_F(TestArgumentsFixture, check_valid_vs_invalid_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), check_valid_vs_invalid_args) {
   const std::string parameters_filepath = (test_path / "test_parameters.1.yaml").string();
   EXPECT_TRUE(
     are_valid_ros_args(
@@ -285,7 +291,7 @@ TEST_F(TestArgumentsFixture, check_valid_vs_invalid_args) {
   EXPECT_FALSE(are_valid_ros_args({"--ros-args", "--log-level", "foo"}));
 }
 
-TEST_F(TestArgumentsFixture, test_no_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_no_args) {
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
   rcl_ret_t ret = rcl_parse_arguments(0, NULL, rcl_get_default_allocator(), &parsed_args);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -294,7 +300,7 @@ TEST_F(TestArgumentsFixture, test_no_args) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args));
 }
 
-TEST_F(TestArgumentsFixture, test_null_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_null_args) {
   const int argc = 1;
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
   rcl_ret_t ret = rcl_parse_arguments(argc, NULL, rcl_get_default_allocator(), &parsed_args);
@@ -302,7 +308,7 @@ TEST_F(TestArgumentsFixture, test_null_args) {
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_negative_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_negative_args) {
   const int argc = -1;
   const char * const argv[] = {"process_name"};
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
@@ -311,7 +317,7 @@ TEST_F(TestArgumentsFixture, test_negative_args) {
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_bad_alloc_parse_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_bad_alloc_parse_args) {
   const char * const argv[] = {"process_name"};
   const int argc = sizeof(argv) / sizeof(const char *);
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
@@ -321,7 +327,7 @@ TEST_F(TestArgumentsFixture, test_bad_alloc_parse_args) {
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_bad_alloc_unparse_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_bad_alloc_unparse_args) {
   const char * const argv[] = {
     "process_name", "--ros-args", "/foo/bar:=", "-r", "bar:=/fiz/buz", "}bar:=fiz", "--", "arg"};
   const int argc = sizeof(argv) / sizeof(const char *);
@@ -349,7 +355,7 @@ TEST_F(TestArgumentsFixture, test_bad_alloc_unparse_args) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args));
 }
 
-TEST_F(TestArgumentsFixture, test_empty_unparsed) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_empty_unparsed) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_arguments_t empty_parsed_args = rcl_get_zero_initialized_arguments();
   int * actual_unparsed = NULL;
@@ -366,7 +372,7 @@ TEST_F(TestArgumentsFixture, test_empty_unparsed) {
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_bad_params_get_counts) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_bad_params_get_counts) {
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
   EXPECT_EQ(-1, rcl_arguments_get_count_unparsed(nullptr));
   rcl_reset_error();
@@ -382,7 +388,7 @@ TEST_F(TestArgumentsFixture, test_bad_params_get_counts) {
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_null_args_output) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_null_args_output) {
   const char * const argv[] = {"process_name"};
   const int argc = sizeof(argv) / sizeof(const char *);
   rcl_ret_t ret = rcl_parse_arguments(argc, argv, rcl_get_default_allocator(), NULL);
@@ -390,7 +396,7 @@ TEST_F(TestArgumentsFixture, test_null_args_output) {
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_no_ros_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_no_ros_args) {
   const char * const argv[] = {"process_name"};
   const int argc = sizeof(argv) / sizeof(const char *);
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
@@ -401,7 +407,7 @@ TEST_F(TestArgumentsFixture, test_no_ros_args) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args));
 }
 
-TEST_F(TestArgumentsFixture, test_zero_ros_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_zero_ros_args) {
   const char * const argv[] = {"process_name", "--ros-args"};
   const int argc = sizeof(argv) / sizeof(const char *);
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
@@ -412,7 +418,7 @@ TEST_F(TestArgumentsFixture, test_zero_ros_args) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args));
 }
 
-TEST_F(TestArgumentsFixture, test_zero_ros_args_w_trailing_dashes) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_zero_ros_args_w_trailing_dashes) {
   const char * const argv[] = {"process_name", "--ros-args", "--"};
   const int argc = sizeof(argv) / sizeof(const char *);
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
@@ -423,7 +429,7 @@ TEST_F(TestArgumentsFixture, test_zero_ros_args_w_trailing_dashes) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args));
 }
 
-TEST_F(TestArgumentsFixture, test_remap) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_remap) {
   const char * const argv[] = {
     "process_name", "--ros-args", "-r", "/foo/bar:=/fiz/buz", "--remap", "foo:=/baz"
   };
@@ -437,7 +443,7 @@ TEST_F(TestArgumentsFixture, test_remap) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args));
 }
 
-TEST_F(TestArgumentsFixture, test_one_remap_two_ros_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_one_remap_two_ros_args) {
   const char * const argv[] =
   {"process_name", "--ros-args", "--ros-args", "-r", "/foo/bar:=/fiz/buz"};
   const int argc = sizeof(argv) / sizeof(const char *);
@@ -450,7 +456,7 @@ TEST_F(TestArgumentsFixture, test_one_remap_two_ros_args) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args));
 }
 
-TEST_F(TestArgumentsFixture, test_one_remap_w_trailing_dashes) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_one_remap_w_trailing_dashes) {
   const char * const argv[] = {"process_name", "--ros-args", "-r", "/foo/bar:=/fiz/buz", "--"};
   const int argc = sizeof(argv) / sizeof(const char *);
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
@@ -462,7 +468,7 @@ TEST_F(TestArgumentsFixture, test_one_remap_w_trailing_dashes) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args));
 }
 
-TEST_F(TestArgumentsFixture, test_one_remap_w_two_trailing_dashes) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_one_remap_w_two_trailing_dashes) {
   const char * const argv[] =
   {"process_name", "--ros-args", "-r", "/foo/bar:=/fiz/buz", "--", "--"};
   const int argc = sizeof(argv) / sizeof(const char *);
@@ -475,7 +481,7 @@ TEST_F(TestArgumentsFixture, test_one_remap_w_two_trailing_dashes) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args));
 }
 
-TEST_F(TestArgumentsFixture, test_mix_valid_invalid_rules) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_mix_valid_invalid_rules) {
   const char * const argv[] = {
     "process_name", "--ros-args", "/foo/bar:=", "-r", "bar:=/fiz/buz", "}bar:=fiz", "--", "arg"
   };
@@ -489,7 +495,7 @@ TEST_F(TestArgumentsFixture, test_mix_valid_invalid_rules) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args));
 }
 
-TEST_F(TestArgumentsFixture, test_copy) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_copy) {
   const char * const argv[] = {
     "process_name", "--ros-args", "/foo/bar:=", "-r", "bar:=/fiz/buz", "-r", "__ns:=/foo", "--",
     "arg"
@@ -519,7 +525,7 @@ TEST_F(TestArgumentsFixture, test_copy) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&copied_args));
 }
 
-TEST_F(TestArgumentsFixture, test_copy_bad_alloc) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_copy_bad_alloc) {
   const char * const argv[] = {"process_name", "--ros-args", "/foo/bar:="};
   const int argc = sizeof(argv) / sizeof(const char *);
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
@@ -540,7 +546,7 @@ TEST_F(TestArgumentsFixture, test_copy_bad_alloc) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args)) << rcl_get_error_string().str;
 }
 
-TEST_F(TestArgumentsFixture, test_copy_no_ros_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_copy_no_ros_args) {
   const char * const argv[] = {"process_name", "--ros-args", "--", "arg", "--ros-args"};
   const int argc = sizeof(argv) / sizeof(const char *);
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
@@ -575,7 +581,7 @@ __return_null_on_zero_allocate(size_t size, void * state)
   return malloc(size);
 }
 
-TEST_F(TestArgumentsFixture, test_copy_no_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_copy_no_args) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   allocator.allocate = __return_null_on_zero_allocate;
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
@@ -594,7 +600,7 @@ TEST_F(TestArgumentsFixture, test_copy_no_args) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&copied_args));
 }
 
-TEST_F(TestArgumentsFixture, test_two_namespace) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_two_namespace) {
   const char * const argv[] = {
     "process_name", "--ros-args", "-r", "__ns:=/foo/bar", "-r", "__ns:=/fiz/buz"
   };
@@ -608,7 +614,7 @@ TEST_F(TestArgumentsFixture, test_two_namespace) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&parsed_args));
 }
 
-TEST_F(TestArgumentsFixture, test_uninitialized_parsed_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_uninitialized_parsed_args) {
   const char * const argv[] = {"process_name"};
   const int argc = sizeof(argv) / sizeof(const char *);
   rcl_arguments_t parsed_args;
@@ -620,7 +626,7 @@ TEST_F(TestArgumentsFixture, test_uninitialized_parsed_args) {
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_double_parse) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_double_parse) {
   const char * const argv[] = {
     "process_name", "--ros-args", "-r", "__ns:=/foo/bar", "-r", "__ns:=/fiz/buz"
   };
@@ -639,19 +645,19 @@ TEST_F(TestArgumentsFixture, test_double_parse) {
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_fini_null) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_fini_null) {
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_arguments_fini(NULL));
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_fini_impl_null) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_fini_impl_null) {
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
   parsed_args.impl = NULL;
   EXPECT_EQ(RCL_RET_ERROR, rcl_arguments_fini(&parsed_args));
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_fini_twice) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_fini_twice) {
   const char * const argv[] = {"process_name"};
   const int argc = sizeof(argv) / sizeof(const char *);
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
@@ -661,7 +667,7 @@ TEST_F(TestArgumentsFixture, test_fini_twice) {
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_bad_remove_ros_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_bad_remove_ros_args) {
   const char * const argv[] = {"process_name"};
   const int argc = sizeof(argv) / sizeof(const char *);
 
@@ -740,7 +746,7 @@ TEST_F(TestArgumentsFixture, test_bad_remove_ros_args) {
   EXPECT_EQ(0, nonros_argc);
 }
 
-TEST_F(TestArgumentsFixture, test_bad_alloc_remove_ros_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_bad_alloc_remove_ros_args) {
   const char * const argv[] = {
     "process_name", "-d", "--ros-args", "-r", "__ns:=/foo/bar", "-r", "__ns:=/fiz/buz", "--",
     "--foo=bar", "--baz", "--ros-args", "--ros-args", "-p", "bar:=baz", "--", "--", "arg",
@@ -769,7 +775,7 @@ TEST_F(TestArgumentsFixture, test_bad_alloc_remove_ros_args) {
   EXPECT_EQ(RCL_RET_BAD_ALLOC, ret);
 }
 
-TEST_F(TestArgumentsFixture, test_remove_ros_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_remove_ros_args) {
   const char * const argv[] = {
     "process_name", "-d", "--ros-args", "-r", "__ns:=/foo/bar", "-r", "__ns:=/fiz/buz", "--",
     "--foo=bar", "--baz", "--ros-args", "--ros-args", "-p", "bar:=baz", "--", "--", "arg",
@@ -809,7 +815,7 @@ TEST_F(TestArgumentsFixture, test_remove_ros_args) {
   EXPECT_STREQ(nonros_argv[5], "arg");
 }
 
-TEST_F(TestArgumentsFixture, test_remove_ros_args_if_ros_only) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_remove_ros_args_if_ros_only) {
   const char * const argv[] = {"--ros-args", "--disable-rosout-logs"};
   const int argc = sizeof(argv) / sizeof(const char *);
 
@@ -843,7 +849,7 @@ TEST_F(TestArgumentsFixture, test_remove_ros_args_if_ros_only) {
 }
 
 
-TEST_F(TestArgumentsFixture, test_remove_ros_args_if_no_args) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_remove_ros_args_if_no_args) {
   const char ** argv = NULL;
   const int argc = 0;
 
@@ -876,7 +882,7 @@ TEST_F(TestArgumentsFixture, test_remove_ros_args_if_no_args) {
   EXPECT_TRUE(NULL == nonros_argv);
 }
 
-TEST_F(TestArgumentsFixture, test_param_argument_zero) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_param_argument_zero) {
   const char * const argv[] =
   {"process_name", "--ros-args", "-r", "__ns:=/namespace", "random:=arg"};
   const int argc = sizeof(argv) / sizeof(const char *);
@@ -895,7 +901,7 @@ TEST_F(TestArgumentsFixture, test_param_argument_zero) {
   EXPECT_EQ(0, parameter_filecount);
 }
 
-TEST_F(TestArgumentsFixture, test_param_argument_single) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_param_argument_single) {
   const std::string parameters_filepath = (test_path / "test_parameters.1.yaml").string();
   const char * const argv[] = {
     "process_name", "--ros-args", "-r", "__ns:=/namespace", "random:=arg",
@@ -957,7 +963,7 @@ TEST_F(TestArgumentsFixture, test_param_argument_single) {
   EXPECT_EQ(1, *(param_value->integer_value));
 }
 
-TEST_F(TestArgumentsFixture, test_param_argument_multiple) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_param_argument_multiple) {
   const std::string parameters_filepath1 = (test_path / "test_parameters.1.yaml").string();
   const std::string parameters_filepath2 = (test_path / "test_parameters.2.yaml").string();
   const char * const argv[] = {
@@ -1028,7 +1034,7 @@ TEST_F(TestArgumentsFixture, test_param_argument_multiple) {
   EXPECT_FALSE(bool_value);
 }
 
-TEST_F(TestArgumentsFixture, test_param_arguments_copy) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_param_arguments_copy) {
   const std::string parameters_filepath1 = (test_path / "test_parameters.1.yaml").string();
   const std::string parameters_filepath2 = (test_path / "test_parameters.2.yaml").string();
   const char * const argv[] = {
@@ -1058,7 +1064,7 @@ TEST_F(TestArgumentsFixture, test_param_arguments_copy) {
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_fini(&copied_args));
 }
 
-TEST_F(TestArgumentsFixture, test_no_param_overrides) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_no_param_overrides) {
   const char * const argv[] = {"process_name"};
   const int argc = sizeof(argv) / sizeof(const char *);
 
@@ -1098,7 +1104,7 @@ TEST_F(TestArgumentsFixture, test_no_param_overrides) {
   EXPECT_TRUE(NULL == params);
 }
 
-TEST_F(TestArgumentsFixture, test_param_overrides) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_param_overrides) {
   const std::string parameters_filepath = (test_path / "test_parameters.1.yaml").string();
   const char * const argv[] = {
     "process_name", "--ros-args",
@@ -1151,7 +1157,7 @@ TEST_F(TestArgumentsFixture, test_param_overrides) {
   EXPECT_STREQ("foo", param_value->string_value);
 }
 
-TEST_F(TestArgumentsFixture, test_bad_alloc_get_param_files) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_bad_alloc_get_param_files) {
   const std::string parameters_filepath1 = (test_path / "test_parameters.1.yaml").string();
   const std::string parameters_filepath2 = (test_path / "test_parameters.2.yaml").string();
   const char * const argv[] = {
@@ -1187,7 +1193,7 @@ TEST_F(TestArgumentsFixture, test_bad_alloc_get_param_files) {
   EXPECT_EQ(RCL_RET_BAD_ALLOC, ret) << rcl_get_error_string().str;
 }
 
-TEST_F(TestArgumentsFixture, test_null_get_param_files) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_null_get_param_files) {
   const std::string parameters_filepath1 = (test_path / "test_parameters.1.yaml").string();
   const char * const argv[] = {
     "process_name", "--ros-args", "--params-file", parameters_filepath1.c_str()
@@ -1221,7 +1227,7 @@ TEST_F(TestArgumentsFixture, test_null_get_param_files) {
   rcl_reset_error();
 }
 
-TEST_F(TestArgumentsFixture, test_parse_with_internal_errors) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_parse_with_internal_errors) {
   const std::string parameters_filepath1 =
     (test_path / "test_parameters.1.yaml").string();
   const std::string parameters_filepath2 =
@@ -1266,7 +1272,7 @@ TEST_F(TestArgumentsFixture, test_parse_with_internal_errors) {
   });
 }
 
-TEST_F(TestArgumentsFixture, test_copy_with_internal_errors) {
+TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_copy_with_internal_errors) {
   const std::string parameters_filepath1 =
     (test_path / "test_parameters.1.yaml").string();
   const std::string parameters_filepath2 =

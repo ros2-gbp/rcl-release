@@ -28,6 +28,13 @@
 
 #include "rcl/error_handling.h"
 
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
 void check_state(
   rcl_wait_set_t * wait_set_ptr,
   rcl_publisher_t * publisher,
@@ -89,7 +96,7 @@ void check_state(
   EXPECT_EQ(expected_subscriber_count, subscriber_count);
 }
 
-class TestCountFixture : public ::testing::Test
+class CLASSNAME (TestCountFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   rcl_node_t * node_ptr;
@@ -143,7 +150,7 @@ public:
   }
 };
 
-TEST_F(TestCountFixture, test_count_matched_functions) {
+TEST_F(CLASSNAME(TestCountFixture, RMW_IMPLEMENTATION), test_count_matched_functions) {
   std::string topic_name("/test_count_matched_functions__");
   rcl_ret_t ret;
 
@@ -192,7 +199,9 @@ TEST_F(TestCountFixture, test_count_matched_functions) {
   rcl_reset_error();
 }
 
-TEST_F(TestCountFixture, test_count_matched_functions_mismatched_qos) {
+TEST_F(
+  CLASSNAME(TestCountFixture, RMW_IMPLEMENTATION),
+  test_count_matched_functions_mismatched_qos) {
   std::string topic_name("/test_count_matched_functions_mismatched_qos__");
   rcl_ret_t ret;
 
