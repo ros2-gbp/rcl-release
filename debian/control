@@ -1,0 +1,13 @@
+Source: ros-humble-rcl
+Section: misc
+Priority: optional
+Maintainer: Ivan Paunovic <ivanpauno@ekumenlabs.com>
+Build-Depends: debhelper (>= 9.0.0), ros-humble-ament-cmake-gtest <!nocheck>, ros-humble-ament-cmake-ros, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-launch <!nocheck>, ros-humble-launch-testing <!nocheck>, ros-humble-launch-testing-ament-cmake <!nocheck>, ros-humble-mimick-vendor <!nocheck>, ros-humble-osrf-testing-tools-cpp <!nocheck>, ros-humble-rcl-interfaces, ros-humble-rcl-logging-interface, ros-humble-rcl-logging-spdlog, ros-humble-rcl-yaml-param-parser, ros-humble-rcpputils <!nocheck>, ros-humble-rcutils, ros-humble-rmw <!nocheck>, ros-humble-rmw-implementation, ros-humble-rmw-implementation-cmake <!nocheck>, ros-humble-rosidl-runtime-c, ros-humble-test-msgs <!nocheck>, ros-humble-tracetools, ros-humble-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-rcl
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-humble-rcl-interfaces, ros-humble-rcl-logging-interface, ros-humble-rcl-logging-spdlog, ros-humble-rcl-yaml-param-parser, ros-humble-rcutils, ros-humble-rmw, ros-humble-rmw-implementation, ros-humble-rosidl-runtime-c, ros-humble-tracetools, ros-humble-ros-workspace
+Description: The ROS client library common implementation.
+ This package contains an API which builds on the ROS middleware API and is optionally built upon by the other ROS client libraries.
