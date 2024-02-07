@@ -2,95 +2,24 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-9.1.0 (2024-01-24)
+6.0.5 (2024-02-07)
 ------------------
-* add unit tests for --log-file-name argument. (`#1130 <https://github.com/ros2/rcl/issues/1130>`_)
-* support `--log-file-name` to ros args. (`#1127 <https://github.com/ros2/rcl/issues/1127>`_)
-* Contributors: Tomoya Fujita
 
-9.0.0 (2023-12-26)
+6.0.4 (2023-11-17)
 ------------------
-* Make sure to disable a test_node test on RHEL. (`#1124 <https://github.com/ros2/rcl/issues/1124>`_)
-* remove static function rcl_ret_from_rcutils_ret(). (`#1122 <https://github.com/ros2/rcl/issues/1122>`_)
-* Remove AMENT_DEPENDENCIES from rcl_add_custom_gtest. (`#1119 <https://github.com/ros2/rcl/issues/1119>`_)
-* Remove unncecessary dependencies in tests (`#1114 <https://github.com/ros2/rcl/issues/1114>`_)
-* a rosout publisher of a node might not exist (`#1115 <https://github.com/ros2/rcl/issues/1115>`_)
-* Contributors: Chen Lihui, Chris Lalancette, Christopher Wecht, Tomoya Fujita
-
-8.0.0 (2023-11-06)
-------------------
-* Set disable loan to on by default. (`#1110 <https://github.com/ros2/rcl/issues/1110>`_)
-* Return service from node_type_description_service_init (`#1112 <https://github.com/ros2/rcl/issues/1112>`_)
-* next_call_time will always be greater than now after calling rcl_timer_call. (`#1089 <https://github.com/ros2/rcl/issues/1089>`_)
-* Contributors: Chris Lalancette, Michael Carroll, Thiemo Kohrt
-
-7.3.0 (2023-10-09)
-------------------
-* Add rcl count clients, servicec & tests (`#1011 <https://github.com/ros2/rcl/issues/1011>`_)
-* Improve the reliability of test_get_type_description_service. (`#1107 <https://github.com/ros2/rcl/issues/1107>`_)
-* Contributors: Chris Lalancette, Minju, Lee
-
-7.2.0 (2023-10-04)
-------------------
-* Remove most remaining uses of ament_target_dependencies. (`#1102 <https://github.com/ros2/rcl/issues/1102>`_)
-* Just remove rcpputils::fs dependency (`#1105 <https://github.com/ros2/rcl/issues/1105>`_)
-* Decouple rosout publisher init from node init. (`#1065 <https://github.com/ros2/rcl/issues/1065>`_)
-* Cleanup the error handling in rcl_node_init. (`#1099 <https://github.com/ros2/rcl/issues/1099>`_)
-* Fix a clang warning for suspicious string concatentation. (`#1101 <https://github.com/ros2/rcl/issues/1101>`_)
-* add the link to the topic name rules. (`#1100 <https://github.com/ros2/rcl/issues/1100>`_)
-* Contributors: Chris Lalancette, Kenta Yonekura, Tomoya Fujita
-
-7.1.1 (2023-09-07)
-------------------
-* Cut down the amount of time for test_logging_rosout. (`#1098 <https://github.com/ros2/rcl/issues/1098>`_)
-* Simplify local_namespace handling in rcl_node_init. (`#1097 <https://github.com/ros2/rcl/issues/1097>`_)
-* Reduce the number of tests we run (`#1096 <https://github.com/ros2/rcl/issues/1096>`_)
-* Adding duplicate node information (`#1088 <https://github.com/ros2/rcl/issues/1088>`_)
-* Revamp the test_get_type_description_service. (`#1095 <https://github.com/ros2/rcl/issues/1095>`_)
-* Cleanup network flow endpoints test. (`#1094 <https://github.com/ros2/rcl/issues/1094>`_)
-* Reduce the failure timeout time for namespaces. (`#1093 <https://github.com/ros2/rcl/issues/1093>`_)
-* Shorten wait time for a subscription not being ready. (`#1092 <https://github.com/ros2/rcl/issues/1092>`_)
-* Contributors: Chris Lalancette, Lucas Wendland
-
-7.1.0 (2023-08-21)
-------------------
-* rcl_send_response returns RCL_RET_TIMEOUT. (`#1048 <https://github.com/ros2/rcl/issues/1048>`_)
-* Move test_namespace into the correct directory. (`#1087 <https://github.com/ros2/rcl/issues/1087>`_)
-* Reset errors in tests to reduce warnings (`#1085 <https://github.com/ros2/rcl/issues/1085>`_)
-* Cleanup error reporting in the type hash code. (`#1084 <https://github.com/ros2/rcl/issues/1084>`_)
-* Instrument loaned message publication code path (`#1083 <https://github.com/ros2/rcl/issues/1083>`_)
-* Contributors: Chris Lalancette, Christophe Bedard, Tomoya Fujita
-
-7.0.0 (2023-07-11)
-------------------
-* Add `~/get_type_description` service (rep2011) (`#1052 <https://github.com/ros2/rcl/issues/1052>`_)
-* Modifies timers API to select autostart state (`#1004 <https://github.com/ros2/rcl/issues/1004>`_)
-* test publisher/subscription with the c/cpp typesupport for test_msgs::msg::array (`#1074 <https://github.com/ros2/rcl/issues/1074>`_)
-* validation result should be used to print the error message. (`#1077 <https://github.com/ros2/rcl/issues/1077>`_)
-* Contributors: Chen Lihui, Eloy Briceno, Hans-Joachim Krauch, Tomoya Fujita
-
-6.3.0 (2023-06-12)
-------------------
-* improve error msg of `rcl_expand_topic_name` (`#1076 <https://github.com/ros2/rcl/issues/1076>`_)
-* Use TRACETOOLS\_ prefix for tracepoint-related macros (`#1058 <https://github.com/ros2/rcl/issues/1058>`_)
-* Contributors: Christophe Bedard, Eric W
-
-6.2.0 (2023-06-07)
-------------------
-* fix comment (`#1073 <https://github.com/ros2/rcl/issues/1073>`_)
-* localhost_only prevails auto discovery options if enabled. (`#1069 <https://github.com/ros2/rcl/issues/1069>`_)
-* Avoid dynamic allocation of message before sending over rosout (`#1067 <https://github.com/ros2/rcl/issues/1067>`_)
-* Contributors: Chen Lihui, Christopher Wecht, Tomoya Fujita
-
-6.1.1 (2023-05-11)
-------------------
-* clarify `rcl_node_init` return code (`#1066 <https://github.com/ros2/rcl/issues/1066>`_)
-* Contributors: Eric W
-
-6.1.0 (2023-04-28)
-------------------
-* Fix a format-security warning when building with clang. (`#1064 <https://github.com/ros2/rcl/issues/1064>`_)
+* Set disable loan to on by default. (`#1117 <https://github.com/ros2/rcl/issues/1117>`_)
 * Contributors: Chris Lalancette
+
+6.0.3 (2023-09-08)
+------------------
+* rcl_send_response returns RCL_RET_TIMEOUT. (`#1090 <https://github.com/ros2/rcl/issues/1090>`_)
+* Add `~/get_type_description` service (rep2011) (`#1082 <https://github.com/ros2/rcl/issues/1082>`_)
+* Contributors: Hans-Joachim Krauch, Tomoya Fujita
+
+6.0.2 (2023-05-19)
+------------------
+* Honor ROS_LOCALHOST_ONLY if enabled. (`#1071 <https://github.com/ros2/rcl/issues/1071>`_)
+* Contributors: Tomoya Fujita
 
 6.0.1 (2023-04-18)
 ------------------

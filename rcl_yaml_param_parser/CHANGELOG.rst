@@ -2,44 +2,18 @@
 Changelog for package rcl_yaml_param_parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-9.1.0 (2024-01-24)
+6.0.5 (2024-02-07)
+------------------
+* Fix for incorrect integer value conversion on Windows (`#1129 <https://github.com/ros2/rcl/issues/1129>`_)
+* Contributors: Chris Lalancette, Michael Orlov
+
+6.0.4 (2023-11-17)
 ------------------
 
-9.0.0 (2023-12-26)
-------------------
-* Fix for incorrect integer value conversion on Windows (`#1126 <https://github.com/ros2/rcl/issues/1126>`_)
-* Contributors: Michael Orlov
-
-8.0.0 (2023-11-06)
+6.0.3 (2023-09-08)
 ------------------
 
-7.3.0 (2023-10-09)
-------------------
-
-7.2.0 (2023-10-04)
-------------------
-* Just remove rcpputils::fs dependency (`#1105 <https://github.com/ros2/rcl/issues/1105>`_)
-* Contributors: Kenta Yonekura
-
-7.1.1 (2023-09-07)
-------------------
-
-7.1.0 (2023-08-21)
-------------------
-
-7.0.0 (2023-07-11)
-------------------
-
-6.3.0 (2023-06-12)
-------------------
-
-6.2.0 (2023-06-07)
-------------------
-
-6.1.1 (2023-05-11)
-------------------
-
-6.1.0 (2023-04-28)
+6.0.2 (2023-05-19)
 ------------------
 
 6.0.1 (2023-04-18)

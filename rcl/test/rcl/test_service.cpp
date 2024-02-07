@@ -27,7 +27,14 @@
 #include "./allocator_testing_utils.h"
 #include "../mocking_utils/patch.hpp"
 
-class TestServiceFixture : public ::testing::Test
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+class CLASSNAME (TestServiceFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   rcl_context_t * context_ptr;
@@ -71,7 +78,7 @@ public:
 
 /* Basic nominal test of a service.
  */
-TEST_F(TestServiceFixture, test_service_nominal) {
+TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) {
   rcl_ret_t ret;
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
@@ -233,7 +240,7 @@ TEST_F(TestServiceFixture, test_service_nominal) {
 
 /* Basic nominal test of a service with rcl_take_response
  */
-TEST_F(TestServiceFixture, test_service_without_info) {
+TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_without_info) {
   rcl_ret_t ret;
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
@@ -331,7 +338,7 @@ TEST_F(TestServiceFixture, test_service_without_info) {
 
 /* Passing bad/invalid arguments to service functions
  */
-TEST_F(TestServiceFixture, test_bad_arguments) {
+TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_bad_arguments) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   const char * topic = "primitives";
@@ -446,7 +453,7 @@ TEST_F(TestServiceFixture, test_bad_arguments) {
 
 /* Name failed tests
  */
-TEST_F(TestServiceFixture, test_service_fail_name) {
+TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_fail_name) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   const char * topic = "white space";
@@ -470,7 +477,7 @@ MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, !=)
 
 /* Test failed service initialization using mocks
  */
-TEST_F(TestServiceFixture, test_fail_ini_mocked) {
+TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_ini_mocked) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   constexpr char topic[] = "topic";
@@ -534,7 +541,7 @@ TEST_F(TestServiceFixture, test_fail_ini_mocked) {
 
 /* Test failed service finalization using mocks
  */
-TEST_F(TestServiceFixture, test_fail_fini_mocked) {
+TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_fini_mocked) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   constexpr char topic[] = "primitives";
@@ -558,7 +565,7 @@ TEST_F(TestServiceFixture, test_fail_fini_mocked) {
 
 /* Test failed service take_request_with_info using mocks and nullptrs
  */
-TEST_F(TestServiceFixture, test_fail_take_request_with_info) {
+TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_take_request_with_info) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   constexpr char topic[] = "primitives";
@@ -626,7 +633,7 @@ TEST_F(TestServiceFixture, test_fail_take_request_with_info) {
 
 /* Test failed service send_response using mocks and nullptrs
  */
-TEST_F(TestServiceFixture, test_fail_send_response) {
+TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_send_response) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   constexpr char topic[] = "primitives";

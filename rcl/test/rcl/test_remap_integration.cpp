@@ -23,7 +23,14 @@
 
 #include "./arg_macros.hpp"
 
-class TestRemapIntegrationFixture : public ::testing::Test
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+class CLASSNAME (TestRemapIntegrationFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   void SetUp()
@@ -35,7 +42,7 @@ public:
   }
 };
 
-TEST_F(TestRemapIntegrationFixture, remap_using_global_rule) {
+TEST_F(CLASSNAME(TestRemapIntegrationFixture, RMW_IMPLEMENTATION), remap_using_global_rule) {
   int argc;
   char ** argv;
   SCOPE_GLOBAL_ARGS(
@@ -106,7 +113,7 @@ TEST_F(TestRemapIntegrationFixture, remap_using_global_rule) {
   EXPECT_EQ(RCL_RET_OK, rcl_node_fini(&node));
 }
 
-TEST_F(TestRemapIntegrationFixture, ignore_global_rules) {
+TEST_F(CLASSNAME(TestRemapIntegrationFixture, RMW_IMPLEMENTATION), ignore_global_rules) {
   int argc;
   char ** argv;
   SCOPE_GLOBAL_ARGS(
@@ -179,7 +186,7 @@ TEST_F(TestRemapIntegrationFixture, ignore_global_rules) {
   EXPECT_EQ(RCL_RET_OK, rcl_node_fini(&node));
 }
 
-TEST_F(TestRemapIntegrationFixture, local_rules_before_global) {
+TEST_F(CLASSNAME(TestRemapIntegrationFixture, RMW_IMPLEMENTATION), local_rules_before_global) {
   int argc;
   char ** argv;
   SCOPE_GLOBAL_ARGS(
@@ -257,7 +264,7 @@ TEST_F(TestRemapIntegrationFixture, local_rules_before_global) {
   EXPECT_EQ(RCL_RET_OK, rcl_node_fini(&node));
 }
 
-TEST_F(TestRemapIntegrationFixture, remap_relative_topic) {
+TEST_F(CLASSNAME(TestRemapIntegrationFixture, RMW_IMPLEMENTATION), remap_relative_topic) {
   int argc;
   char ** argv;
   SCOPE_GLOBAL_ARGS(argc, argv, "process_name", "--ros-args", "-r", "/foo/bar:=remap/global");
@@ -311,7 +318,7 @@ TEST_F(TestRemapIntegrationFixture, remap_relative_topic) {
   EXPECT_EQ(RCL_RET_OK, rcl_node_fini(&node));
 }
 
-TEST_F(TestRemapIntegrationFixture, remap_using_node_rules) {
+TEST_F(CLASSNAME(TestRemapIntegrationFixture, RMW_IMPLEMENTATION), remap_using_node_rules) {
   int argc;
   char ** argv;
   SCOPE_GLOBAL_ARGS(

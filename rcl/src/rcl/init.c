@@ -312,7 +312,7 @@ rcl_init(
     goto fail;
   }
 
-  TRACETOOLS_TRACEPOINT(rcl_init, (const void *)context);
+  TRACEPOINT(rcl_init, (const void *)context);
 
   return RCL_RET_OK;
 fail:
