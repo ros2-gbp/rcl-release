@@ -1,0 +1,483 @@
+ros-rolling-rcl-yaml-param-parser (9.1.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 24 Jan 2024 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (9.0.0-2noble) noble; urgency=high
+
+  * Fix for incorrect integer value conversion on Windows (#1126 <https://github.com/ros2/rcl/issues/1126>)
+  * Contributors: Michael Orlov
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 26 Dec 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (8.0.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 06 Nov 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (7.3.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 09 Oct 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (7.2.0-2noble) noble; urgency=high
+
+  * Just remove rcpputils::fs dependency (#1105 <https://github.com/ros2/rcl/issues/1105>)
+  * Contributors: Kenta Yonekura
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 04 Oct 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (7.1.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 07 Sep 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (7.1.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 21 Aug 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (7.0.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 11 Jul 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (6.3.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 12 Jun 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (6.2.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 07 Jun 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (6.1.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 11 May 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (6.1.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 28 Apr 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (6.0.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 18 Apr 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (6.0.0-2noble) noble; urgency=high
+
+  * Fix some warnings from clang. (#1042 <https://github.com/ros2/rcl/issues/1042>)
+  * Contributors: Chris Lalancette
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 12 Apr 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.9.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 01 Mar 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.8.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 23 Feb 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.7.0-2noble) noble; urgency=high
+
+  * Cleanup the dependencies in rcl_yaml_param_parser. (#1014 <https://github.com/ros2/rcl/issues/1014>)
+  * Update rcl to C++17. (#1031 <https://github.com/ros2/rcl/issues/1031>)
+  * Support yaml string tag '!!str' (#999 <https://github.com/ros2/rcl/issues/999>)
+  * Contributors: Barry Xu, Chris Lalancette
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 13 Feb 2023 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.6.0-2noble) noble; urgency=high
+
+  * [rolling] Update maintainers - 2022-11-07 (#1017 <https://github.com/ros2/rcl/issues/1017>)
+  * Contributors: Audrow Nash
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 05 Dec 2022 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.5.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 02 Nov 2022 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.4.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 13 Sep 2022 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.4.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 29 Apr 2022 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.3.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 26 Apr 2022 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.3.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 05 Apr 2022 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.2.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 31 Mar 2022 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.2.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 24 Mar 2022 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.1.0-2noble) noble; urgency=high
+
+  * Install includes it include/${PROJECT_NAME} (#959 <https://github.com/ros2/rcl/issues/959>)
+  * Contributors: Shane Loretz
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 01 Mar 2022 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.0.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 14 Jan 2022 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (5.0.0-2noble) noble; urgency=high
+
+  * Update maintainers to Ivan Paunovic and William Woodall (#952 <https://github.com/ros2/rcl/issues/952>)
+  * Tweak rcl_yaml_param_parser documentation (#939 <https://github.com/ros2/rcl/issues/939>)
+  * Contributors: Audrow Nash, Michel Hidalgo
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 14 Dec 2021 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (4.0.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 16 Sep 2021 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (3.2.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 02 Sep 2021 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (3.1.2-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 26 Apr 2021 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (3.1.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 12 Apr 2021 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (3.1.0-2noble) noble; urgency=high
+
+  * updating quality declaration links (re: ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>) (#909 <https://github.com/ros2/rcl/issues/909>)
+  * Contributors: shonigmann
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 06 Apr 2021 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (3.0.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 25 Mar 2021 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (3.0.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 23 Mar 2021 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (2.6.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 18 Mar 2021 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (2.5.2-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 05 Feb 2021 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (2.5.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 25 Jan 2021 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (2.5.0-2noble) noble; urgency=high
+
+  * Enable compiler warnings (#831 <https://github.com/ros2/rcl/issues/831>)
+  * Update QDs to QL 1 (#866 <https://github.com/ros2/rcl/issues/866>)
+  * Rearrange test logic to avoid reference to null (#862 <https://github.com/ros2/rcl/issues/862>)
+  * Update QL (#858 <https://github.com/ros2/rcl/issues/858>)
+  * Make sure to initialize the end_mark for yaml_event_t (#849 <https://github.com/ros2/rcl/issues/849>)
+  * Contributors: Alejandro Hernández Cordero, Audrow Nash, Chris Lalancette, Stephen Brawner
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 08 Dec 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (2.4.0-2noble) noble; urgency=high
+
+  * Check for valid node names in parameters files (#809 <https://github.com/ros2/rcl/issues/809>)
+  * Contributors: Chen Lihui
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 19 Oct 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (2.3.0-2noble) noble; urgency=high
+
+  * Update maintainers (#825 <https://github.com/ros2/rcl/issues/825>)
+  * Updated performance section QD (#817 <https://github.com/ros2/rcl/issues/817>)
+  * Several memory-related fixes for rcl_variant_t benchmarks (#813 <https://github.com/ros2/rcl/issues/813>)
+  * Improved rcl_yaml_param_parser benchmark test (#810 <https://github.com/ros2/rcl/issues/810>)
+  * Added benchmark test to rcl_yaml_param_parser (#803 <https://github.com/ros2/rcl/issues/803>)
+  * Remove MAX_NUM_PARAMS_PER_NODE and MAX_NUM_NODE_ENTRIES limitation. (#802 <https://github.com/ros2/rcl/issues/802>)
+  * Add mocking unit tests for rcl_yaml_param_parser (coverage part 3/3) (#772 <https://github.com/ros2/rcl/issues/772>)
+  * Add fault-injection unit tests (coverage part 2/3) (#766 <https://github.com/ros2/rcl/issues/766>)
+  * Add basic unit tests for refactored functions in rcl_yaml_param_parser (coverage part 1/3) (#771 <https://github.com/ros2/rcl/issues/771>)
+  * Fix yaml parser error when meets .nan (refactor on #754 <https://github.com/ros2/rcl/issues/754>) (#781 <https://github.com/ros2/rcl/issues/781>)
+  * Contributors: Alejandro Hernández Cordero, Chen Lihui, Ivan Santiago Paunovic, Scott K Logan, brawner
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 19 Oct 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (2.2.0-2noble) noble; urgency=high
+
+  * Refactor parser.c for better testability (#754 <https://github.com/ros2/rcl/issues/754>)
+  * Don't overwrite cur_ns pointer if reallocation fails (#780 <https://github.com/ros2/rcl/issues/780>)
+  * Fix mem leaks in unit test from 776 (#779 <https://github.com/ros2/rcl/issues/779>)
+  * Fix rcl_parse_yaml_file() error handling. (#776 <https://github.com/ros2/rcl/issues/776>)
+  * Don't overwrite string_array pointer on reallocation failure (#775 <https://github.com/ros2/rcl/issues/775>)
+  * Set yaml_variant values to NULL on finalization (#765 <https://github.com/ros2/rcl/issues/765>)
+  * Remove debugging statements. (#755 <https://github.com/ros2/rcl/issues/755>)
+  * Contributors: Michel Hidalgo, brawner, tomoya
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 02 Sep 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (2.1.0-2noble) noble; urgency=high
+
+  * Removed doxygen warnings (#712 <https://github.com/ros2/rcl/issues/712>)
+  * Contributors: Alejandro Hernández Cordero
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 22 Jul 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (2.0.0-2noble) noble; urgency=high
+
+  * Update quality declaration and coverage (#674 <https://github.com/ros2/rcl/issues/674>)
+  * Contributors: Alejandro Hernández Cordero
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 09 Jul 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.2.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 18 Jun 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.1.5-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 03 Jun 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.1.4-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 02 Jun 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.1.3-2noble) noble; urgency=high
+
+  * Add Security Vulnerability Policy pointing to REP-2006 (#661 <https://github.com/ros2/rcl/issues/661>)
+  * Contributors: Chris Lalancette
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 01 Jun 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.1.2-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 28 May 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.1.1-2noble) noble; urgency=high
+
+  * Increase rcl_yaml_param_parser test coverage (#656 <https://github.com/ros2/rcl/issues/656>)
+  * Contributors: Stephen Brawner
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 26 May 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.1.0-2noble) noble; urgency=high
+
+  * Update Quality Declaration for 1.0 (#647 <https://github.com/ros2/rcl/issues/647>)
+  * Contributors: brawner
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 22 May 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (1.0.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 12 May 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.9.1-2noble) noble; urgency=high
+
+  * Included features (#644 <https://github.com/ros2/rcl/issues/644>)
+  * Quality Declarations for rcl_action, rcl_lifecycle, yaml_parser (#641 <https://github.com/ros2/rcl/issues/641>)
+  * Contributors: Alejandro Hernández Cordero, brawner
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 08 May 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.9.0-2noble) noble; urgency=high
+
+  * Added rcl yaml param parser doxyfile (#634 <https://github.com/ros2/rcl/issues/634>)
+  * Fixed rcl_yaml_param_parser package description (#637 <https://github.com/ros2/rcl/issues/637>)
+  * Fix usage to not expose underlying yaml (#630 <https://github.com/ros2/rcl/issues/630>)
+  * Export targets in a addition to include directories / libraries (#621 <https://github.com/ros2/rcl/issues/621>)
+  * Remove usage of undefined CMake variable (#620 <https://github.com/ros2/rcl/issues/620>)
+  * Fix memory leaks (#564 <https://github.com/ros2/rcl/issues/564>)
+  * Code style only: wrap after open parenthesis if not in one line (#565 <https://github.com/ros2/rcl/issues/565>)
+  * Contributors: Alejandro Hernández Cordero, Dirk Thomas, y-okumura-isp
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 29 Apr 2020 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.8.3-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 08 Nov 2019 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.8.2-2noble) noble; urgency=high
+
+  * Specify test working directory (#529 <https://github.com/ros2/rcl/issues/529>)
+  * Remove the maximum string size. (#524 <https://github.com/ros2/rcl/issues/524>)
+  * Contributors: Chris Lalancette, Dan Rose
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 23 Oct 2019 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.8.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 08 Oct 2019 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.8.0-2noble) noble; urgency=high
+
+  * Enable incremental parameter yaml file parsing. (#507 <https://github.com/ros2/rcl/issues/507>)
+  * Support parameter overrides and remap rules flags on command line (#483 <https://github.com/ros2/rcl/issues/483>)
+  * Increase MAX_STRING_SIZE (#487 <https://github.com/ros2/rcl/issues/487>)
+  * include actual size in error message (#490 <https://github.com/ros2/rcl/issues/490>)
+  * Avoid C4703 error on UWP (#282 <https://github.com/ros2/rcl/issues/282>)
+  * [YAML Parser] Support parameter value parsing (#471 <https://github.com/ros2/rcl/issues/471>)
+  * [YAML Parser] Depend on rcutils only (#470 <https://github.com/ros2/rcl/issues/470>)
+  * Accept quoted int or float values as strings (#464 <https://github.com/ros2/rcl/issues/464>)
+  * Fix memory corruption when maximum number of parameters is exceeded (#456 <https://github.com/ros2/rcl/issues/456>)
+  * Contributors: Dirk Thomas, Esteve Fernandez, Jacob Perron, Michel Hidalgo, hyunseok-yang, ivanpauno
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 26 Sep 2019 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.7.4-2noble) noble; urgency=high
+
+  * Allow empty strings if they are quoted. (#450 <https://github.com/ros2/rcl/issues/450>)
+  * Contributors: Ralf Anton Beier
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 29 May 2019 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.7.3-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 20 May 2019 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.7.2-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 08 May 2019 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.7.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 29 Apr 2019 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.7.0-2noble) noble; urgency=high
+
+  * Corrected bool reading from yaml files. (#415 <https://github.com/ros2/rcl/issues/415>)
+  * Added launch along with launch_testing as test dependencies. (#393 <https://github.com/ros2/rcl/issues/393>)
+  * Set symbol visibility to hidden for rcl. (#391 <https://github.com/ros2/rcl/issues/391>)
+  * Contributors: Michel Hidalgo, Sachin Suresh Bhat, ivanpauno
+
+ -- Audrow Nash <audrow@openrobotics.org>  Sun, 14 Apr 2019 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.6.4-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 11 Jan 2019 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.6.3-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 13 Dec 2018 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.6.2-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 13 Dec 2018 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.6.1-2noble) noble; urgency=high
+
+  * No changes.
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 07 Dec 2018 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.6.0-2noble) noble; urgency=high
+
+  * Updated to use new error handling API from rcutils (#314 <https://github.com/ros2/rcl/issues/314>)
+  * Fixed FQN=//node_name when ns is / (#299 <https://github.com/ros2/rcl/issues/299>)
+  * Fixed documentation issues (#288 <https://github.com/ros2/rcl/issues/288>)
+  * Fixed to deallocate ret_val to avoid memory leak (#278 <https://github.com/ros2/rcl/issues/278>)
+  * Contributors: Chris Ye, William Woodall, dhood
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 16 Nov 2018 00:00:00 -0000
+
+ros-rolling-rcl-yaml-param-parser (0.5.0-2noble) noble; urgency=high
+
+  * Added functions to parse YAML parameter files. (#235 <https://github.com/ros2/rcl/issues/235>)
+  * Contributors: Shane Loretz, William Woodall, anup-pem, dhood
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 25 Jun 2018 00:00:00 -0000
+
+
