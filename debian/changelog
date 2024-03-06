@@ -1,0 +1,485 @@
+ros-rolling-rcl-lifecycle (9.1.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 24 Jan 2024 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (9.0.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 26 Dec 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (8.0.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 06 Nov 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (7.3.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 09 Oct 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (7.2.0-2noble) noble; urgency=high
+
+  * Remove most remaining uses of ament_target_dependencies. (#1102 <https://github.com/ros2/rcl/issues/1102>)
+  * Contributors: Chris Lalancette
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 04 Oct 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (7.1.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 07 Sep 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (7.1.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 21 Aug 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (7.0.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 11 Jul 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (6.3.0-2noble) noble; urgency=high
+
+  * Use TRACETOOLS_ prefix for tracepoint-related macros (#1058 <https://github.com/ros2/rcl/issues/1058>)
+  * Contributors: Christophe Bedard
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 12 Jun 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (6.2.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 07 Jun 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (6.1.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 11 May 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (6.1.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 28 Apr 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (6.0.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 18 Apr 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (6.0.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 12 Apr 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.9.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 01 Mar 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.8.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 23 Feb 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.7.0-2noble) noble; urgency=high
+
+  * Update rcl to C++17. (#1031 <https://github.com/ros2/rcl/issues/1031>)
+  * Contributors: Chris Lalancette
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 13 Feb 2023 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.6.0-2noble) noble; urgency=high
+
+  * [rolling] Update maintainers - 2022-11-07 (#1017 <https://github.com/ros2/rcl/issues/1017>)
+  * Contributors: Audrow Nash
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 05 Dec 2022 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.5.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 02 Nov 2022 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.4.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 13 Sep 2022 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.4.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 29 Apr 2022 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.3.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 26 Apr 2022 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.3.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 05 Apr 2022 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.2.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 31 Mar 2022 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.2.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 24 Mar 2022 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.1.0-2noble) noble; urgency=high
+
+  * Install includes it include/${PROJECT_NAME} (#959 <https://github.com/ros2/rcl/issues/959>)
+  * Contributors: Shane Loretz
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 01 Mar 2022 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.0.1-2noble) noble; urgency=high
+
+  * [rcl_lifecycle] Do not share transition event message between nodes (#956 <https://github.com/ros2/rcl/issues/956>)
+  * Contributors: Ivan Santiago Paunovic
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 14 Jan 2022 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (5.0.0-2noble) noble; urgency=high
+
+  * Update maintainers to Ivan Paunovic and William Woodall (#952 <https://github.com/ros2/rcl/issues/952>)
+  * Fix up documentation build for rcl_lifecycle when using rosdoc2 (#938 <https://github.com/ros2/rcl/issues/938>)
+  * Contributors: Audrow Nash, Michel Hidalgo
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 14 Dec 2021 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (4.0.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 16 Sep 2021 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (3.2.0-2noble) noble; urgency=high
+
+  * Rename variable to fix name shadowing warning (#929 <https://github.com/ros2/rcl/issues/929>)
+  * Contributors: Alberto Soragna
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 02 Sep 2021 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (3.1.2-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 26 Apr 2021 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (3.1.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 12 Apr 2021 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (3.1.0-2noble) noble; urgency=high
+
+  * updating quality declaration links (re: ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>) (#909 <https://github.com/ros2/rcl/issues/909>)
+  * Contributors: shonigmann
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 06 Apr 2021 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (3.0.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 25 Mar 2021 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (3.0.0-2noble) noble; urgency=high
+
+  * make rcl_lifecycle_com_interface optional in lifecycle nodes (#882 <https://github.com/ros2/rcl/issues/882>)
+  * Contributors: Karsten Knese
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 23 Mar 2021 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (2.6.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 18 Mar 2021 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (2.5.2-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 05 Feb 2021 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (2.5.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 25 Jan 2021 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (2.5.0-2noble) noble; urgency=high
+
+  * Update QDs to QL 1 (#866 <https://github.com/ros2/rcl/issues/866>)
+  * Update QL (#858 <https://github.com/ros2/rcl/issues/858>)
+  * Make sure to always check return values (#840 <https://github.com/ros2/rcl/issues/840>)
+  * Update tracetools QL and add to rcl_lifecycle's QD (#845 <https://github.com/ros2/rcl/issues/845>)
+  * Add compiler warnings (#830 <https://github.com/ros2/rcl/issues/830>)
+  * Contributors: Alejandro Hernández Cordero, Audrow Nash, Chris Lalancette, Christophe Bedard, Stephen Brawner
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 08 Dec 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (2.4.0-2noble) noble; urgency=high
+
+  * Make sure to check the return value of rcl APIs. (#838 <https://github.com/ros2/rcl/issues/838>)
+  * Contributors: Chris Lalancette
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 19 Oct 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (2.3.0-2noble) noble; urgency=high
+
+  * Add lifecycle node state transition instrumentation (#804 <https://github.com/ros2/rcl/issues/804>)
+  * Update maintainers (#825 <https://github.com/ros2/rcl/issues/825>)
+  * Improve error messages in rcl_lifecycle (#742 <https://github.com/ros2/rcl/issues/742>)
+  * Fix test_rcl_lifecycle (#788 <https://github.com/ros2/rcl/issues/788>)
+  * Contributors: Christophe Bedard, Ivan Santiago Paunovic, Lei Liu, brawner
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 19 Oct 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (2.2.0-2noble) noble; urgency=high
+
+  * Add fault injection macros and unit tests to rcl_lifecycle (#731 <https://github.com/ros2/rcl/issues/731>)
+  * Remove std::cout line from test_rcl_lifecycle.cpp (#773 <https://github.com/ros2/rcl/issues/773>)
+  * Set transition_map->states/transition size to 0 on fini (#729 <https://github.com/ros2/rcl/issues/729>)
+  * Contributors: brawner
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 02 Sep 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (2.1.0-2noble) noble; urgency=high
+
+  * Topic fix rcl lifecycle test issue (#715 <https://github.com/ros2/rcl/issues/715>)
+  * Removed doxygen warnings (#712 <https://github.com/ros2/rcl/issues/712>)
+  * Contributors: Alejandro Hernández Cordero, Barry Xu
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 22 Jul 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (2.0.0-2noble) noble; urgency=high
+
+  * Update quality declaration and coverage (#674 <https://github.com/ros2/rcl/issues/674>)
+  * Contributors: Alejandro Hernández Cordero
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 09 Jul 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (1.2.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 18 Jun 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (1.1.5-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 03 Jun 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (1.1.4-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 02 Jun 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (1.1.3-2noble) noble; urgency=high
+
+  * Add Security Vulnerability Policy pointing to REP-2006 (#661 <https://github.com/ros2/rcl/issues/661>)
+  * Contributors: Chris Lalancette
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 01 Jun 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (1.1.2-2noble) noble; urgency=high
+
+  * Allow transition start and goal states to be null (#662 <https://github.com/ros2/rcl/issues/662>)
+  * Contributors: Karsten Knese
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 28 May 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (1.1.1-2noble) noble; urgency=high
+
+  * Increase rcl_lifecycle test coverage and add more safety checks (#649 <https://github.com/ros2/rcl/issues/649>)
+  * Contributors: Stephen Brawner
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 26 May 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (1.1.0-2noble) noble; urgency=high
+
+  * Update Quality Declaration for 1.0 (#647 <https://github.com/ros2/rcl/issues/647>)
+  * Contributors: brawner
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 22 May 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (1.0.0-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 12 May 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.9.1-2noble) noble; urgency=high
+
+  * Included features (#644 <https://github.com/ros2/rcl/issues/644>)
+  * Quality Declarations for rcl_action, rcl_lifecycle, yaml_parser (#641 <https://github.com/ros2/rcl/issues/641>)
+  * Contributors: Alejandro Hernández Cordero, Stephen Brawner
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 08 May 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.9.0-2noble) noble; urgency=high
+
+  * Added rcl_lifecycle Doxyfile (#633 <https://github.com/ros2/rcl/issues/633>)
+  * Export targets in a addition to include directories / libraries (#635 <https://github.com/ros2/rcl/issues/635>)
+  * Added documentation (#622 <https://github.com/ros2/rcl/issues/622>)
+  * Fixed argument name in rcl_lifecycle.h (#626 <https://github.com/ros2/rcl/issues/626>)
+  * Rename rosidl_generator_c namespace to rosidl_runtime_c (#616 <https://github.com/ros2/rcl/issues/616>)
+  * Changed rosidl_generator_c/cpp to rosidl_runtime_c/cpp (#588 <https://github.com/ros2/rcl/issues/588>)
+  * Removed rmw_implementation from package.xml (#575 <https://github.com/ros2/rcl/issues/575>)
+  * Code style only: wrap after open parenthesis if not in one line (#565 <https://github.com/ros2/rcl/issues/565>)
+  * Free valid_transitions for all states (#537 <https://github.com/ros2/rcl/issues/537>)
+  * Contributors: Alejandro Hernández Cordero, Dirk Thomas, Víctor Mayoral Vilches
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 29 Apr 2020 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.8.3-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 08 Nov 2019 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.8.2-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 23 Oct 2019 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.8.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Tue, 08 Oct 2019 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.8.0-2noble) noble; urgency=high
+
+  * reset error message before setting a new one, embed the original one (#501 <https://github.com/ros2/rcl/issues/501>)
+  * Contributors: Dirk Thomas
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 26 Sep 2019 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.7.4-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 29 May 2019 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.7.3-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 20 May 2019 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.7.2-2noble) noble; urgency=high
+
+  * Rmw preallocate (#428 <https://github.com/ros2/rcl/issues/428>)
+  * Contributors: Michael Carroll
+
+ -- Audrow Nash <audrow@openrobotics.org>  Wed, 08 May 2019 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.7.1-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 29 Apr 2019 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.7.0-2noble) noble; urgency=high
+
+  * Updated to use ament_target_dependencies where possible. (#400 <https://github.com/ros2/rcl/issues/400>)
+  * Set symbol visibility to hidden for rcl. (#391 <https://github.com/ros2/rcl/issues/391>)
+  * Contributors: Sachin Suresh Bhat, ivanpauno
+
+ -- Audrow Nash <audrow@openrobotics.org>  Sun, 14 Apr 2019 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.6.4-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 11 Jan 2019 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.6.3-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 13 Dec 2018 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.6.2-2noble) noble; urgency=high
+
+
+
+ -- Audrow Nash <audrow@openrobotics.org>  Thu, 13 Dec 2018 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.6.1-2noble) noble; urgency=high
+
+  * Refactored init to not be global (#336 <https://github.com/ros2/rcl/issues/336>)
+  * Contributors: William Woodall
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 07 Dec 2018 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.6.0-2noble) noble; urgency=high
+
+  * Updated use new error handling API from rcutils (#314 <https://github.com/ros2/rcl/issues/314>)
+  * Deleted TRANSITION_SHUTDOWN (#313 <https://github.com/ros2/rcl/issues/313>)
+  * Refactored lifecycle (#298 <https://github.com/ros2/rcl/issues/298>)
+    * no static initialization of states anymore
+    * make transition labels more descriptive
+    * introduce labeled keys
+    * define default transition keys
+    * fix memory management
+    * introduce service for transition graph
+    * export transition keys
+    * remove keys, transition id unique, label ambiguous
+    * semicolon for macro call
+  * Added macro semicolons (#303 <https://github.com/ros2/rcl/issues/303>)
+  * Fixed naming of configure_error transition (#292 <https://github.com/ros2/rcl/issues/292>)
+  * Removed use of uninitialized CMake var (#268 <https://github.com/ros2/rcl/issues/268>)
+  * Fixed rosidl dependencies (#265 <https://github.com/ros2/rcl/issues/265>)
+    * [rcl_lifecycle] remove rosidl deps as this package doesnt generate any messages
+    * depend on rosidl_generator_c
+  * Contributors: Chris Lalancette, Dirk Thomas, Karsten Knese, Mikael Arguedas, William Woodall
+
+ -- Audrow Nash <audrow@openrobotics.org>  Fri, 16 Nov 2018 00:00:00 -0000
+
+ros-rolling-rcl-lifecycle (0.5.0-2noble) noble; urgency=high
+
+  * Updated code to use private substitution (``~``) in lifecycle topics and services (#260 <https://github.com/ros2/rcl/issues/260>)
+    * use ~/<topic> rather than manually constructing topics/services
+    * use check argument for null macros
+  * Fixed potential segmentation fault due to nullptr dereference (#202 <https://github.com/ros2/rcl/issues/202>)
+    * Signed-off-by: Ethan Gao <mailto:ethan.gao@linux.intel.com>
+  * Contributors: Dirk Thomas, Ethan Gao, Michael Carroll, William Woodall
+
+ -- Audrow Nash <audrow@openrobotics.org>  Mon, 25 Jun 2018 00:00:00 -0000
+
+
