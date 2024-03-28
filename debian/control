@@ -1,0 +1,12 @@
+Source: ros-rolling-rcl-action
+Section: misc
+Priority: optional
+Maintainer: Audrow Nash <audrow@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), ament-cmake-copyright <!nocheck>, ament-cmake-cppcheck <!nocheck>, ament-cmake-cpplint <!nocheck>, ament-cmake-flake8 <!nocheck>, ament-cmake-googletest <!nocheck>, ament-cmake-lint-cmake <!nocheck>, ament-cmake-pep257 <!nocheck>, ament-cmake-ros, ament-cmake-uncrustify <!nocheck>, ament-cmake-xmllint <!nocheck>, ament-lint <!nocheck>, libosrf-testing-tools-cpp-dev <!nocheck>, librcutils-dev, librosidl-runtime-c-cpp-dev, python3-rcutils, ros-rolling-action-msgs, ros-rolling-rcl, ros-rolling-rmw, ros-rolling-rmw-implementation-cmake <!nocheck>, ros-rolling-test-msgs <!nocheck>, ros-rolling-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-rolling-rcl-action
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, librcutils-dev, librosidl-runtime-c-cpp-dev, python3-rcutils, ros-rolling-action-msgs, ros-rolling-rcl, ros-rolling-rmw, ros-rolling-ros-workspace
+Description: Package containing a C-based ROS action implementation
