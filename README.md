@@ -1,3 +1,30 @@
+## rcl (rolling) - 9.2.1-1
+
+The packages in the `rcl` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --rosdistro rolling --track rolling rcl` on `Tue, 16 Apr 2024 13:43:31 -0000`
+
+These packages were released:
+- `rcl`
+- `rcl_action`
+- `rcl_lifecycle`
+- `rcl_yaml_param_parser`
+
+Version of package(s) in repository `rcl`:
+
+- upstream repository: https://github.com/ros2/rcl.git
+- release repository: https://github.com/ros2-gbp/rcl-release.git
+- rosdistro version: `9.2.0-1`
+- old version: `9.2.0-1`
+- new version: `9.2.1-1`
+
+Versions of tools used:
+
+- bloom version: `0.12.0`
+- catkin_pkg version: `0.5.2`
+- rosdep version: `0.22.2`
+- rosdistro version: `0.9.0`
+- vcstools version: `0.1.42`
+
+
 ## rcl (rolling) - 9.2.0-1
 
 The packages in the `rcl` repository were released into the `rolling` distro by running `/usr/bin/bloom-release rcl --rosdistro rolling` on `Thu, 28 Mar 2024 09:06:19 -0000`
