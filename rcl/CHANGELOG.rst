@@ -2,10 +2,10 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-9.2.2 (2024-04-24)
+9.3.0 (2024-04-26)
 ------------------
-* Fixed warnings - strict-prototypes (`#1148 <https://github.com/ros2/rcl/issues/1148>`_) (`#1150 <https://github.com/ros2/rcl/issues/1150>`_)
-* Contributors: mergify[bot]
+* Fixed warnings - strict-prototypes (`#1148 <https://github.com/ros2/rcl/issues/1148>`_)
+* Contributors: Alejandro Hernández Cordero
 
 9.2.1 (2024-04-16)
 ------------------
