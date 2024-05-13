@@ -2,10 +2,21 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-9.3.0 (2024-04-26)
+9.2.3 (2024-05-13)
 ------------------
-* Fixed warnings - strict-prototypes (`#1148 <https://github.com/ros2/rcl/issues/1148>`_)
-* Contributors: Alejandro Hernández Cordero
+* Fix up rmw_cyclonedds timestamp testing. (`#1156 <https://github.com/ros2/rcl/issues/1156>`_) (`#1157 <https://github.com/ros2/rcl/issues/1157>`_)
+  We are about to fix it so that rmw_cyclonedds has receive_timestamp
+  support, so we also need to enable that support here
+  in rcl.  We actually rewrite the logic a bit because now the
+  only combination that doesn't work is rmw_connextdds on Windows.
+  (cherry picked from commit 6d53d24a863c3e9e4a41e9fe5f550271210d9d9d)
+  Co-authored-by: Chris Lalancette <clalancette@gmail.com>
+* Contributors: mergify[bot]
+
+9.2.2 (2024-04-24)
+------------------
+* Fixed warnings - strict-prototypes (`#1148 <https://github.com/ros2/rcl/issues/1148>`_) (`#1150 <https://github.com/ros2/rcl/issues/1150>`_)
+* Contributors: mergify[bot]
 
 9.2.1 (2024-04-16)
 ------------------
