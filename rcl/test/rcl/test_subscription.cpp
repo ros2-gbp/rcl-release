@@ -25,14 +25,11 @@
 
 #include "rcutils/strdup.h"
 #include "rcutils/testing/fault_injection.h"
-#include "test_msgs/msg/arrays.h"
 #include "test_msgs/msg/basic_types.h"
 #include "test_msgs/msg/strings.h"
 #include "rosidl_runtime_c/string_functions.h"
 
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
-#include "rosidl_typesupport_cpp/message_type_support.hpp"
-#include "test_msgs/msg/arrays.hpp"
 #include "rcl/error_handling.h"
 #include "rcl/node.h"
 #include "rcutils/env.h"
@@ -41,7 +38,14 @@
 #include "./allocator_testing_utils.h"
 #include "../mocking_utils/patch.hpp"
 
-class TestSubscriptionFixture : public ::testing::Test
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+class CLASSNAME (TestSubscriptionFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   rcl_context_t * context_ptr;
@@ -83,7 +87,8 @@ public:
   }
 };
 
-class TestSubscriptionFixtureInit : public TestSubscriptionFixture
+class CLASSNAME (TestSubscriptionFixtureInit, RMW_IMPLEMENTATION)
+  : public CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION)
 {
 public:
   const rosidl_message_type_support_t * ts =
@@ -97,7 +102,7 @@ public:
 
   void SetUp() override
   {
-    TestSubscriptionFixture::SetUp();
+    CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION) ::SetUp();
     allocator = rcutils_get_default_allocator();
     subscription_options = rcl_subscription_get_default_options();
     subscription = rcl_get_zero_initialized_subscription();
@@ -110,13 +115,15 @@ public:
   {
     rcl_ret_t ret = rcl_subscription_fini(&subscription, this->node_ptr);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    TestSubscriptionFixture::TearDown();
+    CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION) ::TearDown();
   }
 };
 
 /* Test subscription init, fini and is_valid functions
  */
-TEST_F(TestSubscriptionFixture, test_subscription_init_fini_and_is_valid)
+TEST_F(
+  CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION),
+  test_subscription_init_fini_and_is_valid)
 {
   rcl_ret_t ret;
 
@@ -151,7 +158,7 @@ MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, <)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, >)
 
 // Bad arguments for init and fini
-TEST_F(TestSubscriptionFixture, test_subscription_bad_init) {
+TEST_F(CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION), test_subscription_bad_init) {
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, BasicTypes);
   constexpr char topic[] = "/chatter";
@@ -261,7 +268,7 @@ TEST_F(TestSubscriptionFixture, test_subscription_bad_init) {
 
 /* Basic nominal test of a subscription
  */
-TEST_F(TestSubscriptionFixture, test_subscription_nominal) {
+TEST_F(CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION), test_subscription_nominal) {
   rcl_ret_t ret;
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
@@ -318,9 +325,13 @@ TEST_F(TestSubscriptionFixture, test_subscription_nominal) {
     EXPECT_NE(0u, message_info.source_timestamp);
     EXPECT_TRUE(pre_publish_time <= message_info.source_timestamp) <<
       pre_publish_time << " > " << message_info.source_timestamp;
+  #ifdef RMW_RECEIVED_TIMESTAMP_SUPPORTED
     EXPECT_NE(0u, message_info.received_timestamp);
     EXPECT_TRUE(pre_publish_time <= message_info.received_timestamp);
     EXPECT_TRUE(message_info.source_timestamp <= message_info.received_timestamp);
+  #else
+    EXPECT_EQ(0u, message_info.received_timestamp);
+  #endif
   #else
     EXPECT_EQ(0u, message_info.source_timestamp);
     EXPECT_EQ(0u, message_info.received_timestamp);
@@ -330,7 +341,7 @@ TEST_F(TestSubscriptionFixture, test_subscription_nominal) {
 
 /* Basic nominal test of a publisher with a string.
  */
-TEST_F(TestSubscriptionFixture, test_subscription_nominal_string) {
+TEST_F(CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION), test_subscription_nominal_string) {
   rcl_ret_t ret;
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
@@ -379,7 +390,10 @@ TEST_F(TestSubscriptionFixture, test_subscription_nominal_string) {
 
 /* Basic nominal test of a subscription taking a sequence.
  */
-TEST_F(TestSubscriptionFixture, test_subscription_nominal_string_sequence) {
+TEST_F(
+  CLASSNAME(
+    TestSubscriptionFixture,
+    RMW_IMPLEMENTATION), test_subscription_nominal_string_sequence) {
   using namespace std::chrono_literals;
   rcl_ret_t ret;
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
@@ -446,8 +460,6 @@ TEST_F(TestSubscriptionFixture, test_subscription_nominal_string_sequence) {
 
     ASSERT_EQ(0u, messages.size);
     ASSERT_EQ(0u, message_infos.size);
-
-    rcl_reset_error();
   }
 
   {
@@ -548,7 +560,7 @@ TEST_F(TestSubscriptionFixture, test_subscription_nominal_string_sequence) {
 
 /* Basic nominal test of a subscription with take_serialize msg
  */
-TEST_F(TestSubscriptionFixture, test_subscription_serialized) {
+TEST_F(CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION), test_subscription_serialized) {
   rcl_ret_t ret;
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   rcutils_allocator_t allocator = rcl_get_default_allocator();
@@ -624,7 +636,7 @@ TEST_F(TestSubscriptionFixture, test_subscription_serialized) {
 
 /* Basic test for subscription loan functions
  */
-TEST_F(TestSubscriptionFixture, test_subscription_loaned) {
+TEST_F(CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION), test_subscription_loaned) {
   rcl_ret_t ret;
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
@@ -703,79 +715,45 @@ TEST_F(TestSubscriptionFixture, test_subscription_loaned) {
   }
 }
 
-TEST_F(TestSubscriptionFixture, test_subscription_option) {
-  {
-    rcl_subscription_options_t subscription_options = rcl_subscription_get_default_options();
-    EXPECT_TRUE(subscription_options.disable_loaned_message);
-  }
-  {
-    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "1"));
-    rcl_subscription_options_t subscription_options = rcl_subscription_get_default_options();
-    EXPECT_TRUE(subscription_options.disable_loaned_message);
-  }
-  {
-    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "2"));
-    rcl_subscription_options_t subscription_options = rcl_subscription_get_default_options();
-    EXPECT_TRUE(subscription_options.disable_loaned_message);
-  }
-  {
-    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "Unexpected"));
-    rcl_subscription_options_t subscription_options = rcl_subscription_get_default_options();
-    EXPECT_TRUE(subscription_options.disable_loaned_message);
-  }
-  {
-    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "0"));
-    rcl_subscription_options_t subscription_options = rcl_subscription_get_default_options();
-    EXPECT_FALSE(subscription_options.disable_loaned_message);
-  }
-}
-
-TEST_F(TestSubscriptionFixture, test_subscription_loan_disable) {
-  bool is_fastdds = (std::string(rmw_get_implementation_identifier()).find("rmw_fastrtps") == 0);
+TEST_F(CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION), test_subscription_loan_disable) {
+  rcl_subscription_t subscription = rcl_get_zero_initialized_subscription();
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, BasicTypes);
   constexpr char topic[] = "pod_msg";
-
+  rcl_subscription_options_t subscription_options = rcl_subscription_get_default_options();
+  rcl_ret_t ret =
+    rcl_subscription_init(&subscription, this->node_ptr, ts, topic, &subscription_options);
+  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
   {
-    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "1"));
-    rcl_subscription_t subscription = rcl_get_zero_initialized_subscription();
-    rcl_subscription_options_t subscription_options = rcl_subscription_get_default_options();
-    EXPECT_TRUE(subscription_options.disable_loaned_message);
-    rcl_ret_t ret =
-      rcl_subscription_init(&subscription, this->node_ptr, ts, topic, &subscription_options);
-    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-    {
-      rcl_ret_t ret = rcl_subscription_fini(&subscription, this->node_ptr);
-      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    });
-    EXPECT_FALSE(rcl_subscription_can_loan_messages(&subscription));
-  }
+    rcl_ret_t ret = rcl_subscription_fini(&subscription, this->node_ptr);
+    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
+  });
 
-  {
+  if (rcl_subscription_can_loan_messages(&subscription)) {
     ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "0"));
-    rcl_subscription_t subscription = rcl_get_zero_initialized_subscription();
-    rcl_subscription_options_t subscription_options = rcl_subscription_get_default_options();
-    EXPECT_FALSE(subscription_options.disable_loaned_message);
-    rcl_ret_t ret =
-      rcl_subscription_init(&subscription, this->node_ptr, ts, topic, &subscription_options);
-    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-    {
-      rcl_ret_t ret = rcl_subscription_fini(&subscription, this->node_ptr);
-      EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    });
-    if (is_fastdds) {
-      EXPECT_TRUE(rcl_subscription_can_loan_messages(&subscription));
-    } else {
-      EXPECT_FALSE(rcl_subscription_can_loan_messages(&subscription));
-    }
+    EXPECT_TRUE(rcl_subscription_can_loan_messages(&subscription));
+    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "1"));
+    EXPECT_FALSE(rcl_subscription_can_loan_messages(&subscription));
+    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "2"));
+    EXPECT_TRUE(rcl_subscription_can_loan_messages(&subscription));
+    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "Unexpected"));
+    EXPECT_TRUE(rcl_subscription_can_loan_messages(&subscription));
+  } else {
+    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "0"));
+    EXPECT_FALSE(rcl_subscription_can_loan_messages(&subscription));
+    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "1"));
+    EXPECT_FALSE(rcl_subscription_can_loan_messages(&subscription));
+    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "2"));
+    EXPECT_FALSE(rcl_subscription_can_loan_messages(&subscription));
+    ASSERT_TRUE(rcutils_set_env("ROS_DISABLE_LOANED_MESSAGES", "Unexpected"));
+    EXPECT_FALSE(rcl_subscription_can_loan_messages(&subscription));
   }
 }
 
 /* Test for all failure modes in subscription take with loaned messages function.
  */
-TEST_F(TestSubscriptionFixture, test_bad_take_loaned_message) {
+TEST_F(CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION), test_bad_take_loaned_message) {
   constexpr char topic[] = "rcl_loan";
   const rosidl_message_type_support_t * ts = ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, Strings);
   rcl_subscription_options_t subscription_options = rcl_subscription_get_default_options();
@@ -848,7 +826,7 @@ TEST_F(TestSubscriptionFixture, test_bad_take_loaned_message) {
 
 /* Test for all failure modes in subscription return loaned messages function.
  */
-TEST_F(TestSubscriptionFixture, test_bad_return_loaned_message) {
+TEST_F(CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION), test_bad_return_loaned_message) {
   constexpr char topic[] = "rcl_loan";
   const rosidl_message_type_support_t * ts = ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, Strings);
   rcl_subscription_options_t subscription_options = rcl_subscription_get_default_options();
@@ -910,7 +888,10 @@ TEST_F(TestSubscriptionFixture, test_bad_return_loaned_message) {
 
 /* A subscription with a content filtered topic setting.
  */
-TEST_F(TestSubscriptionFixture, test_subscription_content_filtered) {
+TEST_F(
+  CLASSNAME(
+    TestSubscriptionFixture,
+    RMW_IMPLEMENTATION), test_subscription_content_filtered) {
   const char * filter_expression1 = "string_value = 'FilteredData'";
   rcl_ret_t ret;
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
@@ -956,9 +937,9 @@ TEST_F(TestSubscriptionFixture, test_subscription_content_filtered) {
   }
 
   if (is_cft_support) {
-    ASSERT_FALSE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 100));
+    ASSERT_FALSE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 1000));
   } else {
-    ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 100, 100));
+    ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 1000));
 
     test_msgs__msg__Strings msg;
     test_msgs__msg__Strings__init(&msg);
@@ -983,7 +964,7 @@ TEST_F(TestSubscriptionFixture, test_subscription_content_filtered) {
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   }
 
-  ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 100, 100));
+  ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 1000));
 
   {
     test_msgs__msg__Strings msg;
@@ -1023,7 +1004,6 @@ TEST_F(TestSubscriptionFixture, test_subscription_content_filtered) {
       std::this_thread::sleep_for(std::chrono::seconds(10));
     } else {
       ASSERT_EQ(RCL_RET_UNSUPPORTED, ret);
-      rcl_reset_error();
     }
 
     EXPECT_EQ(
@@ -1044,9 +1024,9 @@ TEST_F(TestSubscriptionFixture, test_subscription_content_filtered) {
   }
 
   if (is_cft_support) {
-    ASSERT_FALSE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 100));
+    ASSERT_FALSE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 1000));
   } else {
-    ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 100, 100));
+    ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 1000));
 
     test_msgs__msg__Strings msg;
     test_msgs__msg__Strings__init(&msg);
@@ -1071,7 +1051,7 @@ TEST_F(TestSubscriptionFixture, test_subscription_content_filtered) {
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   }
 
-  ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 100, 100));
+  ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 1000));
 
   {
     test_msgs__msg__Strings msg;
@@ -1114,7 +1094,6 @@ TEST_F(TestSubscriptionFixture, test_subscription_content_filtered) {
       );
     } else {
       ASSERT_EQ(RCL_RET_UNSUPPORTED, ret);
-      rcl_reset_error();
     }
   }
 
@@ -1141,7 +1120,6 @@ TEST_F(TestSubscriptionFixture, test_subscription_content_filtered) {
       ASSERT_FALSE(rcl_subscription_is_cft_enabled(&subscription));
     } else {
       ASSERT_EQ(RCL_RET_UNSUPPORTED, ret);
-      rcl_reset_error();
     }
 
     EXPECT_EQ(
@@ -1161,7 +1139,7 @@ TEST_F(TestSubscriptionFixture, test_subscription_content_filtered) {
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   }
 
-  ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 100, 100));
+  ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 1000));
 
   {
     test_msgs__msg__Strings msg;
@@ -1180,7 +1158,10 @@ TEST_F(TestSubscriptionFixture, test_subscription_content_filtered) {
 
 /* A subscription without a content filtered topic setting at beginning.
  */
-TEST_F(TestSubscriptionFixture, test_subscription_not_initialized_with_content_filtering) {
+TEST_F(
+  CLASSNAME(
+    TestSubscriptionFixture,
+    RMW_IMPLEMENTATION), test_subscription_not_initialized_with_content_filtering) {
   rcl_ret_t ret;
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
@@ -1214,7 +1195,6 @@ TEST_F(TestSubscriptionFixture, test_subscription_not_initialized_with_content_f
     ret = rcl_subscription_get_content_filter(
       &subscription, &content_filter_options);
     ASSERT_NE(RCL_RET_OK, ret);
-    rcl_reset_error();
   }
 
   ASSERT_TRUE(wait_for_established_subscription(&publisher, 10, 1000));
@@ -1230,7 +1210,7 @@ TEST_F(TestSubscriptionFixture, test_subscription_not_initialized_with_content_f
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   }
 
-  ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 100, 100));
+  ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 1000));
 
   {
     test_msgs__msg__BasicTypes msg;
@@ -1267,7 +1247,6 @@ TEST_F(TestSubscriptionFixture, test_subscription_not_initialized_with_content_f
       &subscription, &options);
     if (!is_cft_support) {
       ASSERT_EQ(RCL_RET_UNSUPPORTED, ret);
-      rcl_reset_error();
     } else {
       ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
       // waiting to allow for filter propagation
@@ -1292,9 +1271,9 @@ TEST_F(TestSubscriptionFixture, test_subscription_not_initialized_with_content_f
   }
 
   if (is_cft_support) {
-    ASSERT_FALSE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 100));
+    ASSERT_FALSE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 1000));
   } else {
-    ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 100, 100));
+    ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 1000));
 
     test_msgs__msg__BasicTypes msg;
     test_msgs__msg__BasicTypes__init(&msg);
@@ -1318,7 +1297,7 @@ TEST_F(TestSubscriptionFixture, test_subscription_not_initialized_with_content_f
     ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   }
 
-  ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 100, 100));
+  ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 1000));
 
   {
     test_msgs__msg__BasicTypes msg;
@@ -1333,7 +1312,7 @@ TEST_F(TestSubscriptionFixture, test_subscription_not_initialized_with_content_f
   }
 }
 
-TEST_F(TestSubscriptionFixture, test_get_options) {
+TEST_F(CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION), test_get_options) {
   rcl_ret_t ret;
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, Strings);
@@ -1354,12 +1333,11 @@ TEST_F(TestSubscriptionFixture, test_get_options) {
   ASSERT_EQ(subscription_options.qos.durability, get_sub_options->qos.durability);
 
   ASSERT_EQ(NULL, rcl_subscription_get_options(nullptr));
-  rcl_reset_error();
 }
 
 /* bad take()
- */
-TEST_F(TestSubscriptionFixtureInit, test_subscription_bad_take) {
+*/
+TEST_F(CLASSNAME(TestSubscriptionFixtureInit, RMW_IMPLEMENTATION), test_subscription_bad_take) {
   test_msgs__msg__BasicTypes msg;
   rmw_message_info_t message_info = rmw_get_zero_initialized_message_info();
   ASSERT_TRUE(test_msgs__msg__BasicTypes__init(&msg));
@@ -1397,8 +1375,10 @@ TEST_F(TestSubscriptionFixtureInit, test_subscription_bad_take) {
 }
 
 /* bad take_serialized
- */
-TEST_F(TestSubscriptionFixtureInit, test_subscription_bad_take_serialized) {
+*/
+TEST_F(
+  CLASSNAME(TestSubscriptionFixtureInit, RMW_IMPLEMENTATION),
+  test_subscription_bad_take_serialized) {
   rcl_serialized_message_t serialized_msg = rmw_get_zero_initialized_serialized_message();
   size_t initial_serialization_capacity = 0u;
   ASSERT_EQ(
@@ -1452,7 +1432,8 @@ TEST_F(TestSubscriptionFixtureInit, test_subscription_bad_take_serialized) {
 
 /* Bad arguments take_sequence
  */
-TEST_F(TestSubscriptionFixtureInit, test_subscription_bad_take_sequence)
+TEST_F(
+  CLASSNAME(TestSubscriptionFixtureInit, RMW_IMPLEMENTATION), test_subscription_bad_take_sequence)
 {
   size_t seq_size = 3u;
   rmw_message_sequence_t messages;
@@ -1533,7 +1514,7 @@ TEST_F(TestSubscriptionFixtureInit, test_subscription_bad_take_sequence)
 
 /* Test for all failure modes in subscription get_publisher_count function.
  */
-TEST_F(TestSubscriptionFixtureInit, test_bad_get_publisher_count) {
+TEST_F(CLASSNAME(TestSubscriptionFixtureInit, RMW_IMPLEMENTATION), test_bad_get_publisher_count) {
   size_t publisher_count = 0;
   EXPECT_EQ(
     RCL_RET_SUBSCRIPTION_INVALID,
@@ -1560,7 +1541,7 @@ TEST_F(TestSubscriptionFixtureInit, test_bad_get_publisher_count) {
 
 /* Using bad arguments subscription methods
  */
-TEST_F(TestSubscriptionFixtureInit, test_subscription_bad_argument) {
+TEST_F(CLASSNAME(TestSubscriptionFixtureInit, RMW_IMPLEMENTATION), test_subscription_bad_argument) {
   EXPECT_EQ(NULL, rcl_subscription_get_actual_qos(nullptr));
   rcl_reset_error();
   EXPECT_FALSE(rcl_subscription_can_loan_messages(nullptr));
@@ -1590,7 +1571,10 @@ TEST_F(TestSubscriptionFixtureInit, test_subscription_bad_argument) {
 
 /* Test for all failure modes in rcl_subscription_set_content_filter function.
  */
-TEST_F(TestSubscriptionFixtureInit, test_bad_rcl_subscription_set_content_filter) {
+TEST_F(
+  CLASSNAME(
+    TestSubscriptionFixtureInit,
+    RMW_IMPLEMENTATION), test_bad_rcl_subscription_set_content_filter) {
   EXPECT_EQ(
     RCL_RET_SUBSCRIPTION_INVALID,
     rcl_subscription_set_content_filter(nullptr, nullptr));
@@ -1650,7 +1634,10 @@ TEST_F(TestSubscriptionFixtureInit, test_bad_rcl_subscription_set_content_filter
 
 /* Test for all failure modes in rcl_subscription_get_content_filter function.
  */
-TEST_F(TestSubscriptionFixtureInit, test_bad_rcl_subscription_get_content_filter) {
+TEST_F(
+  CLASSNAME(
+    TestSubscriptionFixtureInit,
+    RMW_IMPLEMENTATION), test_bad_rcl_subscription_get_content_filter) {
   EXPECT_EQ(
     RCL_RET_SUBSCRIPTION_INVALID,
     rcl_subscription_get_content_filter(nullptr, nullptr));
@@ -1690,7 +1677,7 @@ TEST_F(TestSubscriptionFixtureInit, test_bad_rcl_subscription_get_content_filter
   }
 }
 
-TEST_F(TestSubscriptionFixture, test_init_fini_maybe_fail)
+TEST_F(CLASSNAME(TestSubscriptionFixture, RMW_IMPLEMENTATION), test_init_fini_maybe_fail)
 {
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, BasicTypes);
@@ -1709,7 +1696,6 @@ TEST_F(TestSubscriptionFixture, test_init_fini_maybe_fail)
       if (RCL_RET_OK != ret) {
         // If fault injection caused fini to fail, we should try it again.
         EXPECT_EQ(RCL_RET_OK, rcl_subscription_fini(&subscription, this->node_ptr));
-        rcl_reset_error();
       }
     } else {
       EXPECT_TRUE(rcl_error_is_set());
@@ -1717,119 +1703,3 @@ TEST_F(TestSubscriptionFixture, test_init_fini_maybe_fail)
     }
   });
 }
-
-struct TestParameters
-{
-  enum class TYPESUPPORT {C, CPP};
-
-  explicit TestParameters(
-    TYPESUPPORT pub_ts = TYPESUPPORT::C,
-    TYPESUPPORT sub_ts = TYPESUPPORT::CPP)
-  : pub_ts_(pub_ts), sub_ts_(sub_ts) {}
-
-  TYPESUPPORT pub_ts_;
-  TYPESUPPORT sub_ts_;
-};
-
-class TestSubscriptionFixtureParam : public TestSubscriptionFixture,
-  public ::testing::WithParamInterface<TestParameters>
-{
-protected:
-  void SetUp()
-  {
-    param_ = GetParam();
-    TestSubscriptionFixture::SetUp();
-  }
-
-  TestParameters param_;
-};
-
-
-/* Test subscription to receive complex message from a publisher with typesupport settings.
- */
-TEST_P(TestSubscriptionFixtureParam, test_subscription_complex_message) {
-  rcl_ret_t ret;
-  const rosidl_message_type_support_t * ts_pub;
-  const rosidl_message_type_support_t * ts_sub;
-  if (param_.pub_ts_ == TestParameters::TYPESUPPORT::C) {
-    ts_pub = ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, Arrays);
-  } else {
-    ts_pub = rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::Arrays>();
-  }
-  if (param_.sub_ts_ == TestParameters::TYPESUPPORT::C) {
-    ts_sub = ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, Arrays);
-  } else {
-    ts_sub = rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::Arrays>();
-  }
-  constexpr char topic[] = "rcl_test_subscription_nominal_string_chatter";
-  rcl_publisher_options_t publisher_options = rcl_publisher_get_default_options();
-  rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
-  ret = rcl_publisher_init(&publisher, this->node_ptr, ts_pub, topic, &publisher_options);
-  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    rcl_ret_t ret = rcl_publisher_fini(&publisher, this->node_ptr);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  });
-  rcl_subscription_t subscription = rcl_get_zero_initialized_subscription();
-  rcl_subscription_options_t subscription_options = rcl_subscription_get_default_options();
-  ret = rcl_subscription_init(&subscription, this->node_ptr, ts_sub, topic, &subscription_options);
-  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    rcl_ret_t ret = rcl_subscription_fini(&subscription, this->node_ptr);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  });
-  ASSERT_TRUE(wait_for_established_subscription(&publisher, 10, 100));
-  constexpr char test_string[] = "testing";
-  constexpr bool bool_values[3] = {true, false, true};
-  if (param_.pub_ts_ == TestParameters::TYPESUPPORT::C) {
-    test_msgs__msg__Arrays msg;
-    test_msgs__msg__Arrays__init(&msg);
-    std::copy(std::begin(bool_values), std::end(bool_values), msg.bool_values);
-    ASSERT_TRUE(rosidl_runtime_c__String__assign(&msg.string_values[1], test_string));
-    ret = rcl_publish(&publisher, &msg, nullptr);
-    test_msgs__msg__Arrays__fini(&msg);
-  } else {
-    test_msgs::msg::Arrays msg;
-    std::copy(std::begin(bool_values), std::end(bool_values), msg.bool_values.begin());
-    msg.string_values[1] = test_string;
-    ret = rcl_publish(&publisher, &msg, nullptr);
-  }
-  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  ASSERT_TRUE(wait_for_subscription_to_be_ready(&subscription, context_ptr, 10, 100));
-  if (param_.sub_ts_ == TestParameters::TYPESUPPORT::C) {
-    test_msgs__msg__Arrays msg;
-    test_msgs__msg__Arrays__init(&msg);
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-    {
-      test_msgs__msg__Arrays__fini(&msg);
-    });
-    ret = rcl_take(&subscription, &msg, nullptr, nullptr);
-    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    for (size_t i = 0; i < 3; ++i) {
-      ASSERT_EQ(bool_values[i], msg.bool_values[i]);
-    }
-    ASSERT_EQ(
-      std::string(test_string),
-      std::string(msg.string_values[1].data, msg.string_values[1].size));
-  } else {
-    test_msgs::msg::Arrays msg;
-    ret = rcl_take(&subscription, &msg, nullptr, nullptr);
-    ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    for (size_t i = 0; i < msg.bool_values.size(); ++i) {
-      ASSERT_EQ(bool_values[i], msg.bool_values[i]);
-    }
-    ASSERT_EQ(std::string(test_string), msg.string_values[1]);
-  }
-}
-
-INSTANTIATE_TEST_SUITE_P(
-  TestSubscriptionFixtureParamWithDifferentSettings,
-  TestSubscriptionFixtureParam,
-  ::testing::Values(
-    TestParameters(TestParameters::TYPESUPPORT::C, TestParameters::TYPESUPPORT::C),
-    TestParameters(TestParameters::TYPESUPPORT::C, TestParameters::TYPESUPPORT::CPP),
-    TestParameters(TestParameters::TYPESUPPORT::CPP, TestParameters::TYPESUPPORT::C),
-    TestParameters(TestParameters::TYPESUPPORT::CPP, TestParameters::TYPESUPPORT::CPP)
-));

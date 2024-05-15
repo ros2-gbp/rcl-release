@@ -36,7 +36,7 @@ extern "C"
 #include "./subscription_impl.h"
 
 rcl_event_t
-rcl_get_zero_initialized_event(void)
+rcl_get_zero_initialized_event()
 {
   static rcl_event_t null_event = {0};
   return null_event;
@@ -63,12 +63,6 @@ rcl_publisher_event_init(
       break;
     case RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS:
       rmw_event_type = RMW_EVENT_OFFERED_QOS_INCOMPATIBLE;
-      break;
-    case RCL_PUBLISHER_INCOMPATIBLE_TYPE:
-      rmw_event_type = RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE;
-      break;
-    case RCL_PUBLISHER_MATCHED:
-      rmw_event_type = RMW_EVENT_PUBLICATION_MATCHED;
       break;
     default:
       RCL_SET_ERROR_MSG("Event type for publisher not supported");
@@ -123,12 +117,6 @@ rcl_subscription_event_init(
       break;
     case RCL_SUBSCRIPTION_MESSAGE_LOST:
       rmw_event_type = RMW_EVENT_MESSAGE_LOST;
-      break;
-    case RCL_SUBSCRIPTION_INCOMPATIBLE_TYPE:
-      rmw_event_type = RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE;
-      break;
-    case RCL_SUBSCRIPTION_MATCHED:
-      rmw_event_type = RMW_EVENT_SUBSCRIPTION_MATCHED;
       break;
     default:
       RCL_SET_ERROR_MSG("Event type for subscription not supported");

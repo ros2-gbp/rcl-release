@@ -23,16 +23,13 @@ extern "C"
 
 #include "rcl/error_handling.h"
 #include "rcl/node.h"
-#include "rcl/node_type_cache.h"
 #include "rcutils/env.h"
 #include "rcutils/logging_macros.h"
 #include "rcutils/strdup.h"
 #include "rcutils/types/string_array.h"
 #include "rmw/error_handling.h"
-#include "rmw/dynamic_message_type_support.h"
 #include "rmw/subscription_content_filter_options.h"
 #include "rmw/validate_full_topic_name.h"
-#include "rosidl_dynamic_typesupport/identifier.h"
 #include "tracetools/tracetools.h"
 
 #include "./common.h"
@@ -40,7 +37,7 @@ extern "C"
 
 
 rcl_subscription_t
-rcl_get_zero_initialized_subscription(void)
+rcl_get_zero_initialized_subscription()
 {
   static rcl_subscription_t null_subscription = {0};
   return null_subscription;
@@ -124,28 +121,15 @@ rcl_subscription_init(
     options->qos.avoid_ros_namespace_conventions;
   // options
   subscription->impl->options = *options;
-
-  if (RCL_RET_OK != rcl_node_type_cache_register_type(
-      node, type_support->get_type_hash_func(type_support),
-      type_support->get_type_description_func(type_support),
-      type_support->get_type_description_sources_func(type_support)))
-  {
-    rcutils_reset_error();
-    RCL_SET_ERROR_MSG("Failed to register type for subscription");
-    goto fail;
-  }
-  subscription->impl->type_hash = *type_support->get_type_hash_func(type_support);
-
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription initialized");
   ret = RCL_RET_OK;
-  TRACETOOLS_TRACEPOINT(
+  TRACEPOINT(
     rcl_subscription_init,
     (const void *)subscription,
     (const void *)node,
     (const void *)subscription->impl->rmw_handle,
     remapped_topic_name,
     options->qos.depth);
-
   goto cleanup;
 fail:
   if (subscription->impl) {
@@ -207,15 +191,6 @@ rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
       result = RCL_RET_ERROR;
     }
 
-    if (
-      ROSIDL_TYPE_HASH_VERSION_UNSET != subscription->impl->type_hash.version &&
-      RCL_RET_OK != rcl_node_type_cache_unregister_type(node, &subscription->impl->type_hash))
-    {
-      RCUTILS_SAFE_FWRITE_TO_STDERR(rcl_get_error_string().str);
-      RCUTILS_SAFE_FWRITE_TO_STDERR("\n");
-      result = RCL_RET_ERROR;
-    }
-
     allocator.deallocate(subscription->impl, allocator.state);
     subscription->impl = NULL;
   }
@@ -224,7 +199,7 @@ rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
 }
 
 rcl_subscription_options_t
-rcl_subscription_get_default_options(void)
+rcl_subscription_get_default_options()
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
   static rcl_subscription_options_t default_options;
@@ -232,23 +207,6 @@ rcl_subscription_get_default_options(void)
   default_options.qos = rmw_qos_profile_default;
   default_options.allocator = rcl_get_default_allocator();
   default_options.rmw_subscription_options = rmw_get_default_subscription_options();
-
-  // Load disable flag to LoanedMessage via environmental variable.
-  // TODO(clalancette): This is kind of a copy of rcl_get_disable_loaned_message(), but we need
-  // more information than that function provides.
-  default_options.disable_loaned_message = true;
-
-  const char * env_val = NULL;
-  const char * env_error_str = rcutils_get_env(RCL_DISABLE_LOANED_MESSAGES_ENV_VAR, &env_val);
-  if (NULL != env_error_str) {
-    RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to get disable_loaned_message: ");
-    RCUTILS_SAFE_FWRITE_TO_STDERR_WITH_FORMAT_STRING(
-      "Error getting env var: '" RCUTILS_STRINGIFY(RCL_DISABLE_LOANED_MESSAGES_ENV_VAR) "': %s\n",
-      env_error_str);
-  } else {
-    default_options.disable_loaned_message = !(strcmp(env_val, "0") == 0);
-  }
-
   return default_options;
 }
 
@@ -382,7 +340,7 @@ failed:
 }
 
 rcl_subscription_content_filter_options_t
-rcl_get_zero_initialized_subscription_content_filter_options(void)
+rcl_get_zero_initialized_subscription_content_filter_options()
 {
   return (const rcl_subscription_content_filter_options_t) {
            .rmw_subscription_content_filter_options =
@@ -564,7 +522,7 @@ rcl_take(
   }
   RCUTILS_LOG_DEBUG_NAMED(
     ROS_PACKAGE_NAME, "Subscription take succeeded: %s", taken ? "true" : "false");
-  TRACETOOLS_TRACEPOINT(rcl_take, (const void *)ros_message);
+  TRACEPOINT(rcl_take, (const void *)ros_message);
   if (!taken) {
     return RCL_RET_SUBSCRIPTION_TAKE_FAILED;
   }
@@ -644,39 +602,6 @@ rcl_take_serialized_message(
   }
   RCUTILS_LOG_DEBUG_NAMED(
     ROS_PACKAGE_NAME, "Subscription serialized take succeeded: %s", taken ? "true" : "false");
-  TRACETOOLS_TRACEPOINT(rcl_take, (const void *)serialized_message);
-  if (!taken) {
-    return RCL_RET_SUBSCRIPTION_TAKE_FAILED;
-  }
-  return RCL_RET_OK;
-}
-
-rcl_ret_t
-rcl_take_dynamic_message(
-  const rcl_subscription_t * subscription,
-  rosidl_dynamic_typesupport_dynamic_data_t * dynamic_message,
-  rmw_message_info_t * message_info,
-  rmw_subscription_allocation_t * allocation)
-{
-  RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription taking dynamic message");
-  if (!rcl_subscription_is_valid(subscription)) {
-    return RCL_RET_SUBSCRIPTION_INVALID;  // error already set
-  }
-  RCL_CHECK_ARGUMENT_FOR_NULL(dynamic_message, RCL_RET_INVALID_ARGUMENT);
-  // If message_info is NULL, use a place holder which can be discarded.
-  rmw_message_info_t dummy_message_info;
-  rmw_message_info_t * message_info_local = message_info ? message_info : &dummy_message_info;
-  *message_info_local = rmw_get_zero_initialized_message_info();
-  // Call take with info
-  bool taken = false;
-  rmw_ret_t ret = rmw_take_dynamic_message_with_info(
-    subscription->impl->rmw_handle, dynamic_message, &taken, message_info_local, allocation);
-  if (ret != RMW_RET_OK) {
-    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
-    return rcl_convert_rmw_ret_to_rcl_ret(ret);
-  }
-  RCUTILS_LOG_DEBUG_NAMED(
-    ROS_PACKAGE_NAME, "Subscription dynamic take succeeded: %s", taken ? "true" : "false");
   if (!taken) {
     return RCL_RET_SUBSCRIPTION_TAKE_FAILED;
   }
@@ -743,13 +668,15 @@ rcl_subscription_get_topic_name(const rcl_subscription_t * subscription)
   return subscription->impl->rmw_handle->topic_name;
 }
 
+#define _subscription_get_options(subscription) & subscription->impl->options
+
 const rcl_subscription_options_t *
 rcl_subscription_get_options(const rcl_subscription_t * subscription)
 {
   if (!rcl_subscription_is_valid(subscription)) {
     return NULL;  // error already set
   }
-  return &subscription->impl->options;
+  return _subscription_get_options(subscription);
 }
 
 rmw_subscription_t *
@@ -810,7 +737,24 @@ rcl_subscription_can_loan_messages(const rcl_subscription_t * subscription)
     return false;  // error message already set
   }
 
-  if (subscription->impl->options.disable_loaned_message) {
+  // Load disable flag to LoanedMessage via environmental variable.
+  // TODO(clalancette): This is kind of a copy of rcl_get_disable_loaned_message(), but we need
+  // more information than that function provides.
+  bool disable_loaned_message = true;
+
+  const char * env_val = NULL;
+  const char * env_error_str = rcutils_get_env(RCL_DISABLE_LOANED_MESSAGES_ENV_VAR, &env_val);
+  if (NULL != env_error_str) {
+    RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to get disable_loaned_message: ");
+    RCUTILS_SAFE_FWRITE_TO_STDERR_WITH_FORMAT_STRING(
+      "Error getting env var: '" RCUTILS_STRINGIFY(RCL_DISABLE_LOANED_MESSAGES_ENV_VAR) "': %s\n",
+      env_error_str);
+    return RCL_RET_ERROR;
+  } else {
+    disable_loaned_message = !(strcmp(env_val, "0") == 0);
+  }
+
+  if (disable_loaned_message) {
     return false;
   }
 
