@@ -2,25 +2,93 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-5.3.8 (2024-05-15)
+9.4.0 (2024-06-17)
 ------------------
 
-5.3.7 (2024-01-24)
+9.3.0 (2024-04-26)
+------------------
+* Fixed warnings - strict-prototypes (`#1148 <https://github.com/ros2/rcl/issues/1148>`_)
+* Contributors: Alejandro Hernández Cordero
+
+9.2.1 (2024-04-16)
+------------------
+* Generate version header using ament_generate_version_header(..) (`#1141 <https://github.com/ros2/rcl/issues/1141>`_)
+* Contributors: G.A. vd. Hoorn
+
+9.2.0 (2024-03-28)
+------------------
+* Update quality declaration documents (`#1131 <https://github.com/ros2/rcl/issues/1131>`_)
+* Contributors: Christophe Bedard
+
+9.1.0 (2024-01-24)
 ------------------
 
-5.3.6 (2023-11-13)
+9.0.0 (2023-12-26)
 ------------------
 
-5.3.5 (2023-09-19)
+8.0.0 (2023-11-06)
 ------------------
 
-5.3.4 (2023-07-17)
+7.3.0 (2023-10-09)
 ------------------
 
-5.3.3 (2023-04-25)
+7.2.0 (2023-10-04)
+------------------
+* Remove most remaining uses of ament_target_dependencies. (`#1102 <https://github.com/ros2/rcl/issues/1102>`_)
+* Contributors: Chris Lalancette
+
+7.1.1 (2023-09-07)
 ------------------
 
-5.3.2 (2022-09-08)
+7.1.0 (2023-08-21)
+------------------
+
+7.0.0 (2023-07-11)
+------------------
+
+6.3.0 (2023-06-12)
+------------------
+* Use TRACETOOLS\_ prefix for tracepoint-related macros (`#1058 <https://github.com/ros2/rcl/issues/1058>`_)
+* Contributors: Christophe Bedard
+
+6.2.0 (2023-06-07)
+------------------
+
+6.1.1 (2023-05-11)
+------------------
+
+6.1.0 (2023-04-28)
+------------------
+
+6.0.1 (2023-04-18)
+------------------
+
+6.0.0 (2023-04-12)
+------------------
+
+5.9.0 (2023-03-01)
+------------------
+
+5.8.0 (2023-02-23)
+------------------
+
+5.7.0 (2023-02-13)
+------------------
+* Update rcl to C++17. (`#1031 <https://github.com/ros2/rcl/issues/1031>`_)
+* Contributors: Chris Lalancette
+
+5.6.0 (2022-12-05)
+------------------
+* [rolling] Update maintainers - 2022-11-07 (`#1017 <https://github.com/ros2/rcl/issues/1017>`_)
+* Contributors: Audrow Nash
+
+5.5.0 (2022-11-02)
+------------------
+
+5.4.1 (2022-09-13)
+------------------
+
+5.4.0 (2022-04-29)
 ------------------
 
 5.3.1 (2022-04-26)
