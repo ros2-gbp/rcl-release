@@ -2,6 +2,11 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.0.6 (2024-07-10)
+------------------
+* Generate version header using `ament_generate_version_header(..)` (`#1144 <https://github.com/ros2/rcl/issues/1144>`_)
+* Contributors: G.A. vd. Hoorn, Tomoya.Fujita
+
 6.0.5 (2024-02-07)
 ------------------
 
