@@ -27,7 +27,7 @@ extern "C"
 #include "rcl/logging_rosout.h"
 
 rcl_node_options_t
-rcl_node_get_default_options(void)
+rcl_node_get_default_options()
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
   rcl_node_options_t default_options = {
@@ -36,6 +36,7 @@ rcl_node_get_default_options(void)
     .arguments = rcl_get_zero_initialized_arguments(),
     .enable_rosout = true,
     .rosout_qos = rcl_qos_profile_rosout_default,
+    .enable_type_description_service = false,
   };
   return default_options;
 }

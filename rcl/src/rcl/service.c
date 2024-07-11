@@ -52,7 +52,7 @@ struct rcl_service_impl_s
 };
 
 rcl_service_t
-rcl_get_zero_initialized_service(void)
+rcl_get_zero_initialized_service()
 {
   static rcl_service_t null_service = {0};
   return null_service;
@@ -202,7 +202,7 @@ rcl_service_init(
   service->impl->type_hash = *type_support->get_type_hash_func(type_support);
 
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Service initialized");
-  TRACETOOLS_TRACEPOINT(
+  TRACEPOINT(
     rcl_service_init,
     (const void *)service,
     (const void *)node,
@@ -282,7 +282,7 @@ rcl_service_fini(rcl_service_t * service, rcl_node_t * node)
 }
 
 rcl_service_options_t
-rcl_service_get_default_options(void)
+rcl_service_get_default_options()
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
   static rcl_service_options_t default_options;
@@ -303,13 +303,15 @@ rcl_service_get_service_name(const rcl_service_t * service)
   return service->impl->rmw_handle->service_name;
 }
 
+#define _service_get_options(service) & service->impl->options
+
 const rcl_service_options_t *
 rcl_service_get_options(const rcl_service_t * service)
 {
   if (!rcl_service_is_valid(service)) {
     return NULL;  // error already set
   }
-  return &service->impl->options;
+  return _service_get_options(service);
 }
 
 rmw_service_t *

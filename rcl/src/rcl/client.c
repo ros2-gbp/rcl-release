@@ -53,7 +53,7 @@ struct rcl_client_impl_s
 };
 
 rcl_client_t
-rcl_get_zero_initialized_client(void)
+rcl_get_zero_initialized_client()
 {
   static rcl_client_t null_client = {0};
   return null_client;
@@ -178,15 +178,9 @@ rcl_client_init(
   client->impl->options = *options;
   atomic_init(&client->impl->sequence_number, 0);
 
-  const rosidl_type_hash_t * hash = type_support->get_type_hash_func(type_support);
-  if (hash == NULL) {
-    RCL_SET_ERROR_MSG("Failed to get the type hash");
-    ret = RCL_RET_INVALID_ARGUMENT;
-    goto destroy_client;
-  }
-
   if (RCL_RET_OK != rcl_node_type_cache_register_type(
-      node, hash, type_support->get_type_description_func(type_support),
+      node, type_support->get_type_hash_func(type_support),
+      type_support->get_type_description_func(type_support),
       type_support->get_type_description_sources_func(type_support)))
   {
     rcutils_reset_error();
@@ -194,10 +188,10 @@ rcl_client_init(
     ret = RCL_RET_ERROR;
     goto destroy_client;
   }
-  client->impl->type_hash = *hash;
+  client->impl->type_hash = *type_support->get_type_hash_func(type_support);
 
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Client initialized");
-  TRACETOOLS_TRACEPOINT(
+  TRACEPOINT(
     rcl_client_init,
     (const void *)client,
     (const void *)node,
@@ -276,7 +270,7 @@ rcl_client_fini(rcl_client_t * client, rcl_node_t * node)
 }
 
 rcl_client_options_t
-rcl_client_get_default_options(void)
+rcl_client_get_default_options()
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
   static rcl_client_options_t default_options;
@@ -295,13 +289,15 @@ rcl_client_get_service_name(const rcl_client_t * client)
   return client->impl->rmw_handle->service_name;
 }
 
+#define _client_get_options(client) & client->impl->options;
+
 const rcl_client_options_t *
 rcl_client_get_options(const rcl_client_t * client)
 {
   if (!rcl_client_is_valid(client)) {
     return NULL;  // error already set
   }
-  return &client->impl->options;
+  return _client_get_options(client);
 }
 
 rmw_client_t *

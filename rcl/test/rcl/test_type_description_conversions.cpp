@@ -14,7 +14,6 @@
 
 #include <gtest/gtest.h>
 
-#include "rcl/error_handling.h"
 #include "rcl/type_description_conversions.h"
 #include "rosidl_runtime_c/message_type_support_struct.h"
 #include "rosidl_runtime_c/type_description/type_description__functions.h"
@@ -46,9 +45,7 @@ TEST(TestTypeDescriptionConversions, type_description_conversion_round_trip) {
 
 TEST(TestTypeDescriptionConversions, type_description_invalid_input) {
   EXPECT_TRUE(NULL == rcl_convert_type_description_runtime_to_msg(NULL));
-  rcl_reset_error();
   EXPECT_TRUE(NULL == rcl_convert_type_description_msg_to_runtime(NULL));
-  rcl_reset_error();
 }
 
 TEST(TestTypeDescriptionConversions, type_source_sequence_conversion_round_trip) {
@@ -104,9 +101,7 @@ TEST(TestTypeDescriptionConversions, actually_empty_sources_ok) {
 
 TEST(TestTypeDescriptionConversions, type_source_sequence_invalid_input) {
   EXPECT_TRUE(NULL == rcl_convert_type_source_sequence_msg_to_runtime(NULL));
-  rcl_reset_error();
   EXPECT_TRUE(NULL == rcl_convert_type_source_sequence_runtime_to_msg(NULL));
-  rcl_reset_error();
 }
 
 int main(int argc, char ** argv)

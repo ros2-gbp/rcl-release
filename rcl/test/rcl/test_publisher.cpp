@@ -33,7 +33,14 @@
 #include "./publisher_impl.h"
 #include "../mocking_utils/patch.hpp"
 
-class TestPublisherFixture : public ::testing::Test
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+class CLASSNAME (TestPublisherFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   rcl_context_t * context_ptr;
@@ -75,7 +82,8 @@ public:
   }
 };
 
-class TestPublisherFixtureInit : public TestPublisherFixture
+class CLASSNAME (TestPublisherFixtureInit, RMW_IMPLEMENTATION)
+  : public CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION)
 {
 public:
   const rosidl_message_type_support_t * ts =
@@ -86,7 +94,7 @@ public:
 
   void SetUp() override
   {
-    TestPublisherFixture::SetUp();
+    CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION) ::SetUp();
     publisher = rcl_get_zero_initialized_publisher();
     publisher_options = rcl_publisher_get_default_options();
     rcl_ret_t ret = rcl_publisher_init(
@@ -98,13 +106,13 @@ public:
   {
     rcl_ret_t ret = rcl_publisher_fini(&publisher, this->node_ptr);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-    TestPublisherFixture::TearDown();
+    CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION) ::TearDown();
   }
 };
 
 /* Basic nominal test of a publisher.
  */
-TEST_F(TestPublisherFixture, test_publisher_nominal) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_publisher_nominal) {
   rcl_ret_t ret;
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
@@ -130,7 +138,7 @@ TEST_F(TestPublisherFixture, test_publisher_nominal) {
 
 /* Basic nominal test of a publisher with a string.
  */
-TEST_F(TestPublisherFixture, test_publisher_nominal_string) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_publisher_nominal_string) {
   rcl_ret_t ret;
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
@@ -158,7 +166,7 @@ TEST_F(TestPublisherFixture, test_publisher_nominal_string) {
  * not support publishers on topics with the same basename (but different namespaces) using
  * different message types, because at the time partitions were used for implementing namespaces.
  */
-TEST_F(TestPublisherFixture, test_publishers_different_types) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_publishers_different_types) {
   rcl_ret_t ret;
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts_int =
@@ -207,7 +215,7 @@ TEST_F(TestPublisherFixture, test_publishers_different_types) {
 
 /* Testing the publisher init and fini functions.
  */
-TEST_F(TestPublisherFixture, test_publisher_init_fini) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_publisher_init_fini) {
   rcl_ret_t ret;
   // Setup valid inputs.
   rcl_publisher_t publisher;
@@ -332,7 +340,7 @@ TEST_F(TestPublisherFixture, test_publisher_init_fini) {
   rcl_reset_error();
 }
 
-TEST_F(TestPublisherFixture, test_publisher_loan) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_publisher_loan) {
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, Strings);
@@ -364,7 +372,7 @@ TEST_F(TestPublisherFixture, test_publisher_loan) {
   }
 }
 
-TEST_F(TestPublisherFixture, test_publisher_option) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_publisher_option) {
   {
     rcl_publisher_options_t publisher_options = rcl_publisher_get_default_options();
     EXPECT_FALSE(publisher_options.disable_loaned_message);
@@ -391,7 +399,7 @@ TEST_F(TestPublisherFixture, test_publisher_option) {
   }
 }
 
-TEST_F(TestPublisherFixture, test_publisher_loan_disable) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_publisher_loan_disable) {
   bool is_fastdds = (std::string(rmw_get_implementation_identifier()).find("rmw_fastrtps") == 0);
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, BasicTypes);
@@ -434,7 +442,7 @@ TEST_F(TestPublisherFixture, test_publisher_loan_disable) {
   }
 }
 
-TEST_F(TestPublisherFixture, test_invalid_publisher) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_invalid_publisher) {
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, Strings);
@@ -615,7 +623,9 @@ TEST_F(TestPublisherFixture, test_invalid_publisher) {
 
 // Mocking rmw_publisher_count_matched_subscriptions to make
 // rcl_publisher_get_subscription_count fail
-TEST_F(TestPublisherFixtureInit, test_mock_publisher_get_subscription_count)
+TEST_F(
+  CLASSNAME(TestPublisherFixtureInit, RMW_IMPLEMENTATION),
+  test_mock_publisher_get_subscription_count)
 {
   auto mock = mocking_utils::patch_and_return(
     "lib:rcl", rmw_publisher_count_matched_subscriptions, RMW_RET_BAD_ALLOC);
@@ -631,7 +641,7 @@ TEST_F(TestPublisherFixtureInit, test_mock_publisher_get_subscription_count)
 
 // Mocking rmw_publisher_assert_liveliness to make
 // rcl_publisher_assert_liveliness fail
-TEST_F(TestPublisherFixtureInit, test_mock_assert_liveliness) {
+TEST_F(CLASSNAME(TestPublisherFixtureInit, RMW_IMPLEMENTATION), test_mock_assert_liveliness) {
   auto mock = mocking_utils::patch_and_return(
     "lib:rcl", rmw_publisher_assert_liveliness, RMW_RET_ERROR);
 
@@ -650,8 +660,17 @@ MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rmw_time_t, !=)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rmw_time_t, <)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rmw_time_t, >)
 
-TEST_F(TestPublisherFixtureInit, test_mock_assert_wait_for_all_acked)
+TEST_F(
+  CLASSNAME(TestPublisherFixtureInit, RMW_IMPLEMENTATION),
+  test_mock_assert_wait_for_all_acked)
 {
+#define CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_RESULT, EXPECT_RET)   do { \
+    rmw_publisher_wait_for_all_acked_return = RMW_RET_RESULT; \
+    ret = rcl_publisher_wait_for_all_acked(&publisher, 1000000); \
+    EXPECT_EQ(EXPECT_RET, ret); \
+    rcl_reset_error(); \
+} while (0)
+
   rcl_ret_t ret;
   rmw_ret_t rmw_publisher_wait_for_all_acked_return;
   auto mock = mocking_utils::patch_and_return(
@@ -661,55 +680,40 @@ TEST_F(TestPublisherFixtureInit, test_mock_assert_wait_for_all_acked)
     // Now normal usage of the function rcl_publisher_wait_for_all_acked returning
     // unexpected RMW_RET_TIMEOUT
     SCOPED_TRACE("Check RCL return failed !");
-    rmw_publisher_wait_for_all_acked_return = RMW_RET_TIMEOUT;
-    ret = rcl_publisher_wait_for_all_acked(&publisher, 1000000);
-    EXPECT_EQ(RCL_RET_TIMEOUT, ret);
-    rcl_reset_error();
+    CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_TIMEOUT, RCL_RET_TIMEOUT);
   }
 
   {
     // Now normal usage of the function rcl_publisher_wait_for_all_acked returning
     // unexpected RMW_RET_UNSUPPORTED
     SCOPED_TRACE("Check RCL return failed !");
-    rmw_publisher_wait_for_all_acked_return = RMW_RET_UNSUPPORTED;
-    ret = rcl_publisher_wait_for_all_acked(&publisher, 1000000);
-    EXPECT_EQ(RCL_RET_UNSUPPORTED, ret);
-    rcl_reset_error();
+    CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_UNSUPPORTED, RCL_RET_UNSUPPORTED);
   }
 
   {
     // Now normal usage of the function rcl_publisher_wait_for_all_acked returning
     // unexpected RMW_RET_INVALID_ARGUMENT
     SCOPED_TRACE("Check RCL return failed !");
-    rmw_publisher_wait_for_all_acked_return = RMW_RET_INVALID_ARGUMENT;
-    ret = rcl_publisher_wait_for_all_acked(&publisher, 1000000);
-    EXPECT_EQ(RCL_RET_ERROR, ret);
-    rcl_reset_error();
+    CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_INVALID_ARGUMENT, RCL_RET_ERROR);
   }
 
   {
     // Now normal usage of the function rcl_publisher_wait_for_all_acked returning
     // unexpected RMW_RET_INCORRECT_RMW_IMPLEMENTATION
     SCOPED_TRACE("Check RCL return failed !");
-    rmw_publisher_wait_for_all_acked_return = RMW_RET_INCORRECT_RMW_IMPLEMENTATION;
-    ret = rcl_publisher_wait_for_all_acked(&publisher, 1000000);
-    EXPECT_EQ(RCL_RET_ERROR, ret);
-    rcl_reset_error();
+    CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_INCORRECT_RMW_IMPLEMENTATION, RCL_RET_ERROR);
   }
 
   {
     // Now normal usage of the function rcl_publisher_wait_for_all_acked returning
     // unexpected RMW_RET_ERROR
     SCOPED_TRACE("Check RCL return failed !");
-    rmw_publisher_wait_for_all_acked_return = RMW_RET_ERROR;
-    ret = rcl_publisher_wait_for_all_acked(&publisher, 1000000);
-    EXPECT_EQ(RCL_RET_ERROR, ret);
-    rcl_reset_error();
+    CHECK_PUBLISHER_WAIT_FOR_ALL_ACKED_RETURN(RMW_RET_ERROR, RCL_RET_ERROR);
   }
 }
 
 // Mocking rmw_publish to make rcl_publish fail
-TEST_F(TestPublisherFixtureInit, test_mock_publish) {
+TEST_F(CLASSNAME(TestPublisherFixtureInit, RMW_IMPLEMENTATION), test_mock_publish) {
   auto mock = mocking_utils::patch_and_return("lib:rcl", rmw_publish, RMW_RET_ERROR);
 
   // Test normal usage of the function rcl_publish returning unexpected RMW_RET_ERROR
@@ -724,7 +728,8 @@ TEST_F(TestPublisherFixtureInit, test_mock_publish) {
 }
 
 // Mocking rmw_publish_serialized_message to make rcl_publish_serialized_message fail
-TEST_F(TestPublisherFixtureInit, test_mock_publish_serialized_message)
+TEST_F(
+  CLASSNAME(TestPublisherFixtureInit, RMW_IMPLEMENTATION), test_mock_publish_serialized_message)
 {
   rcl_serialized_message_t serialized_msg = rmw_get_zero_initialized_serialized_message();
   size_t initial_size_serialized = 0u;
@@ -775,7 +780,7 @@ MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, <)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, >)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, !=)
 
-TEST_F(TestPublisherFixture, test_mock_publisher_init) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_mock_publisher_init) {
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, Strings);
@@ -790,7 +795,8 @@ TEST_F(TestPublisherFixture, test_mock_publisher_init) {
   rcl_reset_error();
 }
 
-TEST_F(TestPublisherFixture, test_mock_publisher_init_fail_qos)
+TEST_F(
+  CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_mock_publisher_init_fail_qos)
 {
   auto mock = mocking_utils::patch_and_return(
     "lib:rcl", rmw_publisher_get_actual_qos, RMW_RET_ERROR);
@@ -808,7 +814,7 @@ TEST_F(TestPublisherFixture, test_mock_publisher_init_fail_qos)
 }
 
 // Tests for loaned msgs functions. Mocked as the rmw tier1 vendors don't support it
-TEST_F(TestPublisherFixture, test_mock_loaned_functions) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_mock_loaned_functions) {
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   rcl_publisher_t not_init_publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
@@ -900,7 +906,7 @@ TEST_F(TestPublisherFixture, test_mock_loaned_functions) {
 }
 
 // Tests mocking ini/fini functions for specific failures
-TEST_F(TestPublisherFixture, test_mocks_fail_publisher_init) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_mocks_fail_publisher_init) {
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, Strings);
@@ -953,7 +959,7 @@ TEST_F(TestPublisherFixture, test_mocks_fail_publisher_init) {
 }
 
 // Test mocked fail fini publisher
-TEST_F(TestPublisherFixture, test_mock_publisher_fini_fail) {
+TEST_F(CLASSNAME(TestPublisherFixture, RMW_IMPLEMENTATION), test_mock_publisher_fini_fail) {
   rcl_publisher_t publisher = rcl_get_zero_initialized_publisher();
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, BasicTypes);
