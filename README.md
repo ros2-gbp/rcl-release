@@ -1,3 +1,30 @@
+## rcl (humble) - 5.3.9-1
+
+The packages in the `rcl` repository were released into the `humble` distro by running `/usr/bin/bloom-release -r humble -y rcl` on `Fri, 26 Jul 2024 15:13:18 -0000`
+
+These packages were released:
+- `rcl`
+- `rcl_action`
+- `rcl_lifecycle`
+- `rcl_yaml_param_parser`
+
+Version of package(s) in repository `rcl`:
+
+- upstream repository: https://github.com/ros2/rcl.git
+- release repository: https://github.com/ros2-gbp/rcl-release.git
+- rosdistro version: `5.3.8-1`
+- old version: `5.3.8-1`
+- new version: `5.3.9-1`
+
+Versions of tools used:
+
+- bloom version: `0.12.0`
+- catkin_pkg version: `1.0.0`
+- rosdep version: `0.24.0`
+- rosdistro version: `0.9.1`
+- vcstools version: `0.1.42`
+
+
 ## rcl (iron) - 6.0.6-1
 
 The packages in the `rcl` repository were released into the `iron` distro by running `/usr/bin/bloom-release --rosdistro iron rcl` on `Thu, 11 Jul 2024 05:47:23 -0000`
