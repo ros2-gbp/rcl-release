@@ -2,58 +2,32 @@
 Changelog for package rcl_yaml_param_parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-6.0.6 (2024-07-10)
+5.3.9 (2024-07-26)
 ------------------
-* Generate version header using `ament_generate_version_header(..)` (`#1144 <https://github.com/ros2/rcl/issues/1144>`_)
-* Contributors: G.A. vd. Hoorn, Tomoya.Fujita
+* Generate version header using `ament_generate_version_header(..)` (backport `#1141 <https://github.com/ros2/rcl/issues/1141>`_) (`#1145 <https://github.com/ros2/rcl/issues/1145>`_)
+* Contributors: mergify[bot]
 
-6.0.5 (2024-02-07)
-------------------
-* Fix for incorrect integer value conversion on Windows (`#1129 <https://github.com/ros2/rcl/issues/1129>`_)
-* Contributors: Chris Lalancette, Michael Orlov
-
-6.0.4 (2023-11-17)
+5.3.8 (2024-05-15)
 ------------------
 
-6.0.3 (2023-09-08)
+5.3.7 (2024-01-24)
+------------------
+* Fix for incorrect integer value conversion on Windows (`#1126 <https://github.com/ros2/rcl/issues/1126>`_) (`#1128 <https://github.com/ros2/rcl/issues/1128>`_)
+* Contributors: mergify[bot]
+
+5.3.6 (2023-11-13)
 ------------------
 
-6.0.2 (2023-05-19)
+5.3.5 (2023-09-19)
 ------------------
 
-6.0.1 (2023-04-18)
+5.3.4 (2023-07-17)
 ------------------
 
-6.0.0 (2023-04-12)
-------------------
-* Fix some warnings from clang. (`#1042 <https://github.com/ros2/rcl/issues/1042>`_)
-* Contributors: Chris Lalancette
-
-5.9.0 (2023-03-01)
+5.3.3 (2023-04-25)
 ------------------
 
-5.8.0 (2023-02-23)
-------------------
-
-5.7.0 (2023-02-13)
-------------------
-* Cleanup the dependencies in rcl_yaml_param_parser. (`#1014 <https://github.com/ros2/rcl/issues/1014>`_)
-* Update rcl to C++17. (`#1031 <https://github.com/ros2/rcl/issues/1031>`_)
-* Support yaml string tag '!!str' (`#999 <https://github.com/ros2/rcl/issues/999>`_)
-* Contributors: Barry Xu, Chris Lalancette
-
-5.6.0 (2022-12-05)
-------------------
-* [rolling] Update maintainers - 2022-11-07 (`#1017 <https://github.com/ros2/rcl/issues/1017>`_)
-* Contributors: Audrow Nash
-
-5.5.0 (2022-11-02)
-------------------
-
-5.4.1 (2022-09-13)
-------------------
-
-5.4.0 (2022-04-29)
+5.3.2 (2022-09-08)
 ------------------
 
 5.3.1 (2022-04-26)
