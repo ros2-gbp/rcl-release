@@ -28,9 +28,9 @@ extern "C"
 #include "tracetools/tracetools.h"
 
 #include "rcl/arguments.h"
+#include "rcl/discovery_options.h"
 #include "rcl/domain_id.h"
 #include "rcl/error_handling.h"
-#include "rcl/localhost.h"
 #include "rcl/logging.h"
 #include "rcl/security.h"
 #include "rcl/validate_enclave_name.h"
@@ -153,15 +153,64 @@ rcl_init(
     }
   }
 
-  rmw_localhost_only_t * localhost_only =
-    &context->impl->init_options.impl->rmw_init_options.localhost_only;
-  if (RMW_LOCALHOST_ONLY_DEFAULT == *localhost_only) {
-    // Get actual localhost_only value based on environment variable, if needed.
-    ret = rcl_get_localhost_only(localhost_only);
+  const rmw_discovery_options_t original_discovery_options =
+    options->impl->rmw_init_options.discovery_options;
+  rmw_discovery_options_t * discovery_options =
+    &context->impl->init_options.impl->rmw_init_options.discovery_options;
+
+  // Get actual discovery range option based on environment variable, if not given
+  // to original options passed to function
+  if (  // NOLINT
+    RMW_AUTOMATIC_DISCOVERY_RANGE_NOT_SET == original_discovery_options.automatic_discovery_range)
+  {
+    ret = rcl_get_automatic_discovery_range(discovery_options);
     if (RCL_RET_OK != ret) {
       fail_ret = ret;
       goto fail;
     }
+  }
+
+  if (0 == discovery_options->static_peers_count &&
+    discovery_options->automatic_discovery_range != RMW_AUTOMATIC_DISCOVERY_RANGE_OFF)
+  {
+    // Get static peers.
+    // If off is set, it makes sense to not get any static peers.
+    ret = rcl_get_discovery_static_peers(discovery_options, &allocator);
+    if (RCL_RET_OK != ret) {
+      fail_ret = ret;
+      goto fail;
+    }
+  }
+
+  if (discovery_options->static_peers_count > 0 &&
+    discovery_options->automatic_discovery_range == RMW_AUTOMATIC_DISCOVERY_RANGE_OFF)
+  {
+    RCUTILS_LOG_WARN_NAMED(
+      ROS_PACKAGE_NAME,
+      "Note: ROS_AUTOMATIC_DISCOVERY_RANGE is set to OFF, but "
+      "found static peers in ROS_STATIC_PEERS. "
+      "ROS_STATIC_PEERS will be ignored.");
+  }
+
+  const char * discovery_range_string =
+    rcl_automatic_discovery_range_to_string(discovery_options->automatic_discovery_range);
+  if (NULL == discovery_range_string) {
+    discovery_range_string = "not recognized";
+  }
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME,
+    "Automatic discovery range is %s (%d)",
+    discovery_range_string,
+    discovery_options->automatic_discovery_range);
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME,
+    "Static peers count is %lu",
+    discovery_options->static_peers_count);
+
+  for (size_t ii = 0; ii < discovery_options->static_peers_count; ++ii) {
+    RCUTILS_LOG_DEBUG_NAMED(
+      ROS_PACKAGE_NAME,
+      "\t%s", discovery_options->static_peers[ii].peer_address);
   }
 
   if (context->global_arguments.impl->enclave) {
@@ -220,7 +269,7 @@ rcl_init(
     goto fail;
   }
 
-  TRACEPOINT(rcl_init, (const void *)context);
+  TRACETOOLS_TRACEPOINT(rcl_init, (const void *)context);
 
   return RCL_RET_OK;
 fail:
