@@ -30,12 +30,19 @@
 
 #include "test_msgs/action/fibonacci.h"
 
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
 void * bad_malloc(size_t, void *)
 {
   return NULL;
 }
 
-class TestActionGraphFixture : public ::testing::Test
+class CLASSNAME (TestActionGraphFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -99,7 +106,9 @@ public:
   }
 };
 
-TEST_F(TestActionGraphFixture, test_action_get_client_names_and_types_by_node)
+TEST_F(
+  CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION),
+  test_action_get_client_names_and_types_by_node)
 {
   rcl_ret_t ret;
   rcl_names_and_types_t nat = rcl_get_zero_initialized_names_and_types();
@@ -159,7 +168,9 @@ TEST_F(TestActionGraphFixture, test_action_get_client_names_and_types_by_node)
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 }
 
-TEST_F(TestActionGraphFixture, test_action_get_server_names_and_types_by_node)
+TEST_F(
+  CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION),
+  test_action_get_server_names_and_types_by_node)
 {
   rcl_ret_t ret;
   rcl_names_and_types_t nat = rcl_get_zero_initialized_names_and_types();
@@ -210,7 +221,9 @@ TEST_F(TestActionGraphFixture, test_action_get_server_names_and_types_by_node)
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 }
 
-TEST_F(TestActionGraphFixture, test_action_get_names_and_types)
+TEST_F(
+  CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION),
+  test_action_get_names_and_types)
 {
   rcl_ret_t ret;
   rcl_names_and_types_t nat = rcl_get_zero_initialized_names_and_types();
@@ -255,7 +268,7 @@ typedef std::function<
  * Extend the TestActionGraphFixture with a multi-node fixture for node discovery and node-graph
  * perspective.
  */
-class TestActionGraphMultiNodeFixture : public TestActionGraphFixture
+class TestActionGraphMultiNodeFixture : public CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION)
 {
 public:
   const char * remote_node_name = "remote_graph_node";
@@ -266,7 +279,7 @@ public:
 
   void SetUp() override
   {
-    TestActionGraphFixture::SetUp();
+    CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION) ::SetUp();
 
     rcl_ret_t ret;
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
@@ -313,7 +326,7 @@ public:
 
   void TearDown() override
   {
-    TestActionGraphFixture::TearDown();
+    CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION) ::TearDown();
 
     rcl_ret_t ret;
     ret = rcl_node_fini(&this->remote_node);
@@ -382,8 +395,7 @@ public:
 };
 
 // Note, this test could be affected by other communication on the same ROS domain
-TEST_F(TestActionGraphMultiNodeFixture, test_action_get_names_and_types)
-{
+TEST_F(TestActionGraphMultiNodeFixture, test_action_get_names_and_types) {
   rcl_ret_t ret;
   // Create an action client
   rcl_action_client_t action_client = rcl_action_get_zero_initialized_client();
@@ -460,8 +472,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_names_and_types)
 }
 
 // Note, this test could be affected by other communication on the same ROS domain
-TEST_F(TestActionGraphMultiNodeFixture, test_action_get_server_names_and_types_by_node)
-{
+TEST_F(TestActionGraphMultiNodeFixture, test_action_get_server_names_and_types_by_node) {
   rcl_ret_t ret;
   // Create an action client
   rcl_action_client_t action_client = rcl_action_get_zero_initialized_client();
@@ -527,8 +538,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_server_names_and_types_b
 }
 
 // Note, this test could be affected by other communication on the same ROS domain
-TEST_F(TestActionGraphMultiNodeFixture, test_action_get_client_names_and_types_by_node)
-{
+TEST_F(TestActionGraphMultiNodeFixture, test_action_get_client_names_and_types_by_node) {
   rcl_ret_t ret;
   const rosidl_action_type_support_t * action_typesupport =
     ROSIDL_GET_ACTION_TYPE_SUPPORT(test_msgs, Fibonacci);

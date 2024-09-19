@@ -2,24 +2,16 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-9.4.1 (2024-07-29)
-------------------
-* Fix a memory leak in test_rcl_lifecycle. (`#1173 <https://github.com/ros2/rcl/issues/1173>`_)
-  This one came about probably as a result of a bad merge.
-  But essentially we were forcing the srv_change_state
-  com_interface to be nullptr, but forgetting to save off
-  the old pointer early enough.  Thus, we could never restore
-  the old one before we went to "fini", and the memory would
-  be leaked.  Fix this by remembering the impl pointer earlier.
-* Contributors: Chris Lalancette
-
-9.4.0 (2024-06-17)
+9.2.4 (2024-09-19)
 ------------------
 
-9.3.0 (2024-04-26)
+9.2.3 (2024-05-13)
 ------------------
-* Fixed warnings - strict-prototypes (`#1148 <https://github.com/ros2/rcl/issues/1148>`_)
-* Contributors: Alejandro Hernández Cordero
+
+9.2.2 (2024-04-24)
+------------------
+* Fixed warnings - strict-prototypes (`#1148 <https://github.com/ros2/rcl/issues/1148>`_) (`#1150 <https://github.com/ros2/rcl/issues/1150>`_)
+* Contributors: mergify[bot]
 
 9.2.1 (2024-04-16)
 ------------------
