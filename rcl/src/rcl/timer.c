@@ -58,7 +58,8 @@ struct rcl_timer_impl_s
 rcl_timer_t
 rcl_get_zero_initialized_timer(void)
 {
-  static rcl_timer_t null_timer = {0};
+  // All members are initialized to 0 or NULL by C99 6.7.8/10.
+  static rcl_timer_t null_timer;
   return null_timer;
 }
 
@@ -124,20 +125,6 @@ void _rcl_timer_time_jump(
       return;
     }
   }
-}
-
-rcl_ret_t
-rcl_timer_init(
-  rcl_timer_t * timer,
-  rcl_clock_t * clock,
-  rcl_context_t * context,
-  int64_t period,
-  const rcl_timer_callback_t callback,
-  rcl_allocator_t allocator)
-{
-  return rcl_timer_init2(
-    timer, clock, context, period, callback,
-    allocator, true);
 }
 
 rcl_ret_t

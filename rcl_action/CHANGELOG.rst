@@ -2,13 +2,37 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-9.2.4 (2024-09-19)
+10.0.0 (2024-10-03)
+-------------------
+* Cleanup test_graph.cpp. (`#1193 <https://github.com/ros2/rcl/issues/1193>`_)
+* Expect a minimum of two nodes to be alive in test_graph (`#1192 <https://github.com/ros2/rcl/issues/1192>`_)
+* escalate RCL_RET_ACTION_xxx to 40XX. (`#1191 <https://github.com/ros2/rcl/issues/1191>`_)
+* Fix NULL allocator and racy condition. (`#1188 <https://github.com/ros2/rcl/issues/1188>`_)
+* Increased timeouts (`#1181 <https://github.com/ros2/rcl/issues/1181>`_)
+* Change the starting time of the goal expiration timeout (`#1121 <https://github.com/ros2/rcl/issues/1121>`_)
+* Contributors: Alejandro Hernández Cordero, Barry Xu, Chris Lalancette, Tomoya Fujita, Yadu
+
+9.4.1 (2024-07-29)
+------------------
+* Increase the test_action_interaction timeouts. (`#1172 <https://github.com/ros2/rcl/issues/1172>`_)
+  While I can't reproduce the problem locally, I suspect that
+  waiting only 1 second for the entities to become ready isn't
+  enough in all cases, particularly on Windows, with Connext,
+  and when we are running in parallel with other tests.
+  Thus, increase the timeout for the rcl_wait() in all of the
+  test_action_interaction tests, which should hopefully be
+  enough to make this always pass.
+* Stop compiling rcl_action tests multiple times. (`#1165 <https://github.com/ros2/rcl/issues/1165>`_)
+  We don't need to compile the tests once for each RMW;
+  we can just compile it once and then use the RMW_IMPLEMENTATION
+  environment variable to run the tests on the different RMWs.
+  This speeds up compilation.
+* Contributors: Chris Lalancette
+
+9.4.0 (2024-06-17)
 ------------------
 
-9.2.3 (2024-05-13)
-------------------
-
-9.2.2 (2024-04-24)
+9.3.0 (2024-04-26)
 ------------------
 
 9.2.1 (2024-04-16)

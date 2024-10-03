@@ -2,33 +2,55 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-9.2.4 (2024-09-19)
-------------------
-* Properly initialize the char array used in type hash calculations. (`#1182 <https://github.com/ros2/rcl/issues/1182>`_) (`#1183 <https://github.com/ros2/rcl/issues/1183>`_)
-  Previously, we were zero initializing it and only setting
-  up one of its fields.  But that doesn't totally properly
-  initialize it; we really should call rcutils_char_array_init
-  to make sure everything is initialized.  Do that in the
-  live source, as well as in the test for it.
-  (cherry picked from commit bfe00f71b7056bb64b27a8d5f5bacefe0564c43e)
-  Co-authored-by: Chris Lalancette <clalancette@gmail.com>
-* Contributors: mergify[bot]
+10.0.0 (2024-10-03)
+-------------------
+* Cleanup test_graph.cpp. (`#1193 <https://github.com/ros2/rcl/issues/1193>`_)
+* Expect a minimum of two nodes to be alive in test_graph (`#1192 <https://github.com/ros2/rcl/issues/1192>`_)
+* escalate RCL_RET_ACTION_xxx to 40XX. (`#1191 <https://github.com/ros2/rcl/issues/1191>`_)
+* Fix NULL allocator and racy condition. (`#1188 <https://github.com/ros2/rcl/issues/1188>`_)
+* Properly initialize the char array used in type hash calculations. (`#1182 <https://github.com/ros2/rcl/issues/1182>`_)
+* Increased timeouts (`#1181 <https://github.com/ros2/rcl/issues/1181>`_)
+* Skip some event tests on rmw_zenoh (`#1180 <https://github.com/ros2/rcl/issues/1180>`_)
+* doc: rcl_logging_spdlog is the default impl. (`#1177 <https://github.com/ros2/rcl/issues/1177>`_)
+* Update wait.h documentation for rcl_wait (`#1176 <https://github.com/ros2/rcl/issues/1176>`_)
+* Change the starting time of the goal expiration timeout (`#1121 <https://github.com/ros2/rcl/issues/1121>`_)
+* Contributors: Alejandro Hernández Cordero, Barry Xu, Chris Lalancette, Felix Penzlin, Tomoya Fujita, Yadu
 
-9.2.3 (2024-05-13)
+9.4.1 (2024-07-29)
 ------------------
-* Fix up rmw_cyclonedds timestamp testing. (`#1156 <https://github.com/ros2/rcl/issues/1156>`_) (`#1157 <https://github.com/ros2/rcl/issues/1157>`_)
-  We are about to fix it so that rmw_cyclonedds has receive_timestamp
-  support, so we also need to enable that support here
-  in rcl.  We actually rewrite the logic a bit because now the
-  only combination that doesn't work is rmw_connextdds on Windows.
-  (cherry picked from commit 6d53d24a863c3e9e4a41e9fe5f550271210d9d9d)
-  Co-authored-by: Chris Lalancette <clalancette@gmail.com>
-* Contributors: mergify[bot]
+* Removed deprecated localhost_only (`#1169 <https://github.com/ros2/rcl/issues/1169>`_)
+* Fix typo in rcl_validate_enclave_name_with_size() doc (`#1168 <https://github.com/ros2/rcl/issues/1168>`_)
+* Removed deprecated rcl_init_timer() (`#1167 <https://github.com/ros2/rcl/issues/1167>`_)
+* Cleanup test_count_matched test to handle non-DDS RMWs (`#1164 <https://github.com/ros2/rcl/issues/1164>`_)
+  * Make check_state a class method in test_count_matched.
+  This allows us to pass fewer parameters into each
+  each invocation, and allows us to hide some more of
+  the implementation inside the class.
+  * Rename "ops" to "opts" in test_count_matched.
+  It just better reflects what these structures are.
+  * Cleanup pub/subs with a scope_exit in test_count_matched.
+  This just ensures that they are always cleaned up, even
+  if we exit early.  Note that we specifically do *not*
+  use it for test_count_matched_functions, since the cleanup
+  is intentionally interleaved with other tests.
+  * Check with the RMW layer to see whether QoS is compatible.
+  Some RMWs may have different compatibility than DDS, so
+  check with the RMW layer to see what we should expect for
+  the number of publishers and subscriptions.
+* Contributors: Alejandro Hernández Cordero, Chris Lalancette, Christophe Bedard
 
-9.2.2 (2024-04-24)
+9.4.0 (2024-06-17)
 ------------------
-* Fixed warnings - strict-prototypes (`#1148 <https://github.com/ros2/rcl/issues/1148>`_) (`#1150 <https://github.com/ros2/rcl/issues/1150>`_)
-* Contributors: mergify[bot]
+* Add mechanism to disable workaround for dependency groups (`#1151 <https://github.com/ros2/rcl/issues/1151>`_)
+* remap_impl: minor typo (`#1158 <https://github.com/ros2/rcl/issues/1158>`_)
+* Fix up rmw_cyclonedds timestamp testing. (`#1156 <https://github.com/ros2/rcl/issues/1156>`_)
+* Add 'mimick' label to tests which use Mimick (`#1152 <https://github.com/ros2/rcl/issues/1152>`_)
+* Contributors: Chris Lalancette, G.A. vd. Hoorn, Scott K Logan
+
+9.3.0 (2024-04-26)
+------------------
+* Fixed warnings - strict-prototypes (`#1148 <https://github.com/ros2/rcl/issues/1148>`_)
+* Contributors: Alejandro Hernández Cordero
 
 9.2.1 (2024-04-16)
 ------------------
