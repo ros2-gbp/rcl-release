@@ -34,10 +34,11 @@ struct rcl_lexer_lookahead2_impl_s
 };
 
 rcl_lexer_lookahead2_t
-rcl_get_zero_initialized_lexer_lookahead2(void)
+rcl_get_zero_initialized_lexer_lookahead2()
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_lexer_lookahead2_t zero_initialized;
+  static rcl_lexer_lookahead2_t zero_initialized = {
+    .impl = NULL,
+  };
   return zero_initialized;
 }
 

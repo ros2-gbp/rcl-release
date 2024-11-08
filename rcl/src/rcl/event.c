@@ -36,10 +36,9 @@ extern "C"
 #include "./subscription_impl.h"
 
 rcl_event_t
-rcl_get_zero_initialized_event(void)
+rcl_get_zero_initialized_event()
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_event_t null_event;
+  static rcl_event_t null_event = {0};
   return null_event;
 }
 

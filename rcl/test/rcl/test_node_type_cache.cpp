@@ -25,7 +25,15 @@
 #include "rcl/node.h"
 #include "rcutils/env.h"
 
-class TestNodeTypeCacheFixture : public ::testing::Test
+#ifdef RMW_IMPLEMENTATION
+#define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+#define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+#define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+class CLASSNAME (TestNodeTypeCacheFixture, RMW_IMPLEMENTATION)
+  : public ::testing::Test
 {
 public:
   rcl_context_t * context_ptr;
@@ -70,7 +78,9 @@ public:
   }
 };
 
-TEST_F(TestNodeTypeCacheFixture, test_type_cache_invalid_args) {
+TEST_F(
+  CLASSNAME(TestNodeTypeCacheFixture, RMW_IMPLEMENTATION),
+  test_type_cache_invalid_args) {
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, BasicTypes);
   rcl_type_info_t type_info;
@@ -119,7 +129,9 @@ TEST_F(TestNodeTypeCacheFixture, test_type_cache_invalid_args) {
   rcl_reset_error();
 }
 
-TEST_F(TestNodeTypeCacheFixture, test_type_registration_count) {
+TEST_F(
+  CLASSNAME(TestNodeTypeCacheFixture, RMW_IMPLEMENTATION),
+  test_type_registration_count) {
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, BasicTypes);
   rcl_type_info_t type_info;
@@ -162,7 +174,9 @@ TEST_F(TestNodeTypeCacheFixture, test_type_registration_count) {
       this->node_ptr, ts->get_type_hash_func(ts), &type_info));
 }
 
-TEST_F(TestNodeTypeCacheFixture, test_invalid_unregistration) {
+TEST_F(
+  CLASSNAME(TestNodeTypeCacheFixture, RMW_IMPLEMENTATION),
+  test_invalid_unregistration) {
   const rosidl_message_type_support_t * ts =
     ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, BasicTypes);
   EXPECT_EQ(

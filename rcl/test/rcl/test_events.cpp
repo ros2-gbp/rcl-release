@@ -43,6 +43,13 @@ constexpr seconds LIVELINESS_LEASE_DURATION_IN_S = 1s;
 constexpr seconds DEADLINE_PERIOD_IN_S = 2s;
 constexpr seconds MAX_WAIT_PER_TESTCASE = 10s;
 
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
 #define EXPECT_OK(varname) EXPECT_EQ(varname, RCL_RET_OK) << rcl_get_error_string().str
 
 struct TestIncompatibleQosEventParams
@@ -54,7 +61,8 @@ struct TestIncompatibleQosEventParams
   std::string error_msg;
 };
 
-class TestEventFixture : public ::testing::TestWithParam<TestIncompatibleQosEventParams>
+class CLASSNAME (TestEventFixture, RMW_IMPLEMENTATION)
+  : public ::testing::TestWithParam<TestIncompatibleQosEventParams>
 {
 public:
   void SetUp()
@@ -232,6 +240,8 @@ protected:
   const rosidl_message_type_support_t * ts;
 };
 
+using TestEventFixture = CLASSNAME(TestEventFixture, RMW_IMPLEMENTATION);
+
 const rmw_qos_profile_t TestEventFixture::default_qos_profile = {
   RMW_QOS_POLICY_HISTORY_KEEP_LAST,             // history
   0,                                            // depth
@@ -376,10 +386,6 @@ conditional_wait_for_msgs_and_events(
  */
 TEST_F(TestEventFixture, test_pubsub_no_deadline_missed)
 {
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_zenoh_cpp") == 0) {
-    GTEST_SKIP();
-  }
-
   setup_publisher_subscriber_and_events_and_assert_discovery(
     RCL_PUBLISHER_OFFERED_DEADLINE_MISSED,
     RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
@@ -447,10 +453,6 @@ TEST_F(TestEventFixture, test_pubsub_no_deadline_missed)
  */
 TEST_F(TestEventFixture, test_pubsub_deadline_missed)
 {
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_zenoh_cpp") == 0) {
-    GTEST_SKIP();
-  }
-
   setup_publisher_subscriber_and_events_and_assert_discovery(
     RCL_PUBLISHER_OFFERED_DEADLINE_MISSED,
     RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
@@ -526,10 +528,6 @@ TEST_F(TestEventFixture, test_pubsub_deadline_missed)
  */
 TEST_F(TestEventFixture, test_pubsub_liveliness_kill_pub)
 {
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_zenoh_cpp") == 0) {
-    GTEST_SKIP();
-  }
-
   setup_publisher_subscriber_and_events_and_assert_discovery(
     RCL_PUBLISHER_LIVELINESS_LOST,
     RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
@@ -609,10 +607,6 @@ TEST_F(TestEventFixture, test_pubsub_liveliness_kill_pub)
  */
 TEST_P(TestEventFixture, test_pubsub_incompatible_qos)
 {
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_zenoh_cpp") == 0) {
-    GTEST_SKIP();
-  }
-
   const auto & input = GetParam();
   const auto & qos_policy_kind = input.qos_policy_kind;
   const auto & publisher_qos_profile = input.publisher_qos_profile;
@@ -711,10 +705,6 @@ TEST_F(TestEventFixture, test_bad_event_ini)
  */
 TEST_F(TestEventFixture, test_event_is_valid)
 {
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_zenoh_cpp") == 0) {
-    GTEST_SKIP();
-  }
-
   EXPECT_FALSE(rcl_event_is_valid(nullptr));
   EXPECT_TRUE(rcl_error_is_set());
   rcl_reset_error();
@@ -727,7 +717,6 @@ TEST_F(TestEventFixture, test_event_is_valid)
 
   rcl_ret_t ret = rcl_publisher_event_init(
     &publisher_event_test, &publisher, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
-
   ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
   EXPECT_TRUE(rcl_event_is_valid(&publisher_event_test));
 
@@ -775,10 +764,6 @@ TEST_F(TestEventFixture, test_event_is_invalid) {
  */
 TEST_F(TestEventFixture, test_sub_message_lost_event)
 {
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_zenoh_cpp") == 0) {
-    GTEST_SKIP();
-  }
-
   const rmw_qos_profile_t subscription_qos_profile = default_qos_profile;
 
   rcl_ret_t ret = setup_subscriber(subscription_qos_profile);
@@ -891,10 +876,6 @@ void event_callback(const void * user_data, size_t number_of_events)
  */
 TEST_F(TestEventFixture, test_pub_matched_unmatched_event)
 {
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_zenoh_cpp") == 0) {
-    GTEST_SKIP();
-  }
-
   rcl_ret_t ret;
 
   // Create one publisher
@@ -1006,10 +987,6 @@ TEST_F(TestEventFixture, test_pub_matched_unmatched_event)
  */
 TEST_F(TestEventFixture, test_sub_matched_unmatched_event)
 {
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_zenoh_cpp") == 0) {
-    GTEST_SKIP();
-  }
-
   rcl_ret_t ret;
 
   // Create one subscriber
@@ -1211,10 +1188,6 @@ TEST_F(TestEventFixture, test_pub_previous_matched_event)
 
 TEST_F(TestEventFixture, test_sub_previous_matched_event)
 {
-  if (std::string(rmw_get_implementation_identifier()).find("rmw_zenoh_cpp") == 0) {
-    GTEST_SKIP();
-  }
-
   // While registering callback for matched event, exist previous matched event
   // will trigger callback at once.
 

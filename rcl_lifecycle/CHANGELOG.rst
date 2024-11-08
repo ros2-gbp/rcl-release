@@ -2,79 +2,24 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-10.0.0 (2024-10-03)
--------------------
-* Fix NULL allocator and racy condition. (`#1188 <https://github.com/ros2/rcl/issues/1188>`_)
-* Fix typo in rcl_lifecycle_com_interface_t doc (`#1174 <https://github.com/ros2/rcl/issues/1174>`_)
-* Contributors: Christophe Bedard, Tomoya Fujita
-
-9.4.1 (2024-07-29)
-------------------
-* Fix a memory leak in test_rcl_lifecycle. (`#1173 <https://github.com/ros2/rcl/issues/1173>`_)
-  This one came about probably as a result of a bad merge.
-  But essentially we were forcing the srv_change_state
-  com_interface to be nullptr, but forgetting to save off
-  the old pointer early enough.  Thus, we could never restore
-  the old one before we went to "fini", and the memory would
-  be leaked.  Fix this by remembering the impl pointer earlier.
-* Contributors: Chris Lalancette
-
-9.4.0 (2024-06-17)
+6.0.7 (2024-11-09)
 ------------------
 
-9.3.0 (2024-04-26)
+6.0.6 (2024-07-10)
 ------------------
-* Fixed warnings - strict-prototypes (`#1148 <https://github.com/ros2/rcl/issues/1148>`_)
-* Contributors: Alejandro Hernández Cordero
+* Generate version header using `ament_generate_version_header(..)` (`#1144 <https://github.com/ros2/rcl/issues/1144>`_)
+* Contributors: G.A. vd. Hoorn, Tomoya.Fujita
 
-9.2.1 (2024-04-16)
-------------------
-* Generate version header using ament_generate_version_header(..) (`#1141 <https://github.com/ros2/rcl/issues/1141>`_)
-* Contributors: G.A. vd. Hoorn
-
-9.2.0 (2024-03-28)
-------------------
-* Update quality declaration documents (`#1131 <https://github.com/ros2/rcl/issues/1131>`_)
-* Contributors: Christophe Bedard
-
-9.1.0 (2024-01-24)
+6.0.5 (2024-02-07)
 ------------------
 
-9.0.0 (2023-12-26)
+6.0.4 (2023-11-17)
 ------------------
 
-8.0.0 (2023-11-06)
+6.0.3 (2023-09-08)
 ------------------
 
-7.3.0 (2023-10-09)
-------------------
-
-7.2.0 (2023-10-04)
-------------------
-* Remove most remaining uses of ament_target_dependencies. (`#1102 <https://github.com/ros2/rcl/issues/1102>`_)
-* Contributors: Chris Lalancette
-
-7.1.1 (2023-09-07)
-------------------
-
-7.1.0 (2023-08-21)
-------------------
-
-7.0.0 (2023-07-11)
-------------------
-
-6.3.0 (2023-06-12)
-------------------
-* Use TRACETOOLS\_ prefix for tracepoint-related macros (`#1058 <https://github.com/ros2/rcl/issues/1058>`_)
-* Contributors: Christophe Bedard
-
-6.2.0 (2023-06-07)
-------------------
-
-6.1.1 (2023-05-11)
-------------------
-
-6.1.0 (2023-04-28)
+6.0.2 (2023-05-19)
 ------------------
 
 6.0.1 (2023-04-18)

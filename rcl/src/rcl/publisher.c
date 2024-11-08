@@ -37,10 +37,9 @@ extern "C"
 #include "./publisher_impl.h"
 
 rcl_publisher_t
-rcl_get_zero_initialized_publisher(void)
+rcl_get_zero_initialized_publisher()
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_publisher_t null_publisher;
+  static rcl_publisher_t null_publisher = {0};
   return null_publisher;
 }
 
@@ -144,7 +143,7 @@ rcl_publisher_init(
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Publisher initialized");
   // context
   publisher->impl->context = node->context;
-  TRACETOOLS_TRACEPOINT(
+  TRACEPOINT(
     rcl_publisher_init,
     (const void *)publisher,
     (const void *)node,
@@ -217,10 +216,10 @@ rcl_publisher_fini(rcl_publisher_t * publisher, rcl_node_t * node)
 }
 
 rcl_publisher_options_t
-rcl_publisher_get_default_options(void)
+rcl_publisher_get_default_options()
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
-  rcl_publisher_options_t default_options;
+  static rcl_publisher_options_t default_options;
   // Must set the allocator and qos after because they are not a compile time constant.
   default_options.qos = rmw_qos_profile_default;
   default_options.allocator = rcl_get_default_allocator();
@@ -280,7 +279,7 @@ rcl_publish(
     return RCL_RET_PUBLISHER_INVALID;  // error already set
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_message, RCL_RET_INVALID_ARGUMENT);
-  TRACETOOLS_TRACEPOINT(rcl_publish, (const void *)publisher, (const void *)ros_message);
+  TRACEPOINT(rcl_publish, (const void *)publisher, (const void *)ros_message);
   if (rmw_publish(publisher->impl->rmw_handle, ros_message, allocation) != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     return RCL_RET_ERROR;
@@ -298,7 +297,6 @@ rcl_publish_serialized_message(
     return RCL_RET_PUBLISHER_INVALID;  // error already set
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(serialized_message, RCL_RET_INVALID_ARGUMENT);
-  TRACETOOLS_TRACEPOINT(rcl_publish, (const void *)publisher, (const void *)serialized_message);
   rmw_ret_t ret = rmw_publish_serialized_message(
     publisher->impl->rmw_handle, serialized_message, allocation);
   if (ret != RMW_RET_OK) {
@@ -321,7 +319,6 @@ rcl_publish_loaned_message(
     return RCL_RET_PUBLISHER_INVALID;  // error already set
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_message, RCL_RET_INVALID_ARGUMENT);
-  TRACETOOLS_TRACEPOINT(rcl_publish, (const void *)publisher, (const void *)ros_message);
   rmw_ret_t ret = rmw_publish_loaned_message(publisher->impl->rmw_handle, ros_message, allocation);
   if (ret != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
@@ -387,13 +384,15 @@ rcl_publisher_get_topic_name(const rcl_publisher_t * publisher)
   return publisher->impl->rmw_handle->topic_name;
 }
 
+#define _publisher_get_options(pub) & pub->impl->options
+
 const rcl_publisher_options_t *
 rcl_publisher_get_options(const rcl_publisher_t * publisher)
 {
   if (!rcl_publisher_is_valid_except_context(publisher)) {
     return NULL;  // error already set
   }
-  return &publisher->impl->options;
+  return _publisher_get_options(publisher);
 }
 
 rmw_publisher_t *

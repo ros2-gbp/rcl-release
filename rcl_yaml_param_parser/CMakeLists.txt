@@ -115,7 +115,6 @@ if(BUILD_TESTING)
     test/test_parse.cpp
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   )
-  ament_add_test_label(test_parse mimick)
   if(TARGET test_parse)
     target_link_libraries(test_parse
       ${PROJECT_NAME}
@@ -130,7 +129,6 @@ if(BUILD_TESTING)
     test/test_parser.cpp
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   )
-  ament_add_test_label(test_parser mimick)
   if(TARGET test_parser)
     target_link_libraries(test_parser
       ${PROJECT_NAME}
@@ -147,7 +145,6 @@ if(BUILD_TESTING)
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     TIMEOUT 240  # Large timeout to wait for fault injection tests
   )
-  ament_add_test_label(test_parser_multiple_nodes mimick)
   if(TARGET test_parser_multiple_nodes)
     target_link_libraries(test_parser_multiple_nodes
       ${PROJECT_NAME}
@@ -162,7 +159,6 @@ if(BUILD_TESTING)
     test/test_parser_multiple_params.cpp
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   )
-  ament_add_test_label(test_parser_multiple_params mimick)
   if(TARGET test_parser_multiple_params)
     target_link_libraries(test_parser_multiple_params
       ${PROJECT_NAME}
@@ -191,6 +187,7 @@ if(BUILD_TESTING)
     target_link_libraries(benchmark_parse_yaml
       ${PROJECT_NAME}
       performance_test_fixture::performance_test_fixture
+      rcpputils::rcpputils
       rcutils::rcutils
     )
   endif()

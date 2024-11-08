@@ -56,10 +56,9 @@ struct rcl_timer_impl_s
 };
 
 rcl_timer_t
-rcl_get_zero_initialized_timer(void)
+rcl_get_zero_initialized_timer()
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_timer_t null_timer;
+  static rcl_timer_t null_timer = {0};
   return null_timer;
 }
 
@@ -128,14 +127,13 @@ void _rcl_timer_time_jump(
 }
 
 rcl_ret_t
-rcl_timer_init2(
+rcl_timer_init(
   rcl_timer_t * timer,
   rcl_clock_t * clock,
   rcl_context_t * context,
   int64_t period,
   const rcl_timer_callback_t callback,
-  rcl_allocator_t allocator,
-  bool autostart)
+  rcl_allocator_t allocator)
 {
   RCL_CHECK_ALLOCATOR_WITH_MSG(&allocator, "invalid allocator", return RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
@@ -184,7 +182,7 @@ rcl_timer_init2(
   atomic_init(&impl.time_credit, 0);
   atomic_init(&impl.last_call_time, now);
   atomic_init(&impl.next_call_time, now + period);
-  atomic_init(&impl.canceled, !autostart);
+  atomic_init(&impl.canceled, false);
   impl.allocator = allocator;
 
   // Empty init on reset callback data
@@ -207,7 +205,7 @@ rcl_timer_init2(
     return RCL_RET_BAD_ALLOC;
   }
   *timer->impl = impl;
-  TRACETOOLS_TRACEPOINT(rcl_timer_init, (const void *)timer, period);
+  TRACEPOINT(rcl_timer_init, (const void *)timer, period);
   return RCL_RET_OK;
 }
 
@@ -241,7 +239,7 @@ rcl_timer_fini(rcl_timer_t * timer)
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t
-rcl_timer_clock(const rcl_timer_t * timer, rcl_clock_t ** clock)
+rcl_timer_clock(rcl_timer_t * timer, rcl_clock_t ** clock)
 {
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(clock, RCL_RET_INVALID_ARGUMENT);
@@ -253,17 +251,9 @@ rcl_timer_clock(const rcl_timer_t * timer, rcl_clock_t ** clock)
 rcl_ret_t
 rcl_timer_call(rcl_timer_t * timer)
 {
-  rcl_timer_call_info_t info;
-  return rcl_timer_call_with_info(timer, &info);
-}
-
-rcl_ret_t
-rcl_timer_call_with_info(rcl_timer_t * timer, rcl_timer_call_info_t * call_info)
-{
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Calling timer");
   RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(timer->impl, RCL_RET_TIMER_INVALID);
-  RCL_CHECK_ARGUMENT_FOR_NULL(call_info, RCL_RET_INVALID_ARGUMENT);
   if (rcutils_atomic_load_bool(&timer->impl->canceled)) {
     RCL_SET_ERROR_MSG("timer is canceled");
     return RCL_RET_TIMER_CANCELED;
@@ -283,15 +273,13 @@ rcl_timer_call_with_info(rcl_timer_t * timer, rcl_timer_call_info_t * call_info)
     (rcl_timer_callback_t)rcutils_atomic_load_uintptr_t(&timer->impl->callback);
 
   int64_t next_call_time = rcutils_atomic_load_int64_t(&timer->impl->next_call_time);
-  call_info->expected_call_time = next_call_time;
-  call_info->actual_call_time = now;
   int64_t period = rcutils_atomic_load_int64_t(&timer->impl->period);
   // always move the next call time by exactly period forward
   // don't use now as the base to avoid extending each cycle by the time
   // between the timer being ready and the callback being triggered
   next_call_time += period;
   // in case the timer has missed at least once cycle
-  if (next_call_time <= now) {
+  if (next_call_time < now) {
     if (0 == period) {
       // a timer with a period of zero is considered always ready
       next_call_time = now;
@@ -299,7 +287,7 @@ rcl_timer_call_with_info(rcl_timer_t * timer, rcl_timer_call_info_t * call_info)
       // move the next call time forward by as many periods as necessary
       int64_t now_ahead = now - next_call_time;
       // rounding up without overflow
-      int64_t periods_ahead = 1 + now_ahead / period;
+      int64_t periods_ahead = 1 + (now_ahead - 1) / period;
       next_call_time += periods_ahead * period;
     }
   }
@@ -327,22 +315,6 @@ rcl_timer_is_ready(const rcl_timer_t * timer, bool * is_ready)
     return ret;  // rcl error state should already be set.
   }
   *is_ready = (time_until_next_call <= 0);
-  return RCL_RET_OK;
-}
-
-rcl_ret_t
-rcl_timer_get_next_call_time(const rcl_timer_t * timer, int64_t * next_call_time)
-{
-  RCL_CHECK_ARGUMENT_FOR_NULL(timer, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(timer->impl, RCL_RET_TIMER_INVALID);
-  RCL_CHECK_ARGUMENT_FOR_NULL(next_call_time, RCL_RET_INVALID_ARGUMENT);
-
-  if (rcutils_atomic_load_bool(&timer->impl->canceled)) {
-    return RCL_RET_TIMER_CANCELED;
-  }
-
-  *next_call_time =
-    rcutils_atomic_load_int64_t(&timer->impl->next_call_time);
   return RCL_RET_OK;
 }
 

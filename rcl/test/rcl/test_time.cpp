@@ -26,12 +26,19 @@
 
 #include "./allocator_testing_utils.h"
 
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
 using osrf_testing_tools_cpp::memory_tools::on_unexpected_malloc;
 using osrf_testing_tools_cpp::memory_tools::on_unexpected_realloc;
 using osrf_testing_tools_cpp::memory_tools::on_unexpected_calloc;
 using osrf_testing_tools_cpp::memory_tools::on_unexpected_free;
 
-class TestTimeFixture : public ::testing::Test
+class CLASSNAME (TestTimeFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   void SetUp()
@@ -50,7 +57,7 @@ public:
 };
 
 // Tests the rcl_set_ros_time_override() function.
-TEST_F(TestTimeFixture, test_rcl_ros_time_set_override) {
+TEST_F(CLASSNAME(TestTimeFixture, RMW_IMPLEMENTATION), test_rcl_ros_time_set_override) {
   osrf_testing_tools_cpp::memory_tools::enable_monitoring_in_all_threads();
   rcl_clock_t ros_clock;
   rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -154,7 +161,7 @@ TEST_F(TestTimeFixture, test_rcl_ros_time_set_override) {
   }
 }
 
-TEST_F(TestTimeFixture, test_rcl_init_for_clock_and_point) {
+TEST_F(CLASSNAME(TestTimeFixture, RMW_IMPLEMENTATION), test_rcl_init_for_clock_and_point) {
   rcl_ret_t ret;
   rcl_allocator_t allocator = rcl_get_default_allocator();
   // Check for invalid argument error condition (allowed to alloc).
@@ -184,7 +191,7 @@ TEST_F(TestTimeFixture, test_rcl_init_for_clock_and_point) {
   });
 }
 
-TEST_F(TestTimeFixture, test_ros_clock_initially_zero) {
+TEST_F(CLASSNAME(TestTimeFixture, RMW_IMPLEMENTATION), test_ros_clock_initially_zero) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_clock_t ros_clock;
   ASSERT_EQ(RCL_RET_OK, rcl_ros_clock_init(&ros_clock, &allocator)) << rcl_get_error_string().str;
@@ -198,7 +205,7 @@ TEST_F(TestTimeFixture, test_ros_clock_initially_zero) {
   EXPECT_EQ(0, query_now);
 }
 
-TEST(rcl_time, clock_validation) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), clock_validation) {
   ASSERT_FALSE(rcl_clock_valid(NULL));
   rcl_clock_t uninitialized;
   // Not reliably detectable due to random values.
@@ -213,7 +220,7 @@ TEST(rcl_time, clock_validation) {
   });
 }
 
-TEST(rcl_time, default_clock_instanciation) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), default_clock_instanciation) {
   rcl_clock_t ros_clock;
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_ret_t retval = rcl_ros_clock_init(&ros_clock, &allocator);
@@ -254,7 +261,7 @@ TEST(rcl_time, default_clock_instanciation) {
   ASSERT_TRUE(rcl_clock_valid(system_clock));
 }
 
-TEST(rcl_time, specific_clock_instantiation) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), specific_clock_instantiation) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   {
     rcl_clock_t uninitialized_clock;
@@ -311,7 +318,7 @@ TEST(rcl_time, specific_clock_instantiation) {
   }
 }
 
-TEST(rcl_time, rcl_clock_time_started) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), rcl_clock_time_started) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   {
     rcl_clock_t ros_clock;
@@ -346,7 +353,7 @@ TEST(rcl_time, rcl_clock_time_started) {
   }
 }
 
-TEST(rcl_time, rcl_time_difference) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), rcl_time_difference) {
   rcl_ret_t ret;
   rcl_time_point_t a, b;
 
@@ -370,7 +377,7 @@ TEST(rcl_time, rcl_time_difference) {
   rcl_reset_error();
 }
 
-TEST(rcl_time, rcl_time_difference_signed) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), rcl_time_difference_signed) {
   rcl_time_point_t a, b;
   a.nanoseconds = RCL_S_TO_NS(0LL) + 0LL;
   b.nanoseconds = RCL_S_TO_NS(10LL) + 0LL;
@@ -439,7 +446,7 @@ void reset_callback_triggers(void)
   post_callback_called = false;
 }
 
-TEST(rcl_time, rcl_time_clock_change_callbacks) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), rcl_time_clock_change_callbacks) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_clock_t ros_clock;
   rcl_ret_t ret = rcl_ros_clock_init(&ros_clock, &allocator);
@@ -499,7 +506,7 @@ TEST(rcl_time, rcl_time_clock_change_callbacks) {
   reset_callback_triggers();
 }
 
-TEST(rcl_time, rcl_time_fail_set_jump_callbacks) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), rcl_time_fail_set_jump_callbacks) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_clock_t fail_clock;
   rcl_time_jump_t time_jump;
@@ -526,7 +533,7 @@ TEST(rcl_time, rcl_time_fail_set_jump_callbacks) {
   rcl_reset_error();
 }
 
-TEST(rcl_time, rcl_time_forward_jump_callbacks) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), rcl_time_forward_jump_callbacks) {
   rcl_clock_t ros_clock;
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_ret_t ret = rcl_ros_clock_init(&ros_clock, &allocator);
@@ -590,7 +597,7 @@ TEST(rcl_time, rcl_time_forward_jump_callbacks) {
   EXPECT_FALSE(post_callback_called);
 }
 
-TEST(rcl_time, rcl_time_backward_jump_callbacks) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), rcl_time_backward_jump_callbacks) {
   rcl_clock_t ros_clock;
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_ret_t ret = rcl_ros_clock_init(&ros_clock, &allocator);
@@ -653,7 +660,7 @@ TEST(rcl_time, rcl_time_backward_jump_callbacks) {
   EXPECT_FALSE(post_callback_called);
 }
 
-TEST(rcl_time, rcl_clock_add_jump_callback) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), rcl_clock_add_jump_callback) {
   rcl_clock_t clock;
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_ret_t ret = rcl_ros_clock_init(&clock, &allocator);
@@ -687,7 +694,7 @@ TEST(rcl_time, rcl_clock_add_jump_callback) {
   EXPECT_EQ(2u, clock.num_jump_callbacks);
 }
 
-TEST(rcl_time, rcl_clock_remove_jump_callback) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), rcl_clock_remove_jump_callback) {
   rcl_clock_t clock;
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_ret_t ret = rcl_ros_clock_init(&clock, &allocator);
@@ -732,7 +739,7 @@ TEST(rcl_time, rcl_clock_remove_jump_callback) {
   EXPECT_EQ(0u, clock.num_jump_callbacks);
 }
 
-TEST(rcl_time, add_remove_add_jump_callback) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), add_remove_add_jump_callback) {
   rcl_allocator_t failing_allocator = get_failing_allocator();
   set_failing_allocator_is_failing(failing_allocator, false);
 
@@ -783,7 +790,7 @@ TEST(rcl_time, add_remove_add_jump_callback) {
   EXPECT_EQ(1u, clock.num_jump_callbacks);
 }
 
-TEST(rcl_time, failed_get_now) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), failed_get_now) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_clock_t uninitialized_clock;
   rcl_time_point_value_t query_now;
@@ -795,7 +802,7 @@ TEST(rcl_time, failed_get_now) {
   rcl_reset_error();
 }
 
-TEST(rcl_time, fail_ros_time_override) {
+TEST(CLASSNAME(rcl_time, RMW_IMPLEMENTATION), fail_ros_time_override) {
   bool result;
   rcl_time_point_value_t set_point = 1000000000ull;
 
