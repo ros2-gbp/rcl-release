@@ -209,12 +209,15 @@ TEST(TestDiscoveryInfo, test_bad_argument) {
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_get_automatic_discovery_range(nullptr));
+  rcl_reset_error();
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_get_discovery_static_peers(nullptr, &allocator));
+  rcl_reset_error();
 
   rmw_discovery_options_t discovery_options_var = rmw_get_zero_initialized_discovery_options();
   EXPECT_EQ(
     RCL_RET_INVALID_ARGUMENT,
     rcl_get_discovery_static_peers(&discovery_options_var, nullptr));
+  rcl_reset_error();
   EXPECT_EQ(RCL_RET_OK, rmw_discovery_options_fini(&discovery_options_var));
 }
 
@@ -290,29 +293,6 @@ TEST(TestDiscoveryInfo, test_with_localhost_only) {
   }
 
   {
-    // Only ROS_LOCALHOST_ONLY is enabled
-    ASSERT_TRUE(rcutils_set_env("ROS_LOCALHOST_ONLY", "1"));
-    check_discovery(RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST, 0);
-  }
-
-  {
-    // ROS_LOCALHOST_ONLY is enabled and prevails over SUBNET.
-    ASSERT_TRUE(rcutils_set_env("ROS_LOCALHOST_ONLY", "1"));
-    ASSERT_TRUE(rcutils_set_env("ROS_AUTOMATIC_DISCOVERY_RANGE", "SUBNET"));
-    ASSERT_TRUE(rcutils_set_env("ROS_STATIC_PEERS", "192.168.0.1;remote.com"));
-    check_discovery(RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST, 0);
-  }
-
-  {
-    // ROS_LOCALHOST_ONLY is enabled and prevails over OFF.
-    ASSERT_TRUE(rcutils_set_env("ROS_LOCALHOST_ONLY", "1"));
-    ASSERT_TRUE(rcutils_set_env("ROS_AUTOMATIC_DISCOVERY_RANGE", "OFF"));
-    check_discovery(RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST, 0);
-  }
-
-  {
-    // ROS_LOCALHOST_ONLY is disabled, falls down to use discovery option.
-    ASSERT_TRUE(rcutils_set_env("ROS_LOCALHOST_ONLY", "0"));
     ASSERT_TRUE(rcutils_set_env("ROS_AUTOMATIC_DISCOVERY_RANGE", "SUBNET"));
     ASSERT_TRUE(rcutils_set_env("ROS_STATIC_PEERS", "192.168.0.1;remote.com"));
     check_discovery(RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET, 2);

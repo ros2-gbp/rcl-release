@@ -40,9 +40,10 @@ extern "C"
 
 
 rcl_subscription_t
-rcl_get_zero_initialized_subscription()
+rcl_get_zero_initialized_subscription(void)
 {
-  static rcl_subscription_t null_subscription = {0};
+  // All members are initialized to 0 or NULL by C99 6.7.8/10.
+  static rcl_subscription_t null_subscription;
   return null_subscription;
 }
 
@@ -138,7 +139,7 @@ rcl_subscription_init(
 
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Subscription initialized");
   ret = RCL_RET_OK;
-  TRACEPOINT(
+  TRACETOOLS_TRACEPOINT(
     rcl_subscription_init,
     (const void *)subscription,
     (const void *)node,
@@ -224,10 +225,10 @@ rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node)
 }
 
 rcl_subscription_options_t
-rcl_subscription_get_default_options()
+rcl_subscription_get_default_options(void)
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
-  static rcl_subscription_options_t default_options;
+  rcl_subscription_options_t default_options;
   // Must set these after declaration because they are not a compile time constants.
   default_options.qos = rmw_qos_profile_default;
   default_options.allocator = rcl_get_default_allocator();
@@ -382,7 +383,7 @@ failed:
 }
 
 rcl_subscription_content_filter_options_t
-rcl_get_zero_initialized_subscription_content_filter_options()
+rcl_get_zero_initialized_subscription_content_filter_options(void)
 {
   return (const rcl_subscription_content_filter_options_t) {
            .rmw_subscription_content_filter_options =
@@ -564,7 +565,7 @@ rcl_take(
   }
   RCUTILS_LOG_DEBUG_NAMED(
     ROS_PACKAGE_NAME, "Subscription take succeeded: %s", taken ? "true" : "false");
-  TRACEPOINT(rcl_take, (const void *)ros_message);
+  TRACETOOLS_TRACEPOINT(rcl_take, (const void *)ros_message);
   if (!taken) {
     return RCL_RET_SUBSCRIPTION_TAKE_FAILED;
   }
@@ -644,6 +645,7 @@ rcl_take_serialized_message(
   }
   RCUTILS_LOG_DEBUG_NAMED(
     ROS_PACKAGE_NAME, "Subscription serialized take succeeded: %s", taken ? "true" : "false");
+  TRACETOOLS_TRACEPOINT(rcl_take, (const void *)serialized_message);
   if (!taken) {
     return RCL_RET_SUBSCRIPTION_TAKE_FAILED;
   }
@@ -742,15 +744,13 @@ rcl_subscription_get_topic_name(const rcl_subscription_t * subscription)
   return subscription->impl->rmw_handle->topic_name;
 }
 
-#define _subscription_get_options(subscription) & subscription->impl->options
-
 const rcl_subscription_options_t *
 rcl_subscription_get_options(const rcl_subscription_t * subscription)
 {
   if (!rcl_subscription_is_valid(subscription)) {
     return NULL;  // error already set
   }
-  return _subscription_get_options(subscription);
+  return &subscription->impl->options;
 }
 
 rmw_subscription_t *

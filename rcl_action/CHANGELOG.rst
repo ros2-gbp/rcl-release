@@ -2,28 +2,95 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-6.0.7 (2024-11-09)
+10.0.1 (2024-11-20)
+-------------------
+
+10.0.0 (2024-10-03)
+-------------------
+* Cleanup test_graph.cpp. (`#1193 <https://github.com/ros2/rcl/issues/1193>`_)
+* Expect a minimum of two nodes to be alive in test_graph (`#1192 <https://github.com/ros2/rcl/issues/1192>`_)
+* escalate RCL_RET_ACTION_xxx to 40XX. (`#1191 <https://github.com/ros2/rcl/issues/1191>`_)
+* Fix NULL allocator and racy condition. (`#1188 <https://github.com/ros2/rcl/issues/1188>`_)
+* Increased timeouts (`#1181 <https://github.com/ros2/rcl/issues/1181>`_)
+* Change the starting time of the goal expiration timeout (`#1121 <https://github.com/ros2/rcl/issues/1121>`_)
+* Contributors: Alejandro Hernández Cordero, Barry Xu, Chris Lalancette, Tomoya Fujita, Yadu
+
+9.4.1 (2024-07-29)
+------------------
+* Increase the test_action_interaction timeouts. (`#1172 <https://github.com/ros2/rcl/issues/1172>`_)
+  While I can't reproduce the problem locally, I suspect that
+  waiting only 1 second for the entities to become ready isn't
+  enough in all cases, particularly on Windows, with Connext,
+  and when we are running in parallel with other tests.
+  Thus, increase the timeout for the rcl_wait() in all of the
+  test_action_interaction tests, which should hopefully be
+  enough to make this always pass.
+* Stop compiling rcl_action tests multiple times. (`#1165 <https://github.com/ros2/rcl/issues/1165>`_)
+  We don't need to compile the tests once for each RMW;
+  we can just compile it once and then use the RMW_IMPLEMENTATION
+  environment variable to run the tests on the different RMWs.
+  This speeds up compilation.
+* Contributors: Chris Lalancette
+
+9.4.0 (2024-06-17)
 ------------------
 
-6.0.6 (2024-07-10)
-------------------
-* Generate version header using `ament_generate_version_header(..)` (`#1144 <https://github.com/ros2/rcl/issues/1144>`_)
-* add RCL_RET_TIMEOUT to action service response. (`#1154 <https://github.com/ros2/rcl/issues/1154>`_)
-* Contributors: G.A. vd. Hoorn, Tomoya Fujita
-
-6.0.5 (2024-02-07)
+9.3.0 (2024-04-26)
 ------------------
 
-6.0.4 (2023-11-17)
+9.2.1 (2024-04-16)
+------------------
+* Generate version header using ament_generate_version_header(..) (`#1141 <https://github.com/ros2/rcl/issues/1141>`_)
+* Contributors: G.A. vd. Hoorn
+
+9.2.0 (2024-03-28)
+------------------
+* add RCL_RET_TIMEOUT to action service response. (`#1138 <https://github.com/ros2/rcl/issues/1138>`_)
+  * add RCL_RET_TIMEOUT to action service response.
+  * address review comment.
+  ---------
+* Update quality declaration documents (`#1131 <https://github.com/ros2/rcl/issues/1131>`_)
+* Contributors: Christophe Bedard, Tomoya Fujita
+
+9.1.0 (2024-01-24)
 ------------------
 
-6.0.3 (2023-09-08)
+9.0.0 (2023-12-26)
 ------------------
-* rcl_send_response returns RCL_RET_TIMEOUT. (`#1090 <https://github.com/ros2/rcl/issues/1090>`_)
-* Add `~/get_type_description` service (rep2011) (`#1082 <https://github.com/ros2/rcl/issues/1082>`_)
-* Contributors: Hans-Joachim Krauch, Tomoya Fujita
 
-6.0.2 (2023-05-19)
+8.0.0 (2023-11-06)
+------------------
+
+7.3.0 (2023-10-09)
+------------------
+
+7.2.0 (2023-10-04)
+------------------
+* Remove most remaining uses of ament_target_dependencies. (`#1102 <https://github.com/ros2/rcl/issues/1102>`_)
+* Contributors: Chris Lalancette
+
+7.1.1 (2023-09-07)
+------------------
+
+7.1.0 (2023-08-21)
+------------------
+
+7.0.0 (2023-07-11)
+------------------
+* Add `~/get_type_description` service (rep2011) (`#1052 <https://github.com/ros2/rcl/issues/1052>`_)
+* Modifies timers API to select autostart state (`#1004 <https://github.com/ros2/rcl/issues/1004>`_)
+* Contributors: Eloy Briceno, Hans-Joachim Krauch
+
+6.3.0 (2023-06-12)
+------------------
+
+6.2.0 (2023-06-07)
+------------------
+
+6.1.1 (2023-05-11)
+------------------
+
+6.1.0 (2023-04-28)
 ------------------
 
 6.0.1 (2023-04-18)
