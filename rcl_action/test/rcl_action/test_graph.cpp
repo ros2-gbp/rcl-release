@@ -17,7 +17,6 @@
 #include <chrono>
 #include <string>
 #include <thread>
-#include <unordered_set>
 
 #include "rcl_action/action_client.h"
 #include "rcl_action/action_server.h"
@@ -31,12 +30,19 @@
 
 #include "test_msgs/action/fibonacci.h"
 
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
 void * bad_malloc(size_t, void *)
 {
   return NULL;
 }
 
-class TestActionGraphFixture : public ::testing::Test
+class CLASSNAME (TestActionGraphFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -100,7 +106,9 @@ public:
   }
 };
 
-TEST_F(TestActionGraphFixture, test_action_get_client_names_and_types_by_node)
+TEST_F(
+  CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION),
+  test_action_get_client_names_and_types_by_node)
 {
   rcl_ret_t ret;
   rcl_names_and_types_t nat = rcl_get_zero_initialized_names_and_types();
@@ -160,7 +168,9 @@ TEST_F(TestActionGraphFixture, test_action_get_client_names_and_types_by_node)
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 }
 
-TEST_F(TestActionGraphFixture, test_action_get_server_names_and_types_by_node)
+TEST_F(
+  CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION),
+  test_action_get_server_names_and_types_by_node)
 {
   rcl_ret_t ret;
   rcl_names_and_types_t nat = rcl_get_zero_initialized_names_and_types();
@@ -211,7 +221,9 @@ TEST_F(TestActionGraphFixture, test_action_get_server_names_and_types_by_node)
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 }
 
-TEST_F(TestActionGraphFixture, test_action_get_names_and_types)
+TEST_F(
+  CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION),
+  test_action_get_names_and_types)
 {
   rcl_ret_t ret;
   rcl_names_and_types_t nat = rcl_get_zero_initialized_names_and_types();
@@ -256,7 +268,7 @@ typedef std::function<
  * Extend the TestActionGraphFixture with a multi-node fixture for node discovery and node-graph
  * perspective.
  */
-class TestActionGraphMultiNodeFixture : public TestActionGraphFixture
+class TestActionGraphMultiNodeFixture : public CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION)
 {
 public:
   const char * remote_node_name = "remote_graph_node";
@@ -267,7 +279,7 @@ public:
 
   void SetUp() override
   {
-    TestActionGraphFixture::SetUp();
+    CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION) ::SetUp();
 
     rcl_ret_t ret;
     rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
@@ -309,12 +321,12 @@ public:
       this->remote_node_name,
       "",
       std::placeholders::_2);
-    wait_for_all_nodes_alive();
+    WaitForAllNodesAlive();
   }
 
   void TearDown() override
   {
-    TestActionGraphFixture::TearDown();
+    CLASSNAME(TestActionGraphFixture, RMW_IMPLEMENTATION) ::TearDown();
 
     rcl_ret_t ret;
     ret = rcl_node_fini(&this->remote_node);
@@ -326,40 +338,38 @@ public:
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   }
 
-  void wait_for_all_nodes_alive()
+  void WaitForAllNodesAlive()
   {
-    // wait for a minimum of 2 nodes to be discovered: remote_node_name, test_graph_node_name.
-    // old_node may or may not be present in the ROS graph depending on the
-    // rmw_implementation since rcl_shutdown() was invoked on the
-    // old_context_ptr used to initialize this node within TestActionGraphFixture::Setup().
-    // Some middlewares like rmw_zenoh remove node entries from the ROS graph
-    // once the context for the node is shutdown.
+    rcl_ret_t ret;
+    rcutils_string_array_t node_names = rcutils_get_zero_initialized_string_array();
+    rcutils_string_array_t node_namespaces = rcutils_get_zero_initialized_string_array();
+    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    {
+      ret = rcutils_string_array_fini(&node_names);
+      ASSERT_EQ(RCUTILS_RET_OK, ret);
+      ret = rcutils_string_array_fini(&node_namespaces);
+      ASSERT_EQ(RCUTILS_RET_OK, ret);
+    });
+    // Wait for all 3 nodes to be discovered: remote_node, old_node, node
     size_t attempts = 0u;
-    constexpr size_t max_attempts = 100u;
-    std::unordered_set<std::string> discovered_node_names = {};
-    bool found_expected_nodes = false;
-
-    do {
-      rcutils_string_array_t node_names = rcutils_get_zero_initialized_string_array();
-      rcutils_string_array_t node_namespaces = rcutils_get_zero_initialized_string_array();
-      ASSERT_EQ(
-        RCL_RET_OK,
-        rcl_get_node_names(&this->remote_node, allocator, &node_names, &node_namespaces));
+    size_t max_attempts = 4u;
+    while (node_names.size < 3u) {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      ret = rcl_get_node_names(&this->remote_node, allocator, &node_names, &node_namespaces);
       ++attempts;
-      for (size_t name_idx = 0; name_idx < node_names.size; ++name_idx) {
-        discovered_node_names.insert(node_names.data[name_idx]);
-      }
-      found_expected_nodes =
-        discovered_node_names.count(remote_node_name) > 0 &&
-        discovered_node_names.count(test_graph_node_name) > 0;
-      ASSERT_EQ(RCUTILS_RET_OK, rcutils_string_array_fini(&node_names));
-      ASSERT_EQ(RCUTILS_RET_OK, rcutils_string_array_fini(&node_namespaces));
       ASSERT_LE(attempts, max_attempts) << "Unable to attain all required nodes";
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    } while (!found_expected_nodes);
+      if (node_names.size < 3u) {
+        ret = rcutils_string_array_fini(&node_names);
+        ASSERT_EQ(RCUTILS_RET_OK, ret);
+        ret = rcutils_string_array_fini(&node_namespaces);
+        ASSERT_EQ(RCUTILS_RET_OK, ret);
+        node_names = rcutils_get_zero_initialized_string_array();
+        node_namespaces = rcutils_get_zero_initialized_string_array();
+      }
+    }
   }
 
-  void wait_for_action_count(
+  void WaitForActionCount(
     GetActionsFunc func,
     size_t expected_count,
     std::chrono::milliseconds duration)
@@ -385,8 +395,7 @@ public:
 };
 
 // Note, this test could be affected by other communication on the same ROS domain
-TEST_F(TestActionGraphMultiNodeFixture, test_action_get_names_and_types)
-{
+TEST_F(TestActionGraphMultiNodeFixture, test_action_get_names_and_types) {
   rcl_ret_t ret;
   // Create an action client
   rcl_action_client_t action_client = rcl_action_get_zero_initialized_client();
@@ -407,7 +416,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_names_and_types)
       rcl_get_error_string().str;
   });
 
-  wait_for_action_count(action_func, 1u, std::chrono::seconds(1));
+  WaitForActionCount(action_func, 1u, std::chrono::seconds(1));
 
   // Check that there is exactly one action name
   rcl_names_and_types_t nat = rcl_get_zero_initialized_names_and_types();
@@ -446,7 +455,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_names_and_types)
       rcl_get_error_string().str;
   });
 
-  wait_for_action_count(action_func, 2u, std::chrono::seconds(1));
+  WaitForActionCount(action_func, 2u, std::chrono::seconds(1));
 
   ret = action_func(&this->node, &nat);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -463,8 +472,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_names_and_types)
 }
 
 // Note, this test could be affected by other communication on the same ROS domain
-TEST_F(TestActionGraphMultiNodeFixture, test_action_get_server_names_and_types_by_node)
-{
+TEST_F(TestActionGraphMultiNodeFixture, test_action_get_server_names_and_types_by_node) {
   rcl_ret_t ret;
   // Create an action client
   rcl_action_client_t action_client = rcl_action_get_zero_initialized_client();
@@ -517,7 +525,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_server_names_and_types_b
       rcl_get_error_string().str;
   });
 
-  wait_for_action_count(servers_by_node_func, 1u, std::chrono::seconds(1));
+  WaitForActionCount(servers_by_node_func, 1u, std::chrono::seconds(1));
   ret = servers_by_node_func(&this->node, &nat);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   ASSERT_EQ(nat.names.size, 1u);
@@ -530,8 +538,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_server_names_and_types_b
 }
 
 // Note, this test could be affected by other communication on the same ROS domain
-TEST_F(TestActionGraphMultiNodeFixture, test_action_get_client_names_and_types_by_node)
-{
+TEST_F(TestActionGraphMultiNodeFixture, test_action_get_client_names_and_types_by_node) {
   rcl_ret_t ret;
   const rosidl_action_type_support_t * action_typesupport =
     ROSIDL_GET_ACTION_TYPE_SUPPORT(test_msgs, Fibonacci);
@@ -585,7 +592,7 @@ TEST_F(TestActionGraphMultiNodeFixture, test_action_get_client_names_and_types_b
       rcl_get_error_string().str;
   });
 
-  wait_for_action_count(clients_by_node_func, 1u, std::chrono::seconds(1));
+  WaitForActionCount(clients_by_node_func, 1u, std::chrono::seconds(1));
   ret = clients_by_node_func(&this->node, &nat);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   ASSERT_EQ(nat.names.size, 1u);
@@ -632,11 +639,11 @@ TEST_F(TestActionGraphMultiNodeFixture, action_client_init_maybe_fail)
 
     if (RCL_RET_OK == ret) {
       ret = rcl_action_client_fini(&action_client, &this->remote_node);
+      if (RCL_RET_OK != ret) {
+        // This isn't always set, but just in case reset anyway
+        rcutils_reset_error();
+      }
     }
-
-    // Always reset the error, because either rcl_action_client_init() or
-    // rcl_action_client_fini() may have failed above.
-    rcl_reset_error();
   });
 }
 

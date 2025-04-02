@@ -27,11 +27,16 @@
 
 #include "rosidl_runtime_c/primitives_sequence_functions.h"
 
-#include "action_msgs/srv/cancel_goal.h"
-
 #include "test_msgs/action/fibonacci.h"
 
-class TestActionCommunication : public ::testing::Test
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+class CLASSNAME (TestActionCommunication, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 protected:
   void SetUp() override
@@ -177,7 +182,7 @@ protected:
   bool is_result_response_ready;
 };  // class TestActionCommunication
 
-TEST_F(TestActionCommunication, test_valid_goal_comm)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_goal_comm)
 {
   test_msgs__action__Fibonacci_SendGoal_Request outgoing_goal_request;
   test_msgs__action__Fibonacci_SendGoal_Request incoming_goal_request;
@@ -283,7 +288,8 @@ TEST_F(TestActionCommunication, test_valid_goal_comm)
   test_msgs__action__Fibonacci_SendGoal_Response__fini(&outgoing_goal_response);
 }
 
-TEST_F(TestActionCommunication, test_valid_cancel_comm)
+
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_cancel_comm)
 {
   action_msgs__srv__CancelGoal_Request outgoing_cancel_request;
   action_msgs__srv__CancelGoal_Request incoming_cancel_request;
@@ -410,7 +416,7 @@ TEST_F(TestActionCommunication, test_valid_cancel_comm)
   action_msgs__srv__CancelGoal_Response__fini(&outgoing_cancel_response);
 }
 
-TEST_F(TestActionCommunication, test_valid_result_comm)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_result_comm)
 {
   test_msgs__action__Fibonacci_GetResult_Request outgoing_result_request;
   test_msgs__action__Fibonacci_GetResult_Request incoming_result_request;
@@ -525,7 +531,7 @@ TEST_F(TestActionCommunication, test_valid_result_comm)
   test_msgs__action__Fibonacci_GetResult_Response__fini(&outgoing_result_response);
 }
 
-TEST_F(TestActionCommunication, test_valid_status_comm)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_status_comm)
 {
   action_msgs__msg__GoalStatusArray incoming_status_array;
   action_msgs__msg__GoalStatusArray__init(&incoming_status_array);
@@ -601,7 +607,7 @@ TEST_F(TestActionCommunication, test_valid_status_comm)
   EXPECT_EQ(RCL_RET_OK, rcl_action_goal_handle_fini(goal_handle));
 }
 
-TEST_F(TestActionCommunication, test_valid_feedback_comm)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_feedback_comm)
 {
   test_msgs__action__Fibonacci_FeedbackMessage outgoing_feedback;
   test_msgs__action__Fibonacci_FeedbackMessage incoming_feedback;
@@ -664,7 +670,7 @@ TEST_F(TestActionCommunication, test_valid_feedback_comm)
   test_msgs__action__Fibonacci_FeedbackMessage__fini(&outgoing_feedback);
 }
 
-TEST_F(TestActionCommunication, test_invalid_goal_request_opts)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_goal_request_opts)
 {
   test_msgs__action__Fibonacci_SendGoal_Request outgoing_goal_request;
   test_msgs__action__Fibonacci_SendGoal_Request incoming_goal_request;
@@ -721,7 +727,7 @@ TEST_F(TestActionCommunication, test_invalid_goal_request_opts)
   test_msgs__action__Fibonacci_SendGoal_Request__fini(&incoming_goal_request);
 }
 
-TEST_F(TestActionCommunication, test_invalid_goal_response_opts)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_goal_response_opts)
 {
   test_msgs__action__Fibonacci_SendGoal_Response outgoing_goal_response;
   test_msgs__action__Fibonacci_SendGoal_Response incoming_goal_response;
@@ -782,7 +788,7 @@ TEST_F(TestActionCommunication, test_invalid_goal_response_opts)
   test_msgs__action__Fibonacci_SendGoal_Response__fini(&outgoing_goal_response);
 }
 
-TEST_F(TestActionCommunication, test_invalid_cancel_request_opts)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_cancel_request_opts)
 {
   action_msgs__srv__CancelGoal_Request outgoing_cancel_request;
   action_msgs__srv__CancelGoal_Request incoming_cancel_request;
@@ -840,7 +846,8 @@ TEST_F(TestActionCommunication, test_invalid_cancel_request_opts)
   action_msgs__srv__CancelGoal_Request__fini(&outgoing_cancel_request);
 }
 
-TEST_F(TestActionCommunication, test_invalid_cancel_response_opts)
+
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_cancel_response_opts)
 {
   action_msgs__srv__CancelGoal_Response outgoing_cancel_response;
   action_msgs__srv__CancelGoal_Response incoming_cancel_response;
@@ -903,7 +910,7 @@ TEST_F(TestActionCommunication, test_invalid_cancel_response_opts)
   action_msgs__srv__CancelGoal_Response__fini(&outgoing_cancel_response);
 }
 
-TEST_F(TestActionCommunication, test_invalid_result_request_opts)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_result_request_opts)
 {
   test_msgs__action__Fibonacci_GetResult_Request outgoing_result_request;
   test_msgs__action__Fibonacci_GetResult_Request incoming_result_request;
@@ -959,7 +966,7 @@ TEST_F(TestActionCommunication, test_invalid_result_request_opts)
   test_msgs__action__Fibonacci_GetResult_Request__fini(&outgoing_result_request);
 }
 
-TEST_F(TestActionCommunication, test_invalid_result_response_opts)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_result_response_opts)
 {
   test_msgs__action__Fibonacci_GetResult_Response outgoing_result_response;
   test_msgs__action__Fibonacci_GetResult_Response incoming_result_response;
@@ -1022,7 +1029,7 @@ TEST_F(TestActionCommunication, test_invalid_result_response_opts)
   test_msgs__action__Fibonacci_GetResult_Response__fini(&outgoing_result_response);
 }
 
-TEST_F(TestActionCommunication, test_invalid_feedback_opts)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_feedback_opts)
 {
   test_msgs__action__Fibonacci_FeedbackMessage outgoing_feedback;
   test_msgs__action__Fibonacci_FeedbackMessage incoming_feedback;
@@ -1074,7 +1081,7 @@ TEST_F(TestActionCommunication, test_invalid_feedback_opts)
   test_msgs__action__Fibonacci_FeedbackMessage__fini(&outgoing_feedback);
 }
 
-TEST_F(TestActionCommunication, test_invalid_status_opts)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_invalid_status_opts)
 {
   action_msgs__msg__GoalStatusArray incoming_status_array;
   action_msgs__msg__GoalStatusArray__init(&incoming_status_array);
@@ -1123,7 +1130,7 @@ TEST_F(TestActionCommunication, test_invalid_status_opts)
   action_msgs__msg__GoalStatusArray__fini(&incoming_status_array);
 }
 
-TEST_F(TestActionCommunication, test_valid_feedback_comm_maybe_fail)
+TEST_F(CLASSNAME(TestActionCommunication, RMW_IMPLEMENTATION), test_valid_feedback_comm_maybe_fail)
 {
   test_msgs__action__Fibonacci_FeedbackMessage outgoing_feedback;
   test_msgs__action__Fibonacci_FeedbackMessage incoming_feedback;

@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #include <gtest/gtest.h>
 
 #include <chrono>
@@ -462,8 +461,7 @@ TEST_F(TestActionServer, test_action_accept_new_goal)
   }
 }
 
-TEST_F(TestActionServer, test_action_server_goal_exists)
-{
+TEST_F(TestActionServer, test_action_server_goal_exists) {
   rcl_action_goal_info_t goal_info_out = rcl_action_get_zero_initialized_goal_info();
   EXPECT_FALSE(rcl_action_server_goal_exists(nullptr, &goal_info_out));
   EXPECT_TRUE(rcl_error_is_set());
@@ -503,8 +501,7 @@ TEST_F(TestActionServer, test_action_server_goal_exists)
   this->action_server.impl->num_goal_handles--;
 }
 
-TEST_F(TestActionServer, test_action_server_notify_goal_done)
-{
+TEST_F(TestActionServer, test_action_server_notify_goal_done) {
   // Invalid action server
   EXPECT_EQ(RCL_RET_ACTION_SERVER_INVALID, rcl_action_notify_goal_done(nullptr));
   rcl_reset_error();
@@ -594,9 +591,6 @@ TEST_F(TestActionServer, test_action_clear_expired_goals)
   // Transition executing to aborted
   ASSERT_EQ(RCL_RET_OK, rcl_action_update_goal_state(goal_handle, GOAL_EVENT_EXECUTE));
   ASSERT_EQ(RCL_RET_OK, rcl_action_update_goal_state(goal_handle, GOAL_EVENT_ABORT));
-
-  // recalculate the expired goal timer after entering terminal state
-  ASSERT_EQ(RCL_RET_OK, rcl_action_notify_goal_done(&this->action_server));
 
   // Set time to something far in the future
   ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(&this->clock, RCUTILS_S_TO_NS(99999)));
@@ -783,7 +777,7 @@ TEST_F(TestActionServer, test_action_server_get_action_name)
   // Get action_name for a valid action server
   action_name = rcl_action_server_get_action_name(&this->action_server);
   ASSERT_NE(action_name, nullptr) << rcl_get_error_string().str;
-  EXPECT_STREQ(action_name, "/test_action_server_name");
+  EXPECT_STREQ(action_name, "test_action_server_name");
 }
 
 TEST_F(TestActionServer, test_action_server_get_options)
@@ -825,7 +819,7 @@ protected:
       ret = rcl_action_goal_handle_get_info(goal_handle, &goal_infos_out[i]);
       ASSERT_EQ(ret, RCL_RET_OK) << rcl_get_error_string().str;
       // Sleep so goals have different acceptance times
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      std::this_thread::sleep_for(std::chrono::milliseconds(250));
     }
   }
 
@@ -1026,10 +1020,6 @@ TEST_F(TestActionServer, action_server_init_fini_maybe_fail)
     if (RCL_RET_OK == ret) {
       ret = rcl_action_server_fini(&action_server, &node);
     }
-
-    // Always reset the error, because either rcl_action_server_init() or
-    // rcl_action_server_fini() may have failed above.
-    rcl_reset_error();
   });
 }
 

@@ -26,7 +26,6 @@
 #include <future>
 #include <string>
 #include <thread>
-#include <unordered_set>
 #include <vector>
 
 #include "rcl/error_handling.h"
@@ -1050,34 +1049,23 @@ public:
 
   void wait_for_all_nodes_alive()
   {
-    // wait for a minimum of 2 nodes to be discovered: remote_node_name, test_graph_node_name.
-    // old_node may or may not be present in the ROS graph depending on the
-    // rmw_implementation since rcl_shutdown() was invoked on the
-    // old_context_ptr used to initialize this node within TestGraphFixture::Setup().
-    // Some middlewares like rmw_zenoh remove node entries from the ROS graph
-    // once the context for the node is shutdown.
+    // wait for all 3 nodes to be discovered: remote_node, old_node, node
     size_t attempts = 0u;
-    constexpr size_t max_attempts = 100u;
-    std::unordered_set<std::string> discovered_node_names = {};
-    bool found_expected_nodes = false;
+    size_t max_attempts = 10u;
+    size_t last_size = 0u;
     do {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
       rcutils_string_array_t node_names = rcutils_get_zero_initialized_string_array();
       rcutils_string_array_t node_namespaces = rcutils_get_zero_initialized_string_array();
       ASSERT_EQ(
         RCL_RET_OK,
         rcl_get_node_names(this->remote_node_ptr, allocator, &node_names, &node_namespaces));
-      ++attempts;
-      for (size_t name_idx = 0; name_idx < node_names.size; ++name_idx) {
-        discovered_node_names.insert(node_names.data[name_idx]);
-      }
-      found_expected_nodes =
-        discovered_node_names.count(remote_node_name) > 0 &&
-        discovered_node_names.count(test_graph_node_name) > 0;
+      attempts++;
+      last_size = node_names.size;
       ASSERT_EQ(RCUTILS_RET_OK, rcutils_string_array_fini(&node_names));
       ASSERT_EQ(RCUTILS_RET_OK, rcutils_string_array_fini(&node_namespaces));
       ASSERT_LE(attempts, max_attempts) << "Unable to attain all required nodes";
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    } while (!found_expected_nodes);
+    } while (last_size < 3u);
   }
 
   /**
@@ -1086,7 +1074,7 @@ public:
    * \param node_state expected state of node
    * \param remote_node_state expected state of remote node
    */
-  void verify_subsystem_count(
+  void VerifySubsystemCount(
     const expected_node_state && node_state,
     const expected_node_state && remote_node_state) const
   {
@@ -1184,19 +1172,19 @@ TEST_F(NodeGraphMultiNodeFixture, test_node_info_subscriptions)
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
 
-  verify_subsystem_count(expected_node_state{1, 1, 0, 0}, expected_node_state{1, 1, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 1, 0, 0}, expected_node_state{1, 1, 0, 0});
 
   // Destroy the node's subscriber
   ret = rcl_subscription_fini(&sub, this->node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  verify_subsystem_count(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 1, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 1, 0, 0});
 
   // Destroy the remote node's subdscriber
   ret = rcl_subscription_fini(&sub2, this->remote_node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  verify_subsystem_count(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
 }
 
 TEST_F(NodeGraphMultiNodeFixture, test_node_info_publishers)
@@ -1209,14 +1197,14 @@ TEST_F(NodeGraphMultiNodeFixture, test_node_info_publishers)
   ret = rcl_publisher_init(&pub, this->node_ptr, ts, this->topic_name.c_str(), &pub_ops);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  verify_subsystem_count(expected_node_state{2, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
+  VerifySubsystemCount(expected_node_state{2, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
 
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Destroyed publisher");
   // Destroy the publisher.
   ret = rcl_publisher_fini(&pub, this->node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   rcl_reset_error();
-  verify_subsystem_count(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
 }
 
 TEST_F(NodeGraphMultiNodeFixture, test_node_info_services)
@@ -1228,12 +1216,12 @@ TEST_F(NodeGraphMultiNodeFixture, test_node_info_services)
   auto ts1 = ROSIDL_GET_SRV_TYPE_SUPPORT(test_msgs, srv, BasicTypes);
   ret = rcl_service_init(&service, this->node_ptr, ts1, service_name, &service_options);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  verify_subsystem_count(expected_node_state{1, 0, 1, 0}, expected_node_state{1, 0, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 1, 0}, expected_node_state{1, 0, 0, 0});
 
   // Destroy service.
   ret = rcl_service_fini(&service, this->node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  verify_subsystem_count(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
 }
 
 TEST_F(NodeGraphMultiNodeFixture, test_node_info_clients)
@@ -1245,12 +1233,12 @@ TEST_F(NodeGraphMultiNodeFixture, test_node_info_clients)
   auto ts = ROSIDL_GET_SRV_TYPE_SUPPORT(test_msgs, srv, BasicTypes);
   ret = rcl_client_init(&client, this->node_ptr, ts, service_name, &client_options);
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  verify_subsystem_count(expected_node_state{1, 0, 0, 1}, expected_node_state{1, 0, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 1}, expected_node_state{1, 0, 0, 0});
 
   // Destroy client
   ret = rcl_client_fini(&client, this->node_ptr);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  verify_subsystem_count(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
+  VerifySubsystemCount(expected_node_state{1, 0, 0, 0}, expected_node_state{1, 0, 0, 0});
 }
 
 /*
