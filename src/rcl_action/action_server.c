@@ -101,8 +101,6 @@ rcl_action_get_zero_initialized_server(void)
     goto fail; \
   }
 
-RCL_ACTION_PUBLIC
-RCL_WARN_UNUSED
 rcl_ret_t
 rcl_action_server_init(
   rcl_action_server_t * action_server,
@@ -1186,8 +1184,6 @@ rcl_action_server_wait_set_get_entities_ready(
   return RCL_RET_OK;
 }
 
-RCL_ACTION_PUBLIC
-RCL_WARN_UNUSED
 rcl_ret_t
 rcl_action_server_set_goal_service_callback(
   const rcl_action_server_t * action_server,
@@ -1204,8 +1200,6 @@ rcl_action_server_set_goal_service_callback(
     user_data);
 }
 
-RCL_ACTION_PUBLIC
-RCL_WARN_UNUSED
 rcl_ret_t
 rcl_action_server_set_result_service_callback(
   const rcl_action_server_t * action_server,
@@ -1222,8 +1216,6 @@ rcl_action_server_set_result_service_callback(
     user_data);
 }
 
-RCL_ACTION_PUBLIC
-RCL_WARN_UNUSED
 rcl_ret_t
 rcl_action_server_set_cancel_service_callback(
   const rcl_action_server_t * action_server,
@@ -1238,6 +1230,40 @@ rcl_action_server_set_cancel_service_callback(
     &action_server->impl->cancel_service,
     callback,
     user_data);
+}
+
+#define SERVER_CONFIGURE_SERVICE_INTROSPECTION(TYPE, STATE) \
+  if (rcl_service_configure_service_introspection( \
+      &action_server->impl->TYPE ## _service, \
+      node, \
+      clock, \
+      type_support->TYPE ## _service_type_support, \
+      publisher_options, \
+      STATE) != RCL_RET_OK) \
+  { \
+    return RCL_RET_ERROR; \
+  }
+
+rcl_ret_t
+rcl_action_server_configure_action_introspection(
+  rcl_action_server_t * action_server,
+  rcl_node_t * node,
+  rcl_clock_t * clock,
+  const rosidl_action_type_support_t * type_support,
+  const rcl_publisher_options_t publisher_options,
+  rcl_service_introspection_state_t introspection_state)
+{
+  if (!rcl_action_server_is_valid_except_context(action_server)) {
+    return RCL_RET_ACTION_SERVER_INVALID;
+  }
+  RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT);
+  RCL_CHECK_ARGUMENT_FOR_NULL(clock, RCL_RET_INVALID_ARGUMENT);
+  RCL_CHECK_ARGUMENT_FOR_NULL(type_support, RCL_RET_INVALID_ARGUMENT);
+
+  SERVER_CONFIGURE_SERVICE_INTROSPECTION(goal, introspection_state);
+  SERVER_CONFIGURE_SERVICE_INTROSPECTION(cancel, introspection_state);
+  SERVER_CONFIGURE_SERVICE_INTROSPECTION(result, introspection_state);
+  return RCL_RET_OK;
 }
 
 #ifdef __cplusplus
