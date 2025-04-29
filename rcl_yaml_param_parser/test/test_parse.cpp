@@ -155,7 +155,6 @@ TEST(TestParse, parse_value_sequence) {
   EXPECT_EQ(
     nullptr,
     params_st->params[node_idx].parameter_values[parameter_idx].integer_array_value);
-  rcutils_reset_error();
 
   // Check proper sequence type
   seq_data_type = DATA_TYPE_UNKNOWN;
@@ -188,7 +187,6 @@ TEST(TestParse, parse_value_sequence) {
     rcutils_get_error_string().str;
   EXPECT_EQ(
     nullptr, params_st->params[node_idx].parameter_values[parameter_idx].integer_array_value);
-  rcutils_reset_error();
 
   // Check proper sequence type
   seq_data_type = DATA_TYPE_UNKNOWN;
@@ -224,7 +222,6 @@ TEST(TestParse, parse_value_sequence) {
     rcutils_get_error_string().str;
   EXPECT_EQ(
     nullptr, params_st->params[node_idx].parameter_values[parameter_idx].integer_array_value);
-  rcutils_reset_error();
 
   // Check proper sequence type
   seq_data_type = DATA_TYPE_UNKNOWN;
@@ -259,7 +256,6 @@ TEST(TestParse, parse_value_sequence) {
     rcutils_get_error_string().str;
   EXPECT_EQ(
     nullptr, params_st->params[node_idx].parameter_values[parameter_idx].integer_array_value);
-  rcutils_reset_error();
 
   // Check proper sequence type
   seq_data_type = DATA_TYPE_UNKNOWN;
