@@ -2,15 +2,7 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-10.2.2 (2025-06-23)
--------------------
-
-10.2.1 (2025-05-30)
--------------------
-* introduce rcl_lifecycle_get_transition_label_by_id(). (`#1229 <https://github.com/ros2/rcl/issues/1229>`_)
-* Contributors: Tomoya Fujita
-
-10.2.0 (2025-04-25)
+10.1.1 (2025-06-23)
 -------------------
 
 10.1.0 (2025-04-04)
