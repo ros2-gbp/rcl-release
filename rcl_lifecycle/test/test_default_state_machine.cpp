@@ -879,7 +879,5 @@ TEST_F(TestDefaultStateMachine, init_fini_maybe_fail) {
           rcl_lifecycle_state_machine_fini(&sm, this->node_ptr));
       }
     }
-
-    rcl_reset_error();
   });
 }
