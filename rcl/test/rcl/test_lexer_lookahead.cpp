@@ -21,6 +21,25 @@
 #include "rcl/error_handling.h"
 #include "rcl/lexer_lookahead.h"
 
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+class CLASSNAME (TestLexerLookaheadFixture, RMW_IMPLEMENTATION) : public ::testing::Test
+{
+public:
+  void SetUp()
+  {
+  }
+
+  void TearDown()
+  {
+  }
+};
+
 #define SCOPE_LOOKAHEAD2(name, text) \
   { \
     name = rcl_get_zero_initialized_lexer_lookahead2(); \
@@ -33,7 +52,7 @@
       ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str; \
     })
 
-TEST(TestLexerLookahead, test_init_fini_twice)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_init_fini_twice)
 {
   rcl_lexer_lookahead2_t buffer = rcl_get_zero_initialized_lexer_lookahead2();
   rcl_ret_t ret = rcl_lexer_lookahead2_init(&buffer, "foobar", rcl_get_default_allocator());
@@ -47,7 +66,7 @@ TEST(TestLexerLookahead, test_init_fini_twice)
   rcl_reset_error();
 }
 
-TEST(TestLexerLookahead, test_init_not_zero_initialized)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_init_not_zero_initialized)
 {
   rcl_lexer_lookahead2_t buffer;
   int not_zero = 1;
@@ -57,7 +76,7 @@ TEST(TestLexerLookahead, test_init_not_zero_initialized)
   rcl_reset_error();
 }
 
-TEST(TestLexerLookahead, test_peek)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_peek)
 {
   rcl_ret_t ret;
   rcl_lexer_lookahead2_t buffer;
@@ -76,7 +95,7 @@ TEST(TestLexerLookahead, test_peek)
   EXPECT_EQ(RCL_LEXEME_TOKEN, lexeme);
 }
 
-TEST(TestLexerLookahead, test_peek2)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_peek2)
 {
   rcl_ret_t ret;
   rcl_lexer_lookahead2_t buffer;
@@ -99,7 +118,7 @@ TEST(TestLexerLookahead, test_peek2)
   EXPECT_EQ(RCL_LEXEME_FORWARD_SLASH, lexeme2);
 }
 
-TEST(TestLexerLookahead, test_peek2_no_lexeme)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_peek2_no_lexeme)
 {
   rcl_ret_t ret;
   rcl_lexer_lookahead2_t buffer;
@@ -114,7 +133,7 @@ TEST(TestLexerLookahead, test_peek2_no_lexeme)
   EXPECT_EQ(RCL_LEXEME_NONE, lexeme2);
 }
 
-TEST(TestLexerLookahead, test_peek2_no_lexeme_eof)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_peek2_no_lexeme_eof)
 {
   rcl_ret_t ret;
   rcl_lexer_lookahead2_t buffer;
@@ -129,7 +148,7 @@ TEST(TestLexerLookahead, test_peek2_no_lexeme_eof)
   EXPECT_EQ(RCL_LEXEME_NONE, lexeme2);
 }
 
-TEST(TestLexerLookahead, test_peek2_eof)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_peek2_eof)
 {
   rcl_ret_t ret;
   rcl_lexer_lookahead2_t buffer;
@@ -144,7 +163,7 @@ TEST(TestLexerLookahead, test_peek2_eof)
   EXPECT_EQ(RCL_LEXEME_EOF, lexeme2);
 }
 
-TEST(TestLexerLookahead, test_eof)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_eof)
 {
   rcl_ret_t ret;
   rcl_lexer_lookahead2_t buffer;
@@ -175,7 +194,7 @@ TEST(TestLexerLookahead, test_eof)
 }
 
 
-TEST(TestLexerLookahead, test_accept)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_accept)
 {
   rcl_ret_t ret;
   rcl_lexer_lookahead2_t buffer;
@@ -221,7 +240,7 @@ TEST(TestLexerLookahead, test_accept)
   EXPECT_EQ(RCL_LEXEME_EOF, lexeme);
 }
 
-TEST(TestLexerLookahead, test_accept_bad_arg)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_accept_bad_arg)
 {
   rcl_lexer_lookahead2_t buffer;
   rcl_lexer_lookahead2_t buffer_not_ini = rcl_get_zero_initialized_lexer_lookahead2();
@@ -262,7 +281,7 @@ TEST(TestLexerLookahead, test_accept_bad_arg)
   rcl_reset_error();
 }
 
-TEST(TestLexerLookahead, test_expect)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_expect)
 {
   rcl_ret_t ret;
   rcl_lexer_lookahead2_t buffer;
@@ -292,7 +311,7 @@ TEST(TestLexerLookahead, test_expect)
     EXPECT_STREQ(expected_text, std::string(lexeme_text, lexeme_text_length).c_str()); \
   } while (false)
 
-TEST(TestLexerLookahead, test_lex_long_string)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_lex_long_string)
 {
   rcl_ret_t ret;
   rcl_lexer_lookahead2_t buffer;
@@ -313,7 +332,7 @@ TEST(TestLexerLookahead, test_lex_long_string)
   EXPECT_LOOKAHEAD(RCL_LEXEME_EOF, "", buffer);
 }
 
-TEST(TestLexerLookahead, test_lex_remap_rules)
+TEST_F(CLASSNAME(TestLexerLookaheadFixture, RMW_IMPLEMENTATION), test_lex_remap_rules)
 {
   rcl_ret_t ret;
   rcl_lexer_lookahead2_t buffer;
