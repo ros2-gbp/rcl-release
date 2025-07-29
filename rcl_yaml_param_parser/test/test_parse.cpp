@@ -16,14 +16,16 @@
 
 #include <yaml.h>
 
-#include <string>
-#include <vector>
-
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
 #include "rcl_yaml_param_parser/parser.h"
 #include "../src/impl/parse.h"
 #include "../src/impl/node_params.h"
+
+#include "rcutils/allocator.h"
+#include "rcutils/error_handling.h"
 #include "rcutils/filesystem.h"
+#include "rcutils/types/rcutils_ret.h"
+#include "rcutils/types/string_array.h"
 
 #include "./mocking_utils/patch.hpp"
 
@@ -153,6 +155,7 @@ TEST(TestParse, parse_value_sequence) {
   EXPECT_EQ(
     nullptr,
     params_st->params[node_idx].parameter_values[parameter_idx].integer_array_value);
+  rcutils_reset_error();
 
   // Check proper sequence type
   seq_data_type = DATA_TYPE_UNKNOWN;
@@ -185,6 +188,7 @@ TEST(TestParse, parse_value_sequence) {
     rcutils_get_error_string().str;
   EXPECT_EQ(
     nullptr, params_st->params[node_idx].parameter_values[parameter_idx].integer_array_value);
+  rcutils_reset_error();
 
   // Check proper sequence type
   seq_data_type = DATA_TYPE_UNKNOWN;
@@ -220,6 +224,7 @@ TEST(TestParse, parse_value_sequence) {
     rcutils_get_error_string().str;
   EXPECT_EQ(
     nullptr, params_st->params[node_idx].parameter_values[parameter_idx].integer_array_value);
+  rcutils_reset_error();
 
   // Check proper sequence type
   seq_data_type = DATA_TYPE_UNKNOWN;
@@ -254,6 +259,7 @@ TEST(TestParse, parse_value_sequence) {
     rcutils_get_error_string().str;
   EXPECT_EQ(
     nullptr, params_st->params[node_idx].parameter_values[parameter_idx].integer_array_value);
+  rcutils_reset_error();
 
   // Check proper sequence type
   seq_data_type = DATA_TYPE_UNKNOWN;

@@ -2,47 +2,387 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-5.3.10 (2025-07-16)
+10.2.3 (2025-07-29)
 -------------------
-* Fix a dangling pointer discovered by a fresh Clang (`#1222 <https://github.com/ros2/rcl/issues/1222>`_) (`#1224 <https://github.com/ros2/rcl/issues/1224>`_)
-* Contributors: mergify[bot]
+* Fix Cmake deprecation (`#1249 <https://github.com/ros2/rcl/issues/1249>`_)
+* Contributors: mosfet80
 
-5.3.9 (2024-07-26)
-------------------
-* Generate version header using `ament_generate_version_header(..)` (backport `#1141 <https://github.com/ros2/rcl/issues/1141>`_) (`#1145 <https://github.com/ros2/rcl/issues/1145>`_)
-* Contributors: mergify[bot]
+10.2.2 (2025-06-23)
+-------------------
+* Assert HistoryQoS in test_info_by_topic (`#1242 <https://github.com/ros2/rcl//issues/1242>`_)
+* Add a test for the subscription option 'ignore_local_publications' (`#1239 <https://github.com/ros2/rcl//issues/1239>`_)
+* Contributors: Barry Xu, Mario Domínguez López
 
-5.3.8 (2024-05-15)
-------------------
+10.2.1 (2025-05-30)
+-------------------
+* remove unnecessary test_with_localhost_only. (`#1238 <https://github.com/ros2/rcl/issues/1238>`_)
+* Address memory leaks in rcl test_timer_init_state (`#1236 <https://github.com/ros2/rcl/issues/1236>`_)
+* Removed unused nondefault_qos_profile (`#1233 <https://github.com/ros2/rcl/issues/1233>`_)
+* Removed unused functions (`#1230 <https://github.com/ros2/rcl/issues/1230>`_)
+* remove rcl_qos_profile_rosout_default. (`#1225 <https://github.com/ros2/rcl/issues/1225>`_)
+* remove rmw_connext from test. (`#1226 <https://github.com/ros2/rcl/issues/1226>`_)
+* Contributors: Alejandro Hernández Cordero, Michael Orlov, Tomoya Fujita
 
-5.3.7 (2024-01-24)
-------------------
+10.2.0 (2025-04-25)
+-------------------
+* Fix a dangling pointer discovered by a fresh Clang (`#1222 <https://github.com/ros2/rcl/issues/1222>`_)
+* Contributors: Alexander Kornienko
 
-5.3.6 (2023-11-13)
-------------------
-* Set disable loan to on by default. (backport `#1110 <https://github.com/ros2/rcl/issues/1110>`_) (`#1116 <https://github.com/ros2/rcl/issues/1116>`_)
-* Contributors: mergify[bot]
+10.1.0 (2025-04-04)
+-------------------
+* Set envars to run tests with rmw_zenoh_cpp with multicast discovery (`#1218 <https://github.com/ros2/rcl/issues/1218>`_)
+* Fix typo in message header include in doc (`#1219 <https://github.com/ros2/rcl/issues/1219>`_)
+* use rmw_event_type_is_supported (`#1214 <https://github.com/ros2/rcl/issues/1214>`_)
+* No need to add public symbol visibility macros in implementation. (`#1213 <https://github.com/ros2/rcl/issues/1213>`_)
+* Add new interfaces to enable intropsection for action (`#1207 <https://github.com/ros2/rcl/issues/1207>`_)
+* Use FASTDDS_DEFAULT_PROFILES_FILE instead. (`#1211 <https://github.com/ros2/rcl/issues/1211>`_)
+* Relieve timer test period not to miss the cycle. (`#1209 <https://github.com/ros2/rcl/issues/1209>`_)
+* Contributors: Alejandro Hernández Cordero, Barry Xu, Christophe Bedard, Tomoya Fujita, yadunund
 
-5.3.5 (2023-09-19)
-------------------
-* rcl_send_response returns RCL_RET_TIMEOUT. (backport `#1048 <https://github.com/ros2/rcl/issues/1048>`_) (`#1091 <https://github.com/ros2/rcl/issues/1091>`_)
-* Contributors: mergify[bot]
+10.0.2 (2025-01-31)
+-------------------
+* fix(rcl_action): Allow to pass the timer to action during initialization (`#1201 <https://github.com/ros2/rcl/issues/1201>`_)
+  * fix(timer): Use impl pointer in jump callback
+  The interface description does not explicitly state that a
+  rcl_timer_t may not be copied around. Therefore users may do this.
+  By using a known never changing pointer in the callbacks, we avoid
+  segfaults, even if the 'user' decides to copy the rcl_timer_t around.
+* move qos_profile_rosout_default to rmw. (`#1195 <https://github.com/ros2/rcl/issues/1195>`_)
+* Update example usage for rcl_wait_set_init to pass correct number of args (`#1204 <https://github.com/ros2/rcl/issues/1204>`_)
+* Clean up error handling in many rcl{_action,_lifecycle} codepaths (`#1202 <https://github.com/ros2/rcl/issues/1202>`_)
+  * Shorten the delay in test_action_server setup.
+  Instead of waiting 250ms between setting up 10 goals
+  (for at least 2.5 seconds), just wait 100ms which reduces
+  this to 1 second.
+  * Small style cleanups in test_action_server.cpp
+  * Reset the error in rcl_node_type_cache_register_type().
+  That is, if rcutils_hash_map_set() fails, it sets its
+  own error, so overriding it with our own will cause a
+  warning to print.  Make sure to clear it before setting
+  our own.
+  * Only unregister a clock jump callback if we have installed it.
+  This avoids a warning on cleanup in rcl_timer_init2.
+  * Record the return value from rcl_node_type_cache_register_type.
+  Otherwise, in a failure situation we set the error but we
+  actually return RCL_RET_OK to the upper layers, which is
+  odd.
+  * Get rid of completely unnecessary return value translation.
+  This generated code was translating an RCL error to an
+  RCL error, which doesn't make much sense.  Just remove
+  the duplicate code.
+  * Use the rcl_timer_init2 functionality to start the timer disabled.
+  Rather than starting it enabled, and then immediately
+  canceling it.
+  * Don't overwrite the error from rcl_action_goal_handle_get_info()
+  It already sets the error, so rcl_action_server_goal_exists()
+  should not set it again.
+  * Reset errors before setting new ones when checking action validity
+  That way we avoid an ugly warning in the error paths.
+  * Move the copying of the options earlier in rcl_subscription_init.
+  That way when we go to cleanup in the "fail" case, the
+  options actually exist and are valid.  This avoids an
+  ugly warning during cleanup.
+  * Make sure to set the error on failure of rcl_action_get\_##_service_name
+  This makes it match the generated code for the action_client.
+  * Reset the errors during RCUTILS_FAULT_INJECTION testing.
+  That way subsequent failures won't print out ugly error
+  strings.
+  * Make sure to return errors in _rcl_parse_resource_match .
+  That is, if rcl_lexer_lookahead2_expect() returns an error,
+  we should pass that along to higher layers rather than
+  just ignoring it.
+  * Don't overwrite error by rcl_validate_enclave_name.
+  It leads to ugly warnings.
+  * Add acomment that rmw_validate_namespace_with_size sets the error
+  * Make sure to reset error in rcl_node_type_cache_init.
+  Otherwise we get a warning about overwriting the error
+  from rcutils_hash_map_init.
+  * Conditionally set error message in rcl_publisher_is_valid.
+  Only when rcl_context_is_valid doesn't set the error.
+  * Don't overwrite error from rcl_node_get_logger_name.
+  It already sets the error in the failure case.
+  * Make sure to reset errors when testing network flow endpoints.
+  That's because some of the RMW implementations may not support
+  this feature, and thus set errors.
+  * Make sure to reset errors in rcl_expand_topic_name.
+  That way we can set more useful errors for the upper
+  layers.
+  * Cleanup wait.c error handling.
+  In particular, make sure to not overwrite errors as we
+  get into error-handling paths, which should clean up
+  warnings we get.
+  * Make sure to reset errors in rcl_lifecycle tests.
+  That way we won't get ugly "overwritten" warnings on
+  subsequent tests.
+  ---------
+* Contributors: Chris Lalancette, Janosch Machowinski, Tomoya Fujita, yadunund
 
-5.3.4 (2023-07-17)
-------------------
-* Implement rcl_clock_time_started (`#1021 <https://github.com/ros2/rcl/issues/1021>`_) (`#1078 <https://github.com/ros2/rcl/issues/1078>`_)
-* Contributors: mergify[bot]
+10.0.1 (2024-11-20)
+-------------------
+* Make the event skipping more generic. (`#1197 <https://github.com/ros2/rcl/issues/1197>`_)
+* Heavy cleanup of test_events.cpp. (`#1196 <https://github.com/ros2/rcl/issues/1196>`_)
+* Contributors: Chris Lalancette
 
-5.3.3 (2023-04-25)
-------------------
-* user defined allocator should be used for rosout publisher. (`#1044 <https://github.com/ros2/rcl/issues/1044>`_) (`#1045 <https://github.com/ros2/rcl/issues/1045>`_)
-* avoid unnecessary copy for rcutils_char_array_vsprintf. (`#1035 <https://github.com/ros2/rcl/issues/1035>`_) (`#1039 <https://github.com/ros2/rcl/issues/1039>`_)
-* Contributors: mergify[bot]
+10.0.0 (2024-10-03)
+-------------------
+* Cleanup test_graph.cpp. (`#1193 <https://github.com/ros2/rcl/issues/1193>`_)
+* Expect a minimum of two nodes to be alive in test_graph (`#1192 <https://github.com/ros2/rcl/issues/1192>`_)
+* escalate RCL_RET_ACTION_xxx to 40XX. (`#1191 <https://github.com/ros2/rcl/issues/1191>`_)
+* Fix NULL allocator and racy condition. (`#1188 <https://github.com/ros2/rcl/issues/1188>`_)
+* Properly initialize the char array used in type hash calculations. (`#1182 <https://github.com/ros2/rcl/issues/1182>`_)
+* Increased timeouts (`#1181 <https://github.com/ros2/rcl/issues/1181>`_)
+* Skip some event tests on rmw_zenoh (`#1180 <https://github.com/ros2/rcl/issues/1180>`_)
+* doc: rcl_logging_spdlog is the default impl. (`#1177 <https://github.com/ros2/rcl/issues/1177>`_)
+* Update wait.h documentation for rcl_wait (`#1176 <https://github.com/ros2/rcl/issues/1176>`_)
+* Change the starting time of the goal expiration timeout (`#1121 <https://github.com/ros2/rcl/issues/1121>`_)
+* Contributors: Alejandro Hernández Cordero, Barry Xu, Chris Lalancette, Felix Penzlin, Tomoya Fujita, Yadu
 
-5.3.2 (2022-09-08)
+9.4.1 (2024-07-29)
 ------------------
-* fixed rcl_wait return error when timer cancelled (`#1003 <https://github.com/ros2/rcl/issues/1003>`_) (`#1006 <https://github.com/ros2/rcl/issues/1006>`_)
-* Contributors: mergify[bot]
+* Removed deprecated localhost_only (`#1169 <https://github.com/ros2/rcl/issues/1169>`_)
+* Fix typo in rcl_validate_enclave_name_with_size() doc (`#1168 <https://github.com/ros2/rcl/issues/1168>`_)
+* Removed deprecated rcl_init_timer() (`#1167 <https://github.com/ros2/rcl/issues/1167>`_)
+* Cleanup test_count_matched test to handle non-DDS RMWs (`#1164 <https://github.com/ros2/rcl/issues/1164>`_)
+  * Make check_state a class method in test_count_matched.
+  This allows us to pass fewer parameters into each
+  each invocation, and allows us to hide some more of
+  the implementation inside the class.
+  * Rename "ops" to "opts" in test_count_matched.
+  It just better reflects what these structures are.
+  * Cleanup pub/subs with a scope_exit in test_count_matched.
+  This just ensures that they are always cleaned up, even
+  if we exit early.  Note that we specifically do *not*
+  use it for test_count_matched_functions, since the cleanup
+  is intentionally interleaved with other tests.
+  * Check with the RMW layer to see whether QoS is compatible.
+  Some RMWs may have different compatibility than DDS, so
+  check with the RMW layer to see what we should expect for
+  the number of publishers and subscriptions.
+* Contributors: Alejandro Hernández Cordero, Chris Lalancette, Christophe Bedard
+
+9.4.0 (2024-06-17)
+------------------
+* Add mechanism to disable workaround for dependency groups (`#1151 <https://github.com/ros2/rcl/issues/1151>`_)
+* remap_impl: minor typo (`#1158 <https://github.com/ros2/rcl/issues/1158>`_)
+* Fix up rmw_cyclonedds timestamp testing. (`#1156 <https://github.com/ros2/rcl/issues/1156>`_)
+* Add 'mimick' label to tests which use Mimick (`#1152 <https://github.com/ros2/rcl/issues/1152>`_)
+* Contributors: Chris Lalancette, G.A. vd. Hoorn, Scott K Logan
+
+9.3.0 (2024-04-26)
+------------------
+* Fixed warnings - strict-prototypes (`#1148 <https://github.com/ros2/rcl/issues/1148>`_)
+* Contributors: Alejandro Hernández Cordero
+
+9.2.1 (2024-04-16)
+------------------
+* chore: Minor style improvements (`#1147 <https://github.com/ros2/rcl/issues/1147>`_)
+  Co-authored-by: Janosch Machowinski <J.Machowinski@cellumation.com>
+* improved rcl_wait in the area of timeout computation and spurious wakeups (`#1146 <https://github.com/ros2/rcl/issues/1146>`_)
+  Added special handling for timers with a clock that has time override
+  enabled. For these timer we should not compute a timeout, as the waitset
+  is waken up by the associated guard condition.
+  Before this change, the waitset could wait up, because of an expected ready
+  timer, that was acutally not ready, as the time update to the ROS_TIME had
+  not yet arrived.
+* Add tracepoint for publish_serialized_publish (`#1136 <https://github.com/ros2/rcl/issues/1136>`_)
+  * Add tracepoint for publish_serialized_publish
+  * Add: tracepoint for rcl_take_serialized_message
+  ---------
+* Revert "improved rcl_wait in the area of timeout computation and spurious wakeups (`#1135 <https://github.com/ros2/rcl/issues/1135>`_)" (`#1142 <https://github.com/ros2/rcl/issues/1142>`_)
+  This reverts commit 3c6c5dc47dac23d70722a60b2c0a387d2e71b71d.
+* improved rcl_wait in the area of timeout computation and spurious wakeups (`#1135 <https://github.com/ros2/rcl/issues/1135>`_)
+  * feat: Allow usage of rcl_timer_clock with const rcl_timer_t*
+  * fix: Fixed purious wake-ups on ROS_TIME timers with ROS_TIME enabled
+  Added special handling for timers with a clock that has time override
+  enabled. For theses timer we should not compute a timeout, as the waitset
+  is waken up by the associated guard condition.
+  Before this change, the waitset could wait up, because of an expected ready
+  timer, that was acutally not ready, as the time update to the ROS_TIME had
+  not yet arrived.
+  * feat: Added rcl_timer_get_next_call_time
+  * fix(rcl_wait): Improved timeout computation in case of many timers
+  This commit changes the computation of the timer timeout, to be more
+  precise, in the case, of many registered timers.
+  ---------
+  Co-authored-by: Janosch Machowinski <j.machowinski@nospam.org>
+* Generate version header using ament_generate_version_header(..) (`#1141 <https://github.com/ros2/rcl/issues/1141>`_)
+* Contributors: Chris Lalancette, G.A. vd. Hoorn, h-suzuki-isp, jmachowinski
+
+9.2.0 (2024-03-28)
+------------------
+* Add rcl_timer_call_with_info function that retrieves the expected and the actual timer trigger times (`#1113 <https://github.com/ros2/rcl/issues/1113>`_)
+  Co-authored-by: Alexis Tsogias <a.tsogias@cellumation.com>
+  Co-authored-by: Michael Carroll <carroll.michael@gmail.com>
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+* document out parameters for rcl_get_node_names and rcl_get_node_names_with_enclaves (`#1137 <https://github.com/ros2/rcl/issues/1137>`_)
+  * document out params for rcl_get_node_names
+  Co-authored-by: Chris Lalancette <clalancette@gmail.com>
+* Cleanups for uncrustify 0.78. (`#1134 <https://github.com/ros2/rcl/issues/1134>`_)
+  Mostly this is expanding macros, as this is just easier
+  to read anyway.  But we also mark one section as INDENT-OFF.
+* Re-order rcl_logging_interface include (`#1133 <https://github.com/ros2/rcl/issues/1133>`_)
+* Remove unnecessary macros. (`#1132 <https://github.com/ros2/rcl/issues/1132>`_)
+  These really don't add anything, and allows us to
+  avoid some changes in macro formatting between Ubuntu
+  22.04 and Ubuntu 24.04.
+* Update quality declaration documents (`#1131 <https://github.com/ros2/rcl/issues/1131>`_)
+* Contributors: Chris Lalancette, Christophe Bedard, Felix Penzlin, jmachowinski
+
+9.1.0 (2024-01-24)
+------------------
+* add unit tests for --log-file-name argument. (`#1130 <https://github.com/ros2/rcl/issues/1130>`_)
+* support `--log-file-name` to ros args. (`#1127 <https://github.com/ros2/rcl/issues/1127>`_)
+* Contributors: Tomoya Fujita
+
+9.0.0 (2023-12-26)
+------------------
+* Make sure to disable a test_node test on RHEL. (`#1124 <https://github.com/ros2/rcl/issues/1124>`_)
+* remove static function rcl_ret_from_rcutils_ret(). (`#1122 <https://github.com/ros2/rcl/issues/1122>`_)
+* Remove AMENT_DEPENDENCIES from rcl_add_custom_gtest. (`#1119 <https://github.com/ros2/rcl/issues/1119>`_)
+* Remove unncecessary dependencies in tests (`#1114 <https://github.com/ros2/rcl/issues/1114>`_)
+* a rosout publisher of a node might not exist (`#1115 <https://github.com/ros2/rcl/issues/1115>`_)
+* Contributors: Chen Lihui, Chris Lalancette, Christopher Wecht, Tomoya Fujita
+
+8.0.0 (2023-11-06)
+------------------
+* Set disable loan to on by default. (`#1110 <https://github.com/ros2/rcl/issues/1110>`_)
+* Return service from node_type_description_service_init (`#1112 <https://github.com/ros2/rcl/issues/1112>`_)
+* next_call_time will always be greater than now after calling rcl_timer_call. (`#1089 <https://github.com/ros2/rcl/issues/1089>`_)
+* Contributors: Chris Lalancette, Michael Carroll, Thiemo Kohrt
+
+7.3.0 (2023-10-09)
+------------------
+* Add rcl count clients, servicec & tests (`#1011 <https://github.com/ros2/rcl/issues/1011>`_)
+* Improve the reliability of test_get_type_description_service. (`#1107 <https://github.com/ros2/rcl/issues/1107>`_)
+* Contributors: Chris Lalancette, Minju, Lee
+
+7.2.0 (2023-10-04)
+------------------
+* Remove most remaining uses of ament_target_dependencies. (`#1102 <https://github.com/ros2/rcl/issues/1102>`_)
+* Just remove rcpputils::fs dependency (`#1105 <https://github.com/ros2/rcl/issues/1105>`_)
+* Decouple rosout publisher init from node init. (`#1065 <https://github.com/ros2/rcl/issues/1065>`_)
+* Cleanup the error handling in rcl_node_init. (`#1099 <https://github.com/ros2/rcl/issues/1099>`_)
+* Fix a clang warning for suspicious string concatentation. (`#1101 <https://github.com/ros2/rcl/issues/1101>`_)
+* add the link to the topic name rules. (`#1100 <https://github.com/ros2/rcl/issues/1100>`_)
+* Contributors: Chris Lalancette, Kenta Yonekura, Tomoya Fujita
+
+7.1.1 (2023-09-07)
+------------------
+* Cut down the amount of time for test_logging_rosout. (`#1098 <https://github.com/ros2/rcl/issues/1098>`_)
+* Simplify local_namespace handling in rcl_node_init. (`#1097 <https://github.com/ros2/rcl/issues/1097>`_)
+* Reduce the number of tests we run (`#1096 <https://github.com/ros2/rcl/issues/1096>`_)
+* Adding duplicate node information (`#1088 <https://github.com/ros2/rcl/issues/1088>`_)
+* Revamp the test_get_type_description_service. (`#1095 <https://github.com/ros2/rcl/issues/1095>`_)
+* Cleanup network flow endpoints test. (`#1094 <https://github.com/ros2/rcl/issues/1094>`_)
+* Reduce the failure timeout time for namespaces. (`#1093 <https://github.com/ros2/rcl/issues/1093>`_)
+* Shorten wait time for a subscription not being ready. (`#1092 <https://github.com/ros2/rcl/issues/1092>`_)
+* Contributors: Chris Lalancette, Lucas Wendland
+
+7.1.0 (2023-08-21)
+------------------
+* rcl_send_response returns RCL_RET_TIMEOUT. (`#1048 <https://github.com/ros2/rcl/issues/1048>`_)
+* Move test_namespace into the correct directory. (`#1087 <https://github.com/ros2/rcl/issues/1087>`_)
+* Reset errors in tests to reduce warnings (`#1085 <https://github.com/ros2/rcl/issues/1085>`_)
+* Cleanup error reporting in the type hash code. (`#1084 <https://github.com/ros2/rcl/issues/1084>`_)
+* Instrument loaned message publication code path (`#1083 <https://github.com/ros2/rcl/issues/1083>`_)
+* Contributors: Chris Lalancette, Christophe Bedard, Tomoya Fujita
+
+7.0.0 (2023-07-11)
+------------------
+* Add `~/get_type_description` service (rep2011) (`#1052 <https://github.com/ros2/rcl/issues/1052>`_)
+* Modifies timers API to select autostart state (`#1004 <https://github.com/ros2/rcl/issues/1004>`_)
+* test publisher/subscription with the c/cpp typesupport for test_msgs::msg::array (`#1074 <https://github.com/ros2/rcl/issues/1074>`_)
+* validation result should be used to print the error message. (`#1077 <https://github.com/ros2/rcl/issues/1077>`_)
+* Contributors: Chen Lihui, Eloy Briceno, Hans-Joachim Krauch, Tomoya Fujita
+
+6.3.0 (2023-06-12)
+------------------
+* improve error msg of `rcl_expand_topic_name` (`#1076 <https://github.com/ros2/rcl/issues/1076>`_)
+* Use TRACETOOLS\_ prefix for tracepoint-related macros (`#1058 <https://github.com/ros2/rcl/issues/1058>`_)
+* Contributors: Christophe Bedard, Eric W
+
+6.2.0 (2023-06-07)
+------------------
+* fix comment (`#1073 <https://github.com/ros2/rcl/issues/1073>`_)
+* localhost_only prevails auto discovery options if enabled. (`#1069 <https://github.com/ros2/rcl/issues/1069>`_)
+* Avoid dynamic allocation of message before sending over rosout (`#1067 <https://github.com/ros2/rcl/issues/1067>`_)
+* Contributors: Chen Lihui, Christopher Wecht, Tomoya Fujita
+
+6.1.1 (2023-05-11)
+------------------
+* clarify `rcl_node_init` return code (`#1066 <https://github.com/ros2/rcl/issues/1066>`_)
+* Contributors: Eric W
+
+6.1.0 (2023-04-28)
+------------------
+* Fix a format-security warning when building with clang. (`#1064 <https://github.com/ros2/rcl/issues/1064>`_)
+* Contributors: Chris Lalancette
+
+6.0.1 (2023-04-18)
+------------------
+* fix flaky test (`#1063 <https://github.com/ros2/rcl/issues/1063>`_)
+* Contributors: Chen Lihui
+
+6.0.0 (2023-04-12)
+------------------
+* Add enable_type_description_service node option - API only (`#1060 <https://github.com/ros2/rcl/issues/1060>`_)
+* Dynamic Subscription (BONUS: Allocators): rcl (`#1057 <https://github.com/ros2/rcl/issues/1057>`_)
+* Runtime Interface Reflection: rcl (`#1025 <https://github.com/ros2/rcl/issues/1025>`_)
+* [rcl] Improve handling of dynamic discovery  (`#1023 <https://github.com/ros2/rcl/issues/1023>`_)
+* Use get_type_hash_func for typesupports (`#1055 <https://github.com/ros2/rcl/issues/1055>`_)
+* publish for rosout topic multiple times to avoid flaky test (`#1054 <https://github.com/ros2/rcl/issues/1054>`_)
+* Switch to target_link_libraries in rcl. (`#1051 <https://github.com/ros2/rcl/issues/1051>`_)
+* Calculate type hash from TypeDescription (rep2011) (`#1027 <https://github.com/ros2/rcl/issues/1027>`_)
+* Implement matched event (`#1033 <https://github.com/ros2/rcl/issues/1033>`_)
+* use user-defined allocator to configure logging. (`#1047 <https://github.com/ros2/rcl/issues/1047>`_)
+* user defined allocator should be used for rosout publisher. (`#1044 <https://github.com/ros2/rcl/issues/1044>`_)
+* Add in inconsistent_topic implementation. (`#1024 <https://github.com/ros2/rcl/issues/1024>`_)
+* doc update, ROS message accessibility depends on RMW implementation. (`#1043 <https://github.com/ros2/rcl/issues/1043>`_)
+* Fix some warnings from clang. (`#1042 <https://github.com/ros2/rcl/issues/1042>`_)
+* avoid unnecessary copy for rcutils_char_array_vsprintf. (`#1035 <https://github.com/ros2/rcl/issues/1035>`_)
+* Contributors: Barry Xu, Chen Lihui, Chris Lalancette, Emerson Knapp, Geoffrey Biggs, Tomoya Fujita, methylDragon
+
+5.9.0 (2023-03-01)
+------------------
+* Service introspection (`#997 <https://github.com/ros2/rcl/issues/997>`_)
+* Cache disable flag to avoid reading environmental variable. (`#1029 <https://github.com/ros2/rcl/issues/1029>`_)
+* Contributors: Brian, Tomoya Fujita
+
+5.8.0 (2023-02-23)
+------------------
+* use parent logger (`#921 <https://github.com/ros2/rcl/issues/921>`_)
+* Contributors: Chen Lihui
+
+5.7.0 (2023-02-13)
+------------------
+* Add timer on reset callback (`#995 <https://github.com/ros2/rcl/issues/995>`_)
+* Update rcl to C++17. (`#1031 <https://github.com/ros2/rcl/issues/1031>`_)
+* Make sure to check the return value of rcl_clock_init in tests. (`#1030 <https://github.com/ros2/rcl/issues/1030>`_)
+* Contributors: Chris Lalancette, mauropasse
+
+5.6.0 (2022-12-05)
+------------------
+* Implement rcl_clock_time_started (`#1021 <https://github.com/ros2/rcl/issues/1021>`_)
+* Make sure to reset errors more places in the tests. (`#1020 <https://github.com/ros2/rcl/issues/1020>`_)
+  This makes it so we don't get as many warnings when the
+  tests are running.
+* [rolling] Update maintainers - 2022-11-07 (`#1017 <https://github.com/ros2/rcl/issues/1017>`_)
+* Contributors: Audrow Nash, Chris Lalancette, methylDragon
+
+5.5.0 (2022-11-02)
+------------------
+* Small cleanups to rcl (`#1013 <https://github.com/ros2/rcl/issues/1013>`_)
+* use int64_t for period. (`#1010 <https://github.com/ros2/rcl/issues/1010>`_)
+* Contributors: Chris Lalancette, Tomoya Fujita
+
+5.4.1 (2022-09-13)
+------------------
+* fixed rcl_wait return error when timer cancelled (`#1003 <https://github.com/ros2/rcl/issues/1003>`_)
+* remove duplicate packages in find_package and reorder (`#994 <https://github.com/ros2/rcl/issues/994>`_)
+* Contributors: Chen Lihui, 정찬희
+
+5.4.0 (2022-04-29)
+------------------
 
 5.3.1 (2022-04-26)
 ------------------
