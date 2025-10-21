@@ -28,7 +28,6 @@ extern "C"
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
 #include "rcl/graph.h"
-#include "rcl/node_type_cache.h"
 #include "rcl/subscription.h"
 #include "rcl/types.h"
 #include "rcl/wait.h"
@@ -64,8 +63,7 @@ _rcl_action_get_zero_initialized_client_impl(void)
     0,
     0,
     0,
-    0,
-    rosidl_get_zero_initialized_type_hash()
+    0
   };
   return null_action_client;
 }
@@ -93,13 +91,7 @@ _rcl_action_client_fini_impl(
   if (RCL_RET_OK != rcl_subscription_fini(&action_client->impl->status_subscription, node)) {
     ret = RCL_RET_ERROR;
   }
-  if (
-    ROSIDL_TYPE_HASH_VERSION_UNSET != action_client->impl->type_hash.version &&
-    RCL_RET_OK != rcl_node_type_cache_unregister_type(node, &action_client->impl->type_hash))
-  {
-    ret = RCL_RET_ERROR;
-  }
-  allocator.deallocate(action_client->impl->remapped_action_name, allocator.state);
+  allocator.deallocate(action_client->impl->action_name, allocator.state);
   allocator.deallocate(action_client->impl, allocator.state);
   action_client->impl = NULL;
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Action client finalized");
@@ -109,8 +101,7 @@ _rcl_action_client_fini_impl(
 // \internal Initializes an action client specific service client.
 #define CLIENT_INIT(Type) \
   char * Type ## _service_name = NULL; \
-  ret = rcl_action_get_ ## Type ## _service_name( \
-    action_client->impl->remapped_action_name, allocator, &Type ## _service_name); \
+  ret = rcl_action_get_ ## Type ## _service_name(action_name, allocator, &Type ## _service_name); \
   if (RCL_RET_OK != ret) { \
     rcl_reset_error(); \
     RCL_SET_ERROR_MSG("failed to get " #Type " service name"); \
@@ -146,8 +137,7 @@ _rcl_action_client_fini_impl(
 // \internal Initializes an action client specific topic subscription.
 #define SUBSCRIPTION_INIT(Type) \
   char * Type ## _topic_name = NULL; \
-  ret = rcl_action_get_ ## Type ## _topic_name( \
-    action_client->impl->remapped_action_name, allocator, &Type ## _topic_name); \
+  ret = rcl_action_get_ ## Type ## _topic_name(action_name, allocator, &Type ## _topic_name); \
   if (RCL_RET_OK != ret) { \
     rcl_reset_error(); \
     RCL_SET_ERROR_MSG("failed to get " #Type " topic name"); \
@@ -214,31 +204,13 @@ rcl_action_client_init(
 
   // Avoid uninitialized pointers should initialization fail
   *action_client->impl = _rcl_action_get_zero_initialized_client_impl();
-
-  // Remap/Expand the action name
-  ret = rcl_node_resolve_name(
-    node,
-    action_name,
-    allocator,
-    false, false,
-    &action_client->impl->remapped_action_name
-  );
-
-  if (RCL_RET_OK != ret) {
-    if (RCL_RET_TOPIC_NAME_INVALID == ret || RCL_RET_UNKNOWN_SUBSTITUTION == ret) {
-      ret = RCL_RET_ACTION_NAME_INVALID;
-    } else if (RCL_RET_BAD_ALLOC != ret) {
-      ret = RCL_RET_ERROR;
-    }
+  // Copy action client name and options.
+  action_client->impl->action_name = rcutils_strdup(action_name, allocator);
+  if (NULL == action_client->impl->action_name) {
+    RCL_SET_ERROR_MSG("failed to duplicate action name");
+    ret = RCL_RET_BAD_ALLOC;
     goto fail;
   }
-  RCUTILS_LOG_DEBUG_NAMED(
-    ROS_PACKAGE_NAME,
-    "Remapped and expanded action name '%s'",
-    action_client->impl->remapped_action_name
-  );
-
-  // Copy action client name and options.
   action_client->impl->options = *options;
 
   // Initialize action service clients.
@@ -250,21 +222,9 @@ rcl_action_client_init(
   SUBSCRIPTION_INIT(feedback);
   SUBSCRIPTION_INIT(status);
 
-  if (RCL_RET_OK != rcl_node_type_cache_register_type(
-      node, type_support->get_type_hash_func(type_support),
-      type_support->get_type_description_func(type_support),
-      type_support->get_type_description_sources_func(type_support)))
-  {
-    rcutils_reset_error();
-    RCL_SET_ERROR_MSG("Failed to register type for action");
-    goto fail;
-  }
-  action_client->impl->type_hash = *type_support->get_type_hash_func(type_support);
-
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Action client initialized");
   return ret;
 fail:
-
   fini_ret = _rcl_action_client_fini_impl(action_client, node, allocator);
   if (RCL_RET_OK != fini_ret) {
     RCL_SET_ERROR_MSG("failed to cleanup action client");
@@ -492,7 +452,7 @@ rcl_action_client_get_action_name(const rcl_action_client_t * action_client)
   if (!rcl_action_client_is_valid(action_client)) {
     return NULL;
   }
-  return action_client->impl->remapped_action_name;
+  return action_client->impl->action_name;
 }
 
 const rcl_action_client_options_t *

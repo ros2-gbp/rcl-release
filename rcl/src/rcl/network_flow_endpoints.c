@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "rcl/error_handling.h"
 #include "rcl/graph.h"
 #include "rcl/network_flow_endpoints.h"
@@ -110,3 +115,7 @@ rcl_subscription_get_network_flow_endpoints(
   }
   return rcl_convert_rmw_ret_to_rcl_ret(rmw_ret);
 }
+
+#ifdef __cplusplus
+}
+#endif

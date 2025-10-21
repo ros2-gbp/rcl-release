@@ -26,7 +26,14 @@
 #include "./allocator_testing_utils.h"
 #include "../mocking_utils/patch.hpp"
 
-class TestNetworkFlowEndpointsNode : public ::testing::Test
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+class CLASSNAME (TestNetworkFlowEndpointsNode, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   rcl_context_t * context_ptr;
@@ -68,7 +75,8 @@ public:
   }
 };
 
-class TestPublisherNetworkFlowEndpoints : public TestNetworkFlowEndpointsNode
+class CLASSNAME (TestPublisherNetworkFlowEndpoints, RMW_IMPLEMENTATION)
+  : public CLASSNAME(TestNetworkFlowEndpointsNode, RMW_IMPLEMENTATION)
 {
 public:
   const rosidl_message_type_support_t * ts =
@@ -87,7 +95,7 @@ public:
 
   void SetUp() override
   {
-    TestNetworkFlowEndpointsNode::SetUp();
+    CLASSNAME(TestNetworkFlowEndpointsNode, RMW_IMPLEMENTATION) ::SetUp();
 
     publisher_1 = rcl_get_zero_initialized_publisher();
     publisher_1_options = rcl_publisher_get_default_options();
@@ -128,11 +136,12 @@ public:
     ret = rcl_publisher_fini(&publisher_3, this->node_ptr);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
-    TestNetworkFlowEndpointsNode::TearDown();
+    CLASSNAME(TestNetworkFlowEndpointsNode, RMW_IMPLEMENTATION) ::TearDown();
   }
 };
 
-class TestSubscriptionNetworkFlowEndpoints : public TestNetworkFlowEndpointsNode
+class CLASSNAME (TestSubscriptionNetworkFlowEndpoints, RMW_IMPLEMENTATION)
+  : public CLASSNAME(TestNetworkFlowEndpointsNode, RMW_IMPLEMENTATION)
 {
 public:
   const rosidl_message_type_support_t * ts =
@@ -151,7 +160,7 @@ public:
 
   void SetUp() override
   {
-    TestNetworkFlowEndpointsNode::SetUp();
+    CLASSNAME(TestNetworkFlowEndpointsNode, RMW_IMPLEMENTATION) ::SetUp();
 
     subscription_1 = rcl_get_zero_initialized_subscription();
     subscription_1_options = rcl_subscription_get_default_options();
@@ -192,11 +201,14 @@ public:
     ret = rcl_subscription_fini(&subscription_3, this->node_ptr);
     EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
-    TestNetworkFlowEndpointsNode::TearDown();
+    CLASSNAME(TestNetworkFlowEndpointsNode, RMW_IMPLEMENTATION) ::TearDown();
   }
 };
 
-TEST_F(TestPublisherNetworkFlowEndpoints, test_publisher_get_network_flow_endpoints_errors) {
+TEST_F(
+  CLASSNAME(
+    TestPublisherNetworkFlowEndpoints,
+    RMW_IMPLEMENTATION), test_publisher_get_network_flow_endpoints_errors) {
   rcl_ret_t ret;
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_allocator_t failing_allocator = get_failing_allocator();
@@ -236,7 +248,10 @@ TEST_F(TestPublisherNetworkFlowEndpoints, test_publisher_get_network_flow_endpoi
   rcl_reset_error();
 }
 
-TEST_F(TestPublisherNetworkFlowEndpoints, test_publisher_get_network_flow_endpoints) {
+TEST_F(
+  CLASSNAME(
+    TestPublisherNetworkFlowEndpoints,
+    RMW_IMPLEMENTATION), test_publisher_get_network_flow_endpoints) {
   rcl_ret_t ret_1;
   rcl_ret_t ret_2;
   rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -251,9 +266,7 @@ TEST_F(TestPublisherNetworkFlowEndpoints, test_publisher_get_network_flow_endpoi
   // Get network flow endpoints of publisher with unique network flow endpoints
   rcl_network_flow_endpoint_array_t network_flow_endpoint_array_2 =
     rcl_get_zero_initialized_network_flow_endpoint_array();
-  bool pub_2_is_valid = rcl_publisher_is_valid(&this->publisher_2);
-  rcl_reset_error();
-  if (pub_2_is_valid) {
+  if (rcl_publisher_is_valid(&this->publisher_2)) {
     rcl_network_flow_endpoint_array_t network_flow_endpoint_array_2 =
       rcl_get_zero_initialized_network_flow_endpoint_array();
     ret_2 = rcl_publisher_get_network_flow_endpoints(
@@ -292,12 +305,13 @@ TEST_F(TestPublisherNetworkFlowEndpoints, test_publisher_get_network_flow_endpoi
 
   // Release resources
   rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array_1);
-  rcl_reset_error();
   rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array_2);
-  rcl_reset_error();
 }
 
-TEST_F(TestSubscriptionNetworkFlowEndpoints, test_subscription_get_network_flow_endpoints_errors) {
+TEST_F(
+  CLASSNAME(
+    TestSubscriptionNetworkFlowEndpoints,
+    RMW_IMPLEMENTATION), test_subscription_get_network_flow_endpoints_errors) {
   rcl_ret_t ret;
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_allocator_t failing_allocator = get_failing_allocator();
@@ -337,7 +351,10 @@ TEST_F(TestSubscriptionNetworkFlowEndpoints, test_subscription_get_network_flow_
   rcl_reset_error();
 }
 
-TEST_F(TestSubscriptionNetworkFlowEndpoints, test_subscription_get_network_flow_endpoints) {
+TEST_F(
+  CLASSNAME(
+    TestSubscriptionNetworkFlowEndpoints,
+    RMW_IMPLEMENTATION), test_subscription_get_network_flow_endpoints) {
   rcl_ret_t ret_1;
   rcl_ret_t ret_2;
   rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -387,11 +404,9 @@ TEST_F(TestSubscriptionNetworkFlowEndpoints, test_subscription_get_network_flow_
           strcmp_ret);
       }
     }
-
-    // Release resources
-    rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array_1);
-    rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array_2);
-  } else {
-    rcl_reset_error();
   }
+
+  // Release resources
+  rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array_1);
+  rcl_network_flow_endpoint_array_fini(&network_flow_endpoint_array_2);
 }

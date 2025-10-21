@@ -2,118 +2,38 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-9.2.8 (2025-10-21)
+5.3.11 (2025-10-21)
+-------------------
+
+5.3.10 (2025-07-16)
+-------------------
+
+5.3.9 (2024-07-26)
 ------------------
-* Added remapping resolution for action names (`#1170 <https://github.com/ros2/rcl/issues/1170>`_) (`#1220 <https://github.com/ros2/rcl/issues/1220>`_)
+* Generate version header using `ament_generate_version_header(..)` (backport `#1141 <https://github.com/ros2/rcl/issues/1141>`_) (`#1145 <https://github.com/ros2/rcl/issues/1145>`_)
 * Contributors: mergify[bot]
 
-9.2.7 (2025-06-23)
+5.3.8 (2024-05-15)
 ------------------
-* Change the starting time of the goal expiration timeout (`#1121 <https://github.com/ros2/rcl//issues/1121>`_) (`#1240 <https://github.com/ros2/rcl//issues/1240>`_)
+* add RCL_RET_TIMEOUT to action service response. (`#1138 <https://github.com/ros2/rcl/issues/1138>`_) (`#1153 <https://github.com/ros2/rcl/issues/1153>`_)
 * Contributors: mergify[bot]
 
-9.2.6 (2025-04-29)
+5.3.7 (2024-01-24)
 ------------------
 
-9.2.5 (2025-04-02)
+5.3.6 (2023-11-13)
 ------------------
 
-9.2.4 (2024-09-19)
+5.3.5 (2023-09-19)
 ------------------
 
-9.2.3 (2024-05-13)
+5.3.4 (2023-07-17)
 ------------------
 
-9.2.2 (2024-04-24)
+5.3.3 (2023-04-25)
 ------------------
 
-9.2.1 (2024-04-16)
-------------------
-* Generate version header using ament_generate_version_header(..) (`#1141 <https://github.com/ros2/rcl/issues/1141>`_)
-* Contributors: G.A. vd. Hoorn
-
-9.2.0 (2024-03-28)
-------------------
-* add RCL_RET_TIMEOUT to action service response. (`#1138 <https://github.com/ros2/rcl/issues/1138>`_)
-  * add RCL_RET_TIMEOUT to action service response.
-  * address review comment.
-  ---------
-* Update quality declaration documents (`#1131 <https://github.com/ros2/rcl/issues/1131>`_)
-* Contributors: Christophe Bedard, Tomoya Fujita
-
-9.1.0 (2024-01-24)
-------------------
-
-9.0.0 (2023-12-26)
-------------------
-
-8.0.0 (2023-11-06)
-------------------
-
-7.3.0 (2023-10-09)
-------------------
-
-7.2.0 (2023-10-04)
-------------------
-* Remove most remaining uses of ament_target_dependencies. (`#1102 <https://github.com/ros2/rcl/issues/1102>`_)
-* Contributors: Chris Lalancette
-
-7.1.1 (2023-09-07)
-------------------
-
-7.1.0 (2023-08-21)
-------------------
-
-7.0.0 (2023-07-11)
-------------------
-* Add `~/get_type_description` service (rep2011) (`#1052 <https://github.com/ros2/rcl/issues/1052>`_)
-* Modifies timers API to select autostart state (`#1004 <https://github.com/ros2/rcl/issues/1004>`_)
-* Contributors: Eloy Briceno, Hans-Joachim Krauch
-
-6.3.0 (2023-06-12)
-------------------
-
-6.2.0 (2023-06-07)
-------------------
-
-6.1.1 (2023-05-11)
-------------------
-
-6.1.0 (2023-04-28)
-------------------
-
-6.0.1 (2023-04-18)
-------------------
-
-6.0.0 (2023-04-12)
-------------------
-* doc update, ROS message accessibility depends on RMW implementation. (`#1043 <https://github.com/ros2/rcl/issues/1043>`_)
-* Contributors: Tomoya Fujita
-
-5.9.0 (2023-03-01)
-------------------
-
-5.8.0 (2023-02-23)
-------------------
-
-5.7.0 (2023-02-13)
-------------------
-* Update rcl to C++17. (`#1031 <https://github.com/ros2/rcl/issues/1031>`_)
-* Contributors: Chris Lalancette
-
-5.6.0 (2022-12-05)
-------------------
-* Reduce result_timeout to 10 seconds. (`#1012 <https://github.com/ros2/rcl/issues/1012>`_)
-* [rolling] Update maintainers - 2022-11-07 (`#1017 <https://github.com/ros2/rcl/issues/1017>`_)
-* Contributors: Audrow Nash, Chris Lalancette
-
-5.5.0 (2022-11-02)
-------------------
-
-5.4.1 (2022-09-13)
-------------------
-
-5.4.0 (2022-04-29)
+5.3.2 (2022-09-08)
 ------------------
 
 5.3.1 (2022-04-26)
