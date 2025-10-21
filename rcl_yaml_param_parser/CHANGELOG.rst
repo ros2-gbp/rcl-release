@@ -2,46 +2,27 @@
 Changelog for package rcl_yaml_param_parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-10.1.3 (2025-10-21)
--------------------
-* Fix param file parsing failure with wildcards due to ordering (`#1253 <https://github.com/ros2/rcl/issues/1253>`_) (`#1266 <https://github.com/ros2/rcl/issues/1266>`_)
+9.2.8 (2025-10-21)
+------------------
+* Fix param file parsing failure with wildcards due to ordering (`#1253 <https://github.com/ros2/rcl/issues/1253>`_) (`#1265 <https://github.com/ros2/rcl/issues/1265>`_)
 * Contributors: mergify[bot]
 
-10.1.2 (2025-09-30)
--------------------
-* Fix Cmake deprecation (`#1249 <https://github.com/ros2/rcl/issues/1249>`_) (`#1250 <https://github.com/ros2/rcl/issues/1250>`_)
-  cmake version < then 3.10 is deprecated
-  (cherry picked from commit 06c9ba61513efed8d21fdc6e7719438c04a927ea)
-  Co-authored-by: mosfet80 <10235105+mosfet80@users.noreply.github.com>
-* Contributors: mergify[bot]
-
-10.1.1 (2025-06-23)
--------------------
-
-10.1.0 (2025-04-04)
--------------------
-
-10.0.2 (2025-01-31)
--------------------
-* Cleanup errors after error paths in rcl_yaml_param_parser tests. (`#1203 <https://github.com/ros2/rcl/issues/1203>`_)
-  This gets rid of ugly "overwritten" warnings in the tests.
-* Contributors: Chris Lalancette
-
-10.0.1 (2024-11-20)
--------------------
-
-10.0.0 (2024-10-03)
--------------------
-
-9.4.1 (2024-07-29)
+9.2.7 (2025-06-23)
 ------------------
 
-9.4.0 (2024-06-17)
+9.2.6 (2025-04-29)
 ------------------
-* Add 'mimick' label to tests which use Mimick (`#1152 <https://github.com/ros2/rcl/issues/1152>`_)
-* Contributors: Scott K Logan
 
-9.3.0 (2024-04-26)
+9.2.5 (2025-04-02)
+------------------
+
+9.2.4 (2024-09-19)
+------------------
+
+9.2.3 (2024-05-13)
+------------------
+
+9.2.2 (2024-04-24)
 ------------------
 
 9.2.1 (2024-04-16)

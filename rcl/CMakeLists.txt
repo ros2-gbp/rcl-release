@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.5)
 
 project(rcl)
 
@@ -53,6 +53,7 @@ set(${PROJECT_NAME}_sources
   src/rcl/init_options.c
   src/rcl/lexer.c
   src/rcl/lexer_lookahead.c
+  src/rcl/localhost.c
   src/rcl/logging_rosout.c
   src/rcl/logging.c
   src/rcl/log_level.c

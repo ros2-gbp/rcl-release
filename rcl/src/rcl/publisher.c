@@ -39,8 +39,7 @@ extern "C"
 rcl_publisher_t
 rcl_get_zero_initialized_publisher(void)
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_publisher_t null_publisher;
+  static rcl_publisher_t null_publisher = {0};
   return null_publisher;
 }
 
@@ -220,7 +219,7 @@ rcl_publisher_options_t
 rcl_publisher_get_default_options(void)
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
-  rcl_publisher_options_t default_options;
+  static rcl_publisher_options_t default_options;
   // Must set the allocator and qos after because they are not a compile time constant.
   default_options.qos = rmw_qos_profile_default;
   default_options.allocator = rcl_get_default_allocator();
@@ -421,11 +420,7 @@ rcl_publisher_is_valid(const rcl_publisher_t * publisher)
     return false;  // error already set
   }
   if (!rcl_context_is_valid(publisher->impl->context)) {
-    if (!rcl_error_is_set()) {
-      // rcl_context_is_valid can return false both in the error case, and when the context
-      // hasn't been initialized.  It will only set the error message in the first case.
-      RCL_SET_ERROR_MSG("publisher's context is invalid");
-    }
+    RCL_SET_ERROR_MSG("publisher's context is invalid");
     return false;
   }
   RCL_CHECK_FOR_NULL_WITH_MSG(

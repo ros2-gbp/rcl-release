@@ -43,8 +43,7 @@ extern "C"
 rcl_action_client_t
 rcl_action_get_zero_initialized_client(void)
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_action_client_t null_action_client;
+  static rcl_action_client_t null_action_client = {0};
   return null_action_client;
 }
 
@@ -115,6 +114,11 @@ _rcl_action_client_fini_impl(
   if (RCL_RET_OK != ret) { \
     rcl_reset_error(); \
     RCL_SET_ERROR_MSG("failed to get " #Type " service name"); \
+    if (RCL_RET_BAD_ALLOC == ret) { \
+      ret = RCL_RET_BAD_ALLOC; \
+    } else { \
+      ret = RCL_RET_ERROR; \
+    } \
     goto fail; \
   } \
   rcl_client_options_t Type ## _service_client_options = { \
@@ -129,8 +133,12 @@ _rcl_action_client_fini_impl(
     &Type ## _service_client_options); \
   allocator.deallocate(Type ## _service_name, allocator.state); \
   if (RCL_RET_OK != ret) { \
-    if (RCL_RET_SERVICE_NAME_INVALID == ret) { \
+    if (RCL_RET_BAD_ALLOC == ret) { \
+      ret = RCL_RET_BAD_ALLOC; \
+    } else if (RCL_RET_SERVICE_NAME_INVALID == ret) { \
       ret = RCL_RET_ACTION_NAME_INVALID; \
+    } else { \
+      ret = RCL_RET_ERROR; \
     } \
     goto fail; \
   }
@@ -143,6 +151,11 @@ _rcl_action_client_fini_impl(
   if (RCL_RET_OK != ret) { \
     rcl_reset_error(); \
     RCL_SET_ERROR_MSG("failed to get " #Type " topic name"); \
+    if (RCL_RET_BAD_ALLOC == ret) { \
+      ret = RCL_RET_BAD_ALLOC; \
+    } else { \
+      ret = RCL_RET_ERROR; \
+    } \
     goto fail; \
   } \
   rcl_subscription_options_t Type ## _topic_subscription_options = \
@@ -158,8 +171,12 @@ _rcl_action_client_fini_impl(
     &Type ## _topic_subscription_options); \
   allocator.deallocate(Type ## _topic_name, allocator.state); \
   if (RCL_RET_OK != ret) { \
-    if (RCL_RET_TOPIC_NAME_INVALID == ret) { \
+    if (RCL_RET_BAD_ALLOC == ret) { \
+      ret = RCL_RET_BAD_ALLOC; \
+    } else if (RCL_RET_TOPIC_NAME_INVALID == ret) { \
       ret = RCL_RET_ACTION_NAME_INVALID; \
+    } else { \
+      ret = RCL_RET_ERROR; \
     } \
     goto fail; \
   }
@@ -233,11 +250,11 @@ rcl_action_client_init(
   SUBSCRIPTION_INIT(feedback);
   SUBSCRIPTION_INIT(status);
 
-  ret = rcl_node_type_cache_register_type(
+  if (RCL_RET_OK != rcl_node_type_cache_register_type(
       node, type_support->get_type_hash_func(type_support),
       type_support->get_type_description_func(type_support),
-      type_support->get_type_description_sources_func(type_support));
-  if (RCL_RET_OK != ret) {
+      type_support->get_type_description_sources_func(type_support)))
+  {
     rcutils_reset_error();
     RCL_SET_ERROR_MSG("Failed to register type for action");
     goto fail;
@@ -273,7 +290,7 @@ rcl_action_client_fini(rcl_action_client_t * action_client, rcl_node_t * node)
 rcl_action_client_options_t
 rcl_action_client_get_default_options(void)
 {
-  rcl_action_client_options_t default_options;
+  static rcl_action_client_options_t default_options;
   default_options.goal_service_qos = rmw_qos_profile_services_default;
   default_options.cancel_service_qos = rmw_qos_profile_services_default;
   default_options.result_service_qos = rmw_qos_profile_services_default;
@@ -750,41 +767,6 @@ rcl_action_client_set_status_subscription_callback(
     &action_client->impl->status_subscription,
     callback,
     user_data);
-}
-
-#define CLIENT_CONFIGURE_SERVICE_INTROSPECTION(TYPE, STATE) \
-  if (rcl_client_configure_service_introspection( \
-      &action_client->impl->TYPE ## _client, \
-      node, \
-      clock, \
-      type_support->TYPE ## _service_type_support, \
-      publisher_options, \
-      STATE) != RCL_RET_OK) \
-  { \
-    return RCL_RET_ERROR; \
-  }
-
-
-rcl_ret_t
-rcl_action_client_configure_action_introspection(
-  rcl_action_client_t * action_client,
-  rcl_node_t * node,
-  rcl_clock_t * clock,
-  const rosidl_action_type_support_t * type_support,
-  const rcl_publisher_options_t publisher_options,
-  rcl_service_introspection_state_t introspection_state)
-{
-  if (!rcl_action_client_is_valid(action_client)) {
-    return RCL_RET_ACTION_CLIENT_INVALID;
-  }
-  RCL_CHECK_ARGUMENT_FOR_NULL(node, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(clock, RCL_RET_INVALID_ARGUMENT);
-  RCL_CHECK_ARGUMENT_FOR_NULL(type_support, RCL_RET_INVALID_ARGUMENT);
-
-  CLIENT_CONFIGURE_SERVICE_INTROSPECTION(goal, introspection_state);
-  CLIENT_CONFIGURE_SERVICE_INTROSPECTION(cancel, introspection_state);
-  CLIENT_CONFIGURE_SERVICE_INTROSPECTION(result, introspection_state);
-  return RCL_RET_OK;
 }
 
 #ifdef __cplusplus
