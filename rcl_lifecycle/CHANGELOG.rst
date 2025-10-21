@@ -2,26 +2,18 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-10.2.5 (2025-10-21)
+10.1.3 (2025-10-21)
 -------------------
 
-10.2.4 (2025-09-30)
+10.1.2 (2025-09-30)
 -------------------
+* Fix Cmake deprecation (`#1249 <https://github.com/ros2/rcl/issues/1249>`_) (`#1250 <https://github.com/ros2/rcl/issues/1250>`_)
+  cmake version < then 3.10 is deprecated
+  (cherry picked from commit 06c9ba61513efed8d21fdc6e7719438c04a927ea)
+  Co-authored-by: mosfet80 <10235105+mosfet80@users.noreply.github.com>
+* Contributors: mergify[bot]
 
-10.2.3 (2025-07-29)
--------------------
-* Fix Cmake deprecation (`#1249 <https://github.com/ros2/rcl/issues/1249>`_)
-* Contributors: mosfet80
-
-10.2.2 (2025-06-23)
--------------------
-
-10.2.1 (2025-05-30)
--------------------
-* introduce rcl_lifecycle_get_transition_label_by_id(). (`#1229 <https://github.com/ros2/rcl/issues/1229>`_)
-* Contributors: Tomoya Fujita
-
-10.2.0 (2025-04-25)
+10.1.1 (2025-06-23)
 -------------------
 
 10.1.0 (2025-04-04)
