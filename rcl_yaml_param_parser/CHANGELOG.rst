@@ -2,15 +2,26 @@
 Changelog for package rcl_yaml_param_parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-10.1.2 (2025-09-30)
+10.2.5 (2025-10-21)
 -------------------
-* Fix Cmake deprecation (`#1249 <https://github.com/ros2/rcl/issues/1249>`_) (`#1250 <https://github.com/ros2/rcl/issues/1250>`_)
-  cmake version < then 3.10 is deprecated
-  (cherry picked from commit 06c9ba61513efed8d21fdc6e7719438c04a927ea)
-  Co-authored-by: mosfet80 <10235105+mosfet80@users.noreply.github.com>
-* Contributors: mergify[bot]
+* Fix param file parsing failure with wildcards due to ordering (`#1253 <https://github.com/ros2/rcl/issues/1253>`_)
+* Contributors: Barry Xu
 
-10.1.1 (2025-06-23)
+10.2.4 (2025-09-30)
+-------------------
+
+10.2.3 (2025-07-29)
+-------------------
+* Fix Cmake deprecation (`#1249 <https://github.com/ros2/rcl/issues/1249>`_)
+* Contributors: mosfet80
+
+10.2.2 (2025-06-23)
+-------------------
+
+10.2.1 (2025-05-30)
+-------------------
+
+10.2.0 (2025-04-25)
 -------------------
 
 10.1.0 (2025-04-04)
