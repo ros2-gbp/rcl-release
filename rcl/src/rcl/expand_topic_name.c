@@ -70,7 +70,7 @@ rcl_expand_topic_name(
     return ret;
   }
   if (validation_result != RCL_TOPIC_NAME_VALID) {
-    RCL_SET_ERROR_MSG("topic name is invalid");
+    RCL_SET_ERROR_MSG(rcl_topic_name_validation_result_string(validation_result));
     return RCL_RET_TOPIC_NAME_INVALID;
   }
   // validate the node name
@@ -81,7 +81,7 @@ rcl_expand_topic_name(
     return rcl_convert_rmw_ret_to_rcl_ret(rmw_ret);
   }
   if (validation_result != RMW_NODE_NAME_VALID) {
-    RCL_SET_ERROR_MSG("node name is invalid");
+    RCL_SET_ERROR_MSG(rmw_node_name_validation_result_string(validation_result));
     return RCL_RET_NODE_INVALID_NAME;
   }
   // validate the namespace
@@ -91,7 +91,7 @@ rcl_expand_topic_name(
     return rcl_convert_rmw_ret_to_rcl_ret(rmw_ret);
   }
   if (validation_result != RMW_NODE_NAME_VALID) {
-    RCL_SET_ERROR_MSG("node namespace is invalid");
+    RCL_SET_ERROR_MSG(rmw_namespace_validation_result_string(validation_result));
     return RCL_RET_NODE_INVALID_NAMESPACE;
   }
   // check if the topic has substitutions to be made
@@ -104,6 +104,7 @@ rcl_expand_topic_name(
     *output_topic_name = rcutils_strdup(input_topic_name, allocator);
     if (!*output_topic_name) {
       *output_topic_name = NULL;
+      rcl_reset_error();
       RCL_SET_ERROR_MSG("failed to allocate memory for output topic");
       return RCL_RET_BAD_ALLOC;
     }
@@ -176,6 +177,7 @@ rcl_expand_topic_name(
         rcutils_strndup(next_opening_brace, substitution_substr_len, allocator);
       if (!next_substitution) {
         *output_topic_name = NULL;
+        rcl_reset_error();
         RCL_SET_ERROR_MSG("failed to allocate memory for substitution");
         allocator.deallocate(local_output, allocator.state);
         return RCL_RET_BAD_ALLOC;
@@ -186,6 +188,7 @@ rcl_expand_topic_name(
       allocator.deallocate(original_local_output, allocator.state);  // free no matter what
       if (!local_output) {
         *output_topic_name = NULL;
+        rcl_reset_error();
         RCL_SET_ERROR_MSG("failed to allocate memory for expanded topic");
         return RCL_RET_BAD_ALLOC;
       }

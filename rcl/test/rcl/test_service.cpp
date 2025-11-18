@@ -27,14 +27,7 @@
 #include "./allocator_testing_utils.h"
 #include "../mocking_utils/patch.hpp"
 
-#ifdef RMW_IMPLEMENTATION
-# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
-# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
-#else
-# define CLASSNAME(NAME, SUFFIX) NAME
-#endif
-
-class CLASSNAME (TestServiceFixture, RMW_IMPLEMENTATION) : public ::testing::Test
+class TestServiceFixture : public ::testing::Test
 {
 public:
   rcl_context_t * context_ptr;
@@ -78,7 +71,7 @@ public:
 
 /* Basic nominal test of a service.
  */
-TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) {
+TEST_F(TestServiceFixture, test_service_nominal) {
   rcl_ret_t ret;
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
@@ -92,6 +85,7 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
 
   ret = rcl_service_init(&service, this->node_ptr, ts, topic, &service_options);
   EXPECT_EQ(RCL_RET_ALREADY_INIT, ret) << rcl_get_error_string().str;
+  rcl_reset_error();
 
   const rmw_qos_profile_t * request_subscription_qos =
     rcl_service_request_subscription_get_actual_qos(&service);
@@ -124,7 +118,6 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
   ret = rcl_service_init(&service, this->node_ptr, ts, topic, &service_options);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   EXPECT_TRUE(rcl_service_is_valid(&service));
-  rcl_reset_error();
 
   // Check that the service name matches what we assigned.
   EXPECT_EQ(strcmp(rcl_service_get_service_name(&service), expected_topic), 0);
@@ -190,12 +183,8 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
     EXPECT_EQ(2UL, service_request.uint32_value);
 #ifdef RMW_TIMESTAMPS_SUPPORTED
     EXPECT_GE(header.source_timestamp, start_timestamp);
-#ifdef RMW_RECEIVED_TIMESTAMP_SUPPORTED
     EXPECT_GE(header.received_timestamp, start_timestamp);
     EXPECT_GE(header.received_timestamp, header.source_timestamp);
-#else
-    EXPECT_EQ(0u, header.received_timestamp);
-#endif
 #else
     EXPECT_EQ(0u, header.source_timestamp);
     EXPECT_EQ(0u, header.received_timestamp);
@@ -221,12 +210,8 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
   EXPECT_EQ(header.request_id.sequence_number, 1);
 #ifdef RMW_TIMESTAMPS_SUPPORTED
   EXPECT_GE(header.source_timestamp, start_timestamp);
-#ifdef RMW_RECEIVED_TIMESTAMP_SUPPORTED
   EXPECT_GE(header.received_timestamp, start_timestamp);
   EXPECT_GE(header.received_timestamp, header.source_timestamp);
-#else
-  EXPECT_EQ(0u, header.received_timestamp);
-#endif
 #else
   EXPECT_EQ(0u, header.source_timestamp);
   EXPECT_EQ(0u, header.received_timestamp);
@@ -240,7 +225,7 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_nominal) 
 
 /* Basic nominal test of a service with rcl_take_response
  */
-TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_without_info) {
+TEST_F(TestServiceFixture, test_service_without_info) {
   rcl_ret_t ret;
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
@@ -252,7 +237,6 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_without_i
   ret = rcl_service_init(&service, this->node_ptr, ts, topic, &service_options);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   EXPECT_TRUE(rcl_service_is_valid(&service));
-  rcl_reset_error();
 
   // Check that the service name matches what we assigned.
   EXPECT_STREQ(rcl_service_get_service_name(&service), expected_topic);
@@ -339,7 +323,7 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_without_i
 
 /* Passing bad/invalid arguments to service functions
  */
-TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_bad_arguments) {
+TEST_F(TestServiceFixture, test_bad_arguments) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   const char * topic = "primitives";
@@ -354,33 +338,43 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_bad_arguments) {
   EXPECT_EQ(
     RCL_RET_NODE_INVALID, rcl_service_init(
       &service, nullptr, ts, topic, &service_options)) << rcl_get_error_string().str;
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_NODE_INVALID, rcl_service_init(
       &service, &invalid_node, ts, topic, &service_options)) << rcl_get_error_string().str;
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_INVALID_ARGUMENT, rcl_service_init(
       nullptr, this->node_ptr, ts, topic, &service_options)) << rcl_get_error_string().str;
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_INVALID_ARGUMENT, rcl_service_init(
       &service, this->node_ptr, nullptr, topic, &service_options)) << rcl_get_error_string().str;
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_INVALID_ARGUMENT, rcl_service_init(
       &service, this->node_ptr, ts, nullptr, &service_options)) << rcl_get_error_string().str;
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_INVALID_ARGUMENT, rcl_service_init(
       &service, this->node_ptr, ts, topic, nullptr)) << rcl_get_error_string().str;
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_INVALID_ARGUMENT, rcl_service_init(
       &service, this->node_ptr, ts, topic,
       &service_options_bad_alloc)) << rcl_get_error_string().str;
+  rcl_reset_error();
 
   EXPECT_EQ(
     RCL_RET_NODE_INVALID, rcl_service_fini(&service, nullptr)) << rcl_get_error_string().str;
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_NODE_INVALID, rcl_service_fini(&service, &invalid_node)) << rcl_get_error_string().str;
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_SERVICE_INVALID, rcl_service_fini(
       nullptr, this->node_ptr)) << rcl_get_error_string().str;
+  rcl_reset_error();
 
   test_msgs__srv__BasicTypes_Request service_request;
   test_msgs__srv__BasicTypes_Response service_response;
@@ -394,40 +388,57 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_bad_arguments) {
   });
 
   EXPECT_EQ(nullptr, rcl_service_get_service_name(nullptr));
+  rcl_reset_error();
   EXPECT_EQ(nullptr, rcl_service_get_options(nullptr));
+  rcl_reset_error();
   EXPECT_EQ(nullptr, rcl_service_get_rmw_handle(nullptr));
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_SERVICE_INVALID, rcl_take_request_with_info(nullptr, &header, &service_request));
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_SERVICE_INVALID, rcl_send_response(nullptr, &header.request_id, &service_response));
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_SERVICE_INVALID, rcl_take_request(nullptr, &(header.request_id), &service_request));
+  rcl_reset_error();
   EXPECT_EQ(nullptr, rcl_service_request_subscription_get_actual_qos(nullptr));
+  rcl_reset_error();
   EXPECT_EQ(nullptr, rcl_service_response_publisher_get_actual_qos(nullptr));
+  rcl_reset_error();
 
   EXPECT_EQ(nullptr, rcl_service_get_service_name(&service));
+  rcl_reset_error();
   EXPECT_EQ(nullptr, rcl_service_get_options(&service));
+  rcl_reset_error();
   EXPECT_EQ(nullptr, rcl_service_get_rmw_handle(&service));
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_SERVICE_INVALID, rcl_take_request_with_info(&service, &header, &service_request));
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_SERVICE_INVALID, rcl_send_response(&service, &(header.request_id), &service_response));
+  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_SERVICE_INVALID, rcl_take_request(&service, &(header.request_id), &service_request));
+  rcl_reset_error();
 
   service_options_bad_alloc.allocator = get_failing_allocator();
   EXPECT_EQ(
     RCL_RET_BAD_ALLOC, rcl_service_init(
       &service, this->node_ptr, ts,
       topic, &service_options_bad_alloc)) << rcl_get_error_string().str;
+  rcl_reset_error();
 
   EXPECT_EQ(nullptr, rcl_service_request_subscription_get_actual_qos(&service));
+  rcl_reset_error();
   EXPECT_EQ(nullptr, rcl_service_response_publisher_get_actual_qos(&service));
+  rcl_reset_error();
 }
 
 /* Name failed tests
  */
-TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_service_fail_name) {
+TEST_F(TestServiceFixture, test_service_fail_name) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   const char * topic = "white space";
@@ -451,7 +462,7 @@ MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, !=)
 
 /* Test failed service initialization using mocks
  */
-TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_ini_mocked) {
+TEST_F(TestServiceFixture, test_fail_ini_mocked) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   constexpr char topic[] = "topic";
@@ -515,7 +526,7 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_ini_mocked) 
 
 /* Test failed service finalization using mocks
  */
-TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_fini_mocked) {
+TEST_F(TestServiceFixture, test_fail_fini_mocked) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   constexpr char topic[] = "primitives";
@@ -539,7 +550,7 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_fini_mocked)
 
 /* Test failed service take_request_with_info using mocks and nullptrs
  */
-TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_take_request_with_info) {
+TEST_F(TestServiceFixture, test_fail_take_request_with_info) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   constexpr char topic[] = "primitives";
@@ -607,7 +618,7 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_take_request
 
 /* Test failed service send_response using mocks and nullptrs
  */
-TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_send_response) {
+TEST_F(TestServiceFixture, test_fail_send_response) {
   const rosidl_service_type_support_t * ts = ROSIDL_GET_SRV_TYPE_SUPPORT(
     test_msgs, srv, BasicTypes);
   constexpr char topic[] = "primitives";
@@ -633,12 +644,15 @@ TEST_F(CLASSNAME(TestServiceFixture, RMW_IMPLEMENTATION), test_fail_send_respons
 
   ret = rcl_send_response(nullptr, &header.request_id, &service_response);
   EXPECT_EQ(RCL_RET_SERVICE_INVALID, ret);
+  rcl_reset_error();
 
   ret = rcl_send_response(&service, nullptr, &service_response);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  rcl_reset_error();
 
   ret = rcl_send_response(&service, &header.request_id, nullptr);
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, ret);
+  rcl_reset_error();
 
   {
     auto mock = mocking_utils::patch_and_return(

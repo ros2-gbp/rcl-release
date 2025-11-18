@@ -38,6 +38,8 @@ typedef enum rcl_publisher_event_type_e
   RCL_PUBLISHER_OFFERED_DEADLINE_MISSED,
   RCL_PUBLISHER_LIVELINESS_LOST,
   RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS,
+  RCL_PUBLISHER_INCOMPATIBLE_TYPE,
+  RCL_PUBLISHER_MATCHED,
 } rcl_publisher_event_type_t;
 
 /// Enumeration of all of the subscription events that may fire.
@@ -47,6 +49,8 @@ typedef enum rcl_subscription_event_type_e
   RCL_SUBSCRIPTION_LIVELINESS_CHANGED,
   RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS,
   RCL_SUBSCRIPTION_MESSAGE_LOST,
+  RCL_SUBSCRIPTION_INCOMPATIBLE_TYPE,
+  RCL_SUBSCRIPTION_MATCHED,
 } rcl_subscription_event_type_t;
 
 /// Internal rcl implementation struct.
@@ -220,7 +224,7 @@ rcl_event_is_valid(const rcl_event_t * event);
  * \param[in] user_data Given to the callback when called later, may be NULL
  * \return `RCL_RET_OK` if callback was set to the listener, or
  * \return `RCL_RET_INVALID_ARGUMENT` if `event` is NULL, or
- * \return `RCL_RET_UNSUPPORTED` if the API is not implemented in the dds implementation
+ * \return `RCL_RET_UNSUPPORTED` if the API is not supported by the middleware
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
