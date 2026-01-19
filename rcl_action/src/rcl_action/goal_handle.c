@@ -35,8 +35,7 @@ typedef struct rcl_action_goal_handle_impl_s
 rcl_action_goal_handle_t
 rcl_action_get_zero_initialized_goal_handle(void)
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_action_goal_handle_t null_handle;
+  static rcl_action_goal_handle_t null_handle = {0};
   return null_handle;
 }
 
@@ -192,7 +191,7 @@ rcl_action_goal_handle_get_goal_terminal_timestamp(
   RCL_CHECK_ARGUMENT_FOR_NULL(timestamp, RCL_RET_INVALID_ARGUMENT);
 
   if (goal_handle->impl->goal_terminal_timestamp == INVAILD_GOAL_TERMINAL_TIMESTAMP) {
-    return RCL_RET_ACTION_NOT_TERMINATED_YET;
+    return RCL_ACTION_RET_NOT_TERMINATED_YET;
   }
 
   *timestamp = goal_handle->impl->goal_terminal_timestamp;
