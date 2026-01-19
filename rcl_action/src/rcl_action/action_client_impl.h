@@ -26,14 +26,13 @@ typedef struct rcl_action_client_impl_s
   rcl_subscription_t feedback_subscription;
   rcl_subscription_t status_subscription;
   rcl_action_client_options_t options;
-  char * remapped_action_name;
+  char * action_name;
   // Wait set records
   size_t wait_set_goal_client_index;
   size_t wait_set_cancel_client_index;
   size_t wait_set_result_client_index;
   size_t wait_set_feedback_subscription_index;
   size_t wait_set_status_subscription_index;
-  rosidl_type_hash_t type_hash;
 } rcl_action_client_impl_t;
 
 

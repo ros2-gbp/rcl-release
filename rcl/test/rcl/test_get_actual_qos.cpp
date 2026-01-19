@@ -28,6 +28,28 @@
 #include "test_msgs/msg/basic_types.h"
 #include "test_msgs/srv/basic_types.h"
 
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+# define RMW_IMPLEMENTATION_STR RCUTILS_STRINGIFY(RMW_IMPLEMENTATION)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
+#define EXPAND(x) x
+#define TEST_FIXTURE_P_RMW(test_fixture_name) CLASSNAME( \
+    test_fixture_name, RMW_IMPLEMENTATION)
+#define APPLY(macro, ...) EXPAND(macro(__VA_ARGS__))
+#define TEST_P_RMW(test_case_name, test_name) \
+  APPLY( \
+    TEST_P, \
+    CLASSNAME(test_case_name, RMW_IMPLEMENTATION), test_name)
+#define INSTANTIATE_TEST_SUITE_P_RMW(instance_name, test_case_name, ...) \
+  EXPAND( \
+    APPLY( \
+      INSTANTIATE_TEST_SUITE_P, instance_name, \
+      CLASSNAME(test_case_name, RMW_IMPLEMENTATION), __VA_ARGS__))
+
 /**
  * Parameterized test.
  * The first param are the NodeOptions used to create the nodes.
@@ -76,7 +98,8 @@ std::ostream & operator<<(
   return out;
 }
 
-class TestGetActualQoS : public ::testing::TestWithParam<TestParameters>
+class TEST_FIXTURE_P_RMW (TestGetActualQoS)
+  : public ::testing::TestWithParam<TestParameters>
 {
 public:
   void SetUp() override
@@ -124,9 +147,10 @@ protected:
 };
 
 
-class TestPublisherGetActualQoS : public TestGetActualQoS {};
+class TEST_FIXTURE_P_RMW (TestPublisherGetActualQoS)
+  : public TEST_FIXTURE_P_RMW(TestGetActualQoS) {};
 
-TEST_P(TestPublisherGetActualQoS, test_publisher_get_qos_settings)
+TEST_P_RMW(TestPublisherGetActualQoS, test_publisher_get_qos_settings)
 {
   TestParameters parameters = GetParam();
   std::string topic_name("/test_publisher_get_actual_qos__");
@@ -178,9 +202,10 @@ TEST_P(TestPublisherGetActualQoS, test_publisher_get_qos_settings)
 }
 
 
-class TestSubscriptionGetActualQoS : public TestGetActualQoS {};
+class TEST_FIXTURE_P_RMW (TestSubscriptionGetActualQoS)
+  : public TEST_FIXTURE_P_RMW(TestGetActualQoS) {};
 
-TEST_P(TestSubscriptionGetActualQoS, test_subscription_get_qos_settings)
+TEST_P_RMW(TestSubscriptionGetActualQoS, test_subscription_get_qos_settings)
 {
   TestParameters parameters = GetParam();
   std::string topic_name("/test_subscription_get_qos_settings");
@@ -235,6 +260,22 @@ TEST_P(TestSubscriptionGetActualQoS, test_subscription_get_qos_settings)
 //
 
 static constexpr rmw_qos_profile_t
+nondefault_qos_profile()
+{
+  rmw_qos_profile_t profile = rmw_qos_profile_default;
+  profile.history = RMW_QOS_POLICY_HISTORY_KEEP_ALL;
+  profile.depth = 1000;
+  profile.reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+  profile.durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
+  profile.deadline.sec = 1;
+  profile.lifespan.nsec = 500000;
+  profile.liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
+  profile.liveliness_lease_duration.sec = 1;
+  profile.avoid_ros_namespace_conventions = true;
+  return profile;
+}
+
+static constexpr rmw_qos_profile_t
 nondefault_qos_profile_for_fastrtps()
 {
   rmw_qos_profile_t profile = rmw_qos_profile_default;
@@ -267,6 +308,12 @@ expected_default_qos_profile()
 }
 
 static constexpr rmw_qos_profile_t
+expected_nondefault_qos_profile()
+{
+  return nondefault_qos_profile();
+}
+
+static constexpr rmw_qos_profile_t
 expected_nondefault_qos_profile_for_fastrtps()
 {
   rmw_qos_profile_t profile = rmw_qos_profile_default;
@@ -283,11 +330,35 @@ expected_nondefault_qos_profile_for_fastrtps()
 }
 
 static constexpr rmw_qos_profile_t
+expected_system_default_publisher_qos_profile()
+{
+  rmw_qos_profile_t profile = rmw_qos_profile_default;
+  profile.depth = 1;
+  profile.deadline.sec = 2147483647;
+  profile.lifespan.sec = 2147483647;
+  profile.liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
+  profile.liveliness_lease_duration.sec = 2147483647;
+  return profile;
+}
+
+static constexpr rmw_qos_profile_t
 expected_system_default_publisher_qos_profile_for_fastrtps()
 {
   rmw_qos_profile_t profile = rmw_qos_profile_default;
   profile.depth = 1;
   profile.durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
+  profile.liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
+  profile.liveliness_lease_duration.sec = 2147483647;
+  return profile;
+}
+
+static constexpr rmw_qos_profile_t
+expected_system_default_subscription_qos_profile()
+{
+  rmw_qos_profile_t profile = rmw_qos_profile_default;
+  profile.depth = 1;
+  profile.reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+  profile.deadline.sec = 2147483647;
   profile.liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
   profile.liveliness_lease_duration.sec = 2147483647;
   return profile;
@@ -325,7 +396,8 @@ get_parameters(bool for_publisher)
     "default_qos"
   });
 
-  std::string rmw_implementation_str = std::string(rmw_get_implementation_identifier());
+#ifdef RMW_IMPLEMENTATION_STR
+  std::string rmw_implementation_str = RMW_IMPLEMENTATION_STR;
   if (rmw_implementation_str == "rmw_fastrtps_cpp" ||
     rmw_implementation_str == "rmw_fastrtps_dynamic_cpp")
   {
@@ -357,18 +429,53 @@ get_parameters(bool for_publisher)
         "system_default_publisher_qos"
       });
     }
+  } else {
+    // TODO(asorbini): Remove this block once ros2/rmw_connext is deprecated.
+    if (rmw_implementation_str == "rmw_connext_cpp" ||
+      rmw_implementation_str == "rmw_connext_dynamic_cpp")
+    {
+      /*
+       * Test with non-default settings.
+       */
+      parameters.push_back(
+      {
+        nondefault_qos_profile(),
+        expected_nondefault_qos_profile(),
+        "nondefault_qos"
+      });
+
+      /*
+       * Test with system default settings.
+       */
+      if (for_publisher) {
+        parameters.push_back(
+        {
+          rmw_qos_profile_system_default,
+          expected_system_default_publisher_qos_profile(),
+          "system_default_publisher_qos"
+        });
+      } else {
+        parameters.push_back(
+        {
+          rmw_qos_profile_system_default,
+          expected_system_default_subscription_qos_profile(),
+          "system_default_publisher_qos"
+        });
+      }
+    }
   }
+#endif
 
   return parameters;
 }
 
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_SUITE_P_RMW(
   TestPublisherWithDifferentQoSSettings,
   TestPublisherGetActualQoS,
   ::testing::ValuesIn(get_parameters(true)),
   ::testing::PrintToStringParamName());
 
-INSTANTIATE_TEST_SUITE_P(
+INSTANTIATE_TEST_SUITE_P_RMW(
   TestSubscriptionWithDifferentQoSSettings,
   TestSubscriptionGetActualQoS,
   ::testing::ValuesIn(get_parameters(false)),

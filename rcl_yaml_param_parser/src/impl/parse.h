@@ -17,9 +17,7 @@
 
 #include <yaml.h>
 
-#include "rcutils/allocator.h"
-#include "rcutils/macros.h"
-#include "rcutils/types/rcutils_ret.h"
+#include "rcutils/types.h"
 
 #include "./types.h"
 #include "rcl_yaml_param_parser/types.h"
@@ -35,7 +33,6 @@ RCUTILS_WARN_UNUSED
 void * get_value(
   const char * const value,
   yaml_scalar_style_t style,
-  const yaml_char_t * const tag,
   data_types_t * val_type,
   const rcutils_allocator_t allocator);
 

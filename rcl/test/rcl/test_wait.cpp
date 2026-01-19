@@ -32,13 +32,20 @@
 #include "./allocator_testing_utils.h"
 #include "../mocking_utils/patch.hpp"
 
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
 #ifndef _WIN32
 #define TOLERANCE RCL_MS_TO_NS(6)
 #else
 #define TOLERANCE RCL_MS_TO_NS(25)
 #endif
 
-class WaitSetTestFixture : public ::testing::Test
+class CLASSNAME (WaitSetTestFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   rcl_context_t * context_ptr;
@@ -66,7 +73,7 @@ public:
   }
 };
 
-TEST_F(WaitSetTestFixture, wait_set_is_valid) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_is_valid) {
   // null pointers are invalid
   EXPECT_FALSE(rcl_wait_set_is_valid(nullptr));
 
@@ -86,7 +93,7 @@ TEST_F(WaitSetTestFixture, wait_set_is_valid) {
   EXPECT_FALSE(rcl_wait_set_is_valid(&wait_set));
 }
 
-TEST_F(WaitSetTestFixture, test_failed_resize) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), test_failed_resize) {
   // Initialize a wait set with a subscription and then resize it to zero.
   rcl_allocator_t allocator = get_failing_allocator();
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
@@ -105,7 +112,7 @@ TEST_F(WaitSetTestFixture, test_failed_resize) {
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 }
 
-TEST_F(WaitSetTestFixture, test_resize_to_zero) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), test_resize_to_zero) {
   // Initialize a wait set with a subscription and then resize it to zero.
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
@@ -126,7 +133,7 @@ TEST_F(WaitSetTestFixture, test_resize_to_zero) {
 }
 
 // Test rcl_wait with a positive finite timeout value (1ms)
-TEST_F(WaitSetTestFixture, finite_timeout) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), finite_timeout) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 0, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());
@@ -146,7 +153,7 @@ TEST_F(WaitSetTestFixture, finite_timeout) {
 }
 
 // Check that a timer overrides a negative timeout value (blocking forever)
-TEST_F(WaitSetTestFixture, negative_timeout) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), negative_timeout) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 1, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());
@@ -181,9 +188,8 @@ TEST_F(WaitSetTestFixture, negative_timeout) {
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
   rcl_timer_t timer = rcl_get_zero_initialized_timer();
-  ret = rcl_timer_init2(
-    &timer, &clock, this->context_ptr, RCL_MS_TO_NS(10), nullptr, rcl_get_default_allocator(),
-    true);
+  ret = rcl_timer_init(
+    &timer, &clock, this->context_ptr, RCL_MS_TO_NS(10), nullptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
   {
@@ -205,7 +211,7 @@ TEST_F(WaitSetTestFixture, negative_timeout) {
 }
 
 // Test rcl_wait with a timeout value of 0 (non-blocking)
-TEST_F(WaitSetTestFixture, zero_timeout) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), zero_timeout) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 1, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());
@@ -241,7 +247,7 @@ TEST_F(WaitSetTestFixture, zero_timeout) {
 }
 
 // Test rcl_wait with a timeout value of 0 (non-blocking) and an already triggered guard condition
-TEST_F(WaitSetTestFixture, zero_timeout_triggered_guard_condition) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), zero_timeout_triggered_guard_condition) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 1, 0, 0, 0, 0, context_ptr, rcl_get_default_allocator());
@@ -278,7 +284,7 @@ TEST_F(WaitSetTestFixture, zero_timeout_triggered_guard_condition) {
 }
 
 // Test rcl_wait with a timeout value and an overrun timer
-TEST_F(WaitSetTestFixture, zero_timeout_overrun_timer) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), zero_timeout_overrun_timer) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 0, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());
@@ -299,9 +305,8 @@ TEST_F(WaitSetTestFixture, zero_timeout_overrun_timer) {
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
   rcl_timer_t timer = rcl_get_zero_initialized_timer();
-  ret = rcl_timer_init2(
-    &timer, &clock, this->context_ptr, 0, nullptr, rcl_get_default_allocator(),
-    true);
+  ret = rcl_timer_init(
+    &timer, &clock, this->context_ptr, 0, nullptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
   {
@@ -321,149 +326,8 @@ TEST_F(WaitSetTestFixture, zero_timeout_overrun_timer) {
   EXPECT_LE(diff, RCL_MS_TO_NS(50));
 }
 
-// Test rcl_wait with a timeout value and an overrun timer
-TEST_F(WaitSetTestFixture, no_wakeup_on_override_timer) {
-  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
-  rcl_ret_t ret =
-    rcl_wait_set_init(&wait_set, 0, 0, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    ret = rcl_wait_set_fini(&wait_set);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  });
-  rcl_clock_t clock;
-  rcl_allocator_t allocator = rcl_get_default_allocator();
-  ret = rcl_clock_init(RCL_ROS_TIME, &clock, &allocator);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    ret = rcl_clock_fini(&clock);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  });
-  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-
-  ret = rcl_enable_ros_time_override(&clock);
-  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-
-  rcl_timer_t timer = rcl_get_zero_initialized_timer();
-  ret = rcl_timer_init2(
-    &timer, &clock, this->context_ptr, RCL_MS_TO_NS(10), nullptr, rcl_get_default_allocator(),
-    true);
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    ret = rcl_timer_fini(&timer);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  });
-  ret = rcl_wait_set_add_timer(&wait_set, &timer, NULL);
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-
-  // Time spent during wait should be negligible, definitely less than the given timeout
-  std::chrono::steady_clock::time_point before_sc = std::chrono::steady_clock::now();
-  ret = rcl_wait(&wait_set, RCL_MS_TO_NS(100));
-  std::chrono::steady_clock::time_point after_sc = std::chrono::steady_clock::now();
-  // We don't expect a timeout here (since the guard condition had already been triggered)
-  ASSERT_EQ(RCL_RET_TIMEOUT, ret) << rcl_get_error_string().str;
-  int64_t diff = std::chrono::duration_cast<std::chrono::nanoseconds>(after_sc - before_sc).count();
-  EXPECT_GE(diff, RCL_MS_TO_NS(100));
-}
-
-// Test rcl_wait with a timeout value and an overrun timer
-TEST_F(WaitSetTestFixture, wakeup_on_override_timer) {
-  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
-  rcl_ret_t ret =
-    rcl_wait_set_init(&wait_set, 0, 0, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    ret = rcl_wait_set_fini(&wait_set);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  });
-  rcl_clock_t clock;
-  rcl_allocator_t allocator = rcl_get_default_allocator();
-  ret = rcl_clock_init(RCL_ROS_TIME, &clock, &allocator);
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    ret = rcl_clock_fini(&clock);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  });
-  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-
-  ret = rcl_enable_ros_time_override(&clock);
-  ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-
-  rcl_timer_t timer = rcl_get_zero_initialized_timer();
-  ret = rcl_timer_init2(
-    &timer, &clock, this->context_ptr, RCL_MS_TO_NS(10), nullptr, rcl_get_default_allocator(),
-    true);
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    ret = rcl_timer_fini(&timer);
-    EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  });
-  ret = rcl_wait_set_add_timer(&wait_set, &timer, NULL);
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-
-  // Time spent during wait should be negligible, definitely less than the given timeout
-  std::chrono::steady_clock::time_point before_sc = std::chrono::steady_clock::now();
-
-  rcl_ret_t wait_ret = RCL_RET_ERROR;
-  std::atomic_bool wait_done = false;
-  std::thread t([&wait_ret, &wait_set, &wait_done]() {
-      wait_ret = rcl_wait(&wait_set, RCL_MS_TO_NS(100));
-      wait_done = true;
-    });
-
-  ret = rcl_set_ros_time_override(&clock, RCL_MS_TO_NS(5));
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(15));
-  EXPECT_EQ(wait_done, false) << "Error, wait terminated to early";
-
-  ret = rcl_set_ros_time_override(&clock, RCL_MS_TO_NS(15));
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
-  EXPECT_EQ(wait_done, true) << "Error, wait waken up by time jump";
-
-  EXPECT_NE(wait_ret, RCL_RET_TIMEOUT);
-
-  t.join();
-
-  wait_done = false;
-  wait_ret = RCL_RET_ERROR;
-
-  ret = rcl_wait_set_clear(&wait_set);
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-  ret = rcl_wait_set_add_timer(&wait_set, &timer, NULL);
-  EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
-
-  // now all guard conditions are cleared, if we wait again,
-  // we should still wake up instantly as next call time was not advance yet
-  // and therefore the timer should still be ready
-  t = std::thread(
-    [&wait_ret, &wait_set, &wait_done]() {
-      wait_ret = rcl_wait(&wait_set, RCL_MS_TO_NS(100));
-      wait_done = true;
-    });
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(5));
-
-  EXPECT_EQ(wait_done, true) << "Error, wait waken up by time jump";
-
-  EXPECT_NE(wait_ret, RCL_RET_TIMEOUT);
-
-  t.join();
-
-  std::chrono::steady_clock::time_point after_sc = std::chrono::steady_clock::now();
-  int64_t diff = std::chrono::duration_cast<std::chrono::nanoseconds>(after_sc - before_sc).count();
-  EXPECT_LT(diff, RCL_MS_TO_NS(100));
-}
-
 // Check that a canceled timer doesn't wake up rcl_wait
-TEST_F(WaitSetTestFixture, canceled_timer) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), canceled_timer) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 1, 1, 0, 0, 0, context_ptr, rcl_get_default_allocator());
@@ -498,9 +362,9 @@ TEST_F(WaitSetTestFixture, canceled_timer) {
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
 
   rcl_timer_t canceled_timer = rcl_get_zero_initialized_timer();
-  ret = rcl_timer_init2(
+  ret = rcl_timer_init(
     &canceled_timer, &clock, this->context_ptr,
-    RCL_MS_TO_NS(1), nullptr, rcl_get_default_allocator(), true);
+    RCL_MS_TO_NS(1), nullptr, rcl_get_default_allocator());
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
   {
@@ -524,7 +388,7 @@ TEST_F(WaitSetTestFixture, canceled_timer) {
 }
 
 // Test rcl_wait_set_t with excess capacity works.
-TEST_F(WaitSetTestFixture, excess_capacity) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), excess_capacity) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 42, 42, 42, 42, 42, 0, context_ptr, rcl_get_default_allocator());
@@ -541,7 +405,7 @@ TEST_F(WaitSetTestFixture, excess_capacity) {
 }
 
 // Check rcl_wait can be called in many threads, each with unique wait sets and resources.
-TEST_F(WaitSetTestFixture, multi_wait_set_threaded) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), multi_wait_set_threaded) {
   rcl_ret_t ret;
   const size_t number_of_threads = 20;  // concurrent waits
   const size_t count_target = 10;  // number of times each wait should wake up before being "done"
@@ -654,7 +518,9 @@ TEST_F(WaitSetTestFixture, multi_wait_set_threaded) {
       return false;
     };
   // *INDENT-ON*
+  size_t loop_count = 0;
   while (loop_test()) {
+    loop_count++;
     for (auto & test_set : test_sets) {
       ret = rcl_trigger_guard_condition(&test_set.guard_condition);
       ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -673,7 +539,7 @@ TEST_F(WaitSetTestFixture, multi_wait_set_threaded) {
 
 // Check the interaction of a guard condition and a negative timeout by
 // triggering a guard condition in a separate thread
-TEST_F(WaitSetTestFixture, guard_condition) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), guard_condition) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 1, 0, 0, 0, 0, context_ptr, rcl_get_default_allocator());
@@ -723,7 +589,7 @@ TEST_F(WaitSetTestFixture, guard_condition) {
 }
 
 // Check that index arguments are properly set when adding entities
-TEST_F(WaitSetTestFixture, add_with_index) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), add_with_index) {
   const size_t kNumEntities = 3u;
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret = rcl_wait_set_init(
@@ -758,7 +624,7 @@ TEST_F(WaitSetTestFixture, add_with_index) {
 }
 
 // Extra invalid arguments not tested
-TEST_F(WaitSetTestFixture, wait_set_valid_arguments) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_valid_arguments) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 0, 0, 0, 0, 0, 0, context_ptr, rcl_get_default_allocator());
@@ -815,7 +681,7 @@ TEST_F(WaitSetTestFixture, wait_set_valid_arguments) {
 }
 
 // Test get allocator function
-TEST_F(WaitSetTestFixture, wait_set_get_allocator) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_get_allocator) {
   rcl_allocator_t allocator_returned;
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
 
@@ -843,7 +709,7 @@ TEST_F(WaitSetTestFixture, wait_set_get_allocator) {
 }
 
 // Test wait set init failure cases using mocks
-TEST_F(WaitSetTestFixture, wait_set_failed_init) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_failed_init) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   // Mock rmw implementation to fail init
   auto mock = mocking_utils::patch_and_return(
@@ -856,7 +722,7 @@ TEST_F(WaitSetTestFixture, wait_set_failed_init) {
 }
 
 // Test wait set fini failure cases using mocks
-TEST_F(WaitSetTestFixture, wait_set_failed_fini) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_failed_fini) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret =
     rcl_wait_set_init(&wait_set, 1, 1, 1, 1, 1, 0, context_ptr, rcl_get_default_allocator());
@@ -872,7 +738,7 @@ TEST_F(WaitSetTestFixture, wait_set_failed_fini) {
 }
 
 // Test proper error handling with a fault injection test
-TEST_F(WaitSetTestFixture, wait_set_test_maybe_init_fail) {
+TEST_F(CLASSNAME(WaitSetTestFixture, RMW_IMPLEMENTATION), wait_set_test_maybe_init_fail) {
   rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
   rcl_ret_t ret = RCL_RET_OK;
   rcl_allocator_t alloc = rcl_get_default_allocator();
