@@ -27,7 +27,7 @@ typedef struct rcl_action_server_impl_s
   rcl_publisher_t feedback_publisher;
   rcl_publisher_t status_publisher;
   rcl_timer_t expire_timer;
-  char * action_name;
+  char * remapped_action_name;
   rcl_action_server_options_t options;
   // Array of goal handles
   rcl_action_goal_handle_t ** goal_handles;
@@ -39,6 +39,7 @@ typedef struct rcl_action_server_impl_s
   size_t wait_set_cancel_service_index;
   size_t wait_set_result_service_index;
   size_t wait_set_expire_timer_index;
+  rosidl_type_hash_t type_hash;
 } rcl_action_server_impl_t;
 
 

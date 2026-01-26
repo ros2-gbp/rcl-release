@@ -27,6 +27,7 @@ extern "C"
 #include "rcl_action/wait.h"
 
 #include "rcl/error_handling.h"
+#include "rcl/node_type_cache.h"
 #include "rcl/rcl.h"
 #include "rcl/time.h"
 
@@ -35,6 +36,10 @@ extern "C"
 
 #include "rmw/rmw.h"
 
+extern rcl_ret_t
+rcl_action_goal_handle_set_goal_terminal_timestamp(
+  const rcl_action_goal_handle_t * goal_handle,
+  rcl_time_point_value_t timestamp);
 
 rcl_action_server_t
 rcl_action_get_zero_initialized_server(void)
@@ -45,7 +50,8 @@ rcl_action_get_zero_initialized_server(void)
 
 #define SERVICE_INIT(Type) \
   char * Type ## _service_name = NULL; \
-  ret = rcl_action_get_ ## Type ## _service_name(action_name, allocator, &Type ## _service_name); \
+  ret = rcl_action_get_ ## Type ## _service_name( \
+    action_server->impl->remapped_action_name, allocator, &Type ## _service_name); \
   if (RCL_RET_OK != ret) { \
     if (RCL_RET_BAD_ALLOC == ret) { \
       ret = RCL_RET_BAD_ALLOC; \
@@ -79,7 +85,8 @@ rcl_action_get_zero_initialized_server(void)
 
 #define PUBLISHER_INIT(Type) \
   char * Type ## _topic_name = NULL; \
-  ret = rcl_action_get_ ## Type ## _topic_name(action_name, allocator, &Type ## _topic_name); \
+  ret = rcl_action_get_ ## Type ## _topic_name( \
+    action_server->impl->remapped_action_name, allocator, &Type ## _topic_name); \
   if (RCL_RET_OK != ret) { \
     if (RCL_RET_BAD_ALLOC == ret) { \
       ret = RCL_RET_BAD_ALLOC; \
@@ -154,13 +161,37 @@ rcl_action_server_init(
   action_server->impl->expire_timer = rcl_get_zero_initialized_timer();
   action_server->impl->feedback_publisher = rcl_get_zero_initialized_publisher();
   action_server->impl->status_publisher = rcl_get_zero_initialized_publisher();
-  action_server->impl->action_name = NULL;
+  action_server->impl->remapped_action_name = NULL;
   action_server->impl->options = *options;  // copy options
   action_server->impl->goal_handles = NULL;
   action_server->impl->num_goal_handles = 0u;
   action_server->impl->clock = NULL;
+  action_server->impl->type_hash = rosidl_get_zero_initialized_type_hash();
 
   rcl_ret_t ret = RCL_RET_OK;
+  // Resolve action name
+  ret = rcl_node_resolve_name(
+    node,
+    action_name,
+    allocator,
+    false, false,
+    &action_server->impl->remapped_action_name
+  );
+
+  if (RCL_RET_OK != ret) {
+    if (RCL_RET_TOPIC_NAME_INVALID == ret || RCL_RET_UNKNOWN_SUBSTITUTION == ret) {
+      ret = RCL_RET_ACTION_NAME_INVALID;
+    } else if (RCL_RET_BAD_ALLOC != ret) {
+      ret = RCL_RET_ERROR;
+    }
+    goto fail;
+  }
+  RCUTILS_LOG_DEBUG_NAMED(
+    ROS_PACKAGE_NAME,
+    "Remapped and expanded action name '%s'",
+    action_server->impl->remapped_action_name
+  );
+
   // Initialize services
   SERVICE_INIT(goal);
   SERVICE_INIT(cancel);
@@ -173,10 +204,10 @@ rcl_action_server_init(
   // Store reference to clock
   action_server->impl->clock = clock;
 
-// Initialize Timer
-  ret = rcl_timer_init(
+  // Initialize Timer
+  ret = rcl_timer_init2(
     &action_server->impl->expire_timer, action_server->impl->clock, node->context,
-    options->result_timeout.nanoseconds, NULL, allocator);
+    options->result_timeout.nanoseconds, NULL, allocator, true);
   if (RCL_RET_OK != ret) {
     goto fail;
   }
@@ -186,12 +217,18 @@ rcl_action_server_init(
     goto fail;
   }
 
-  // Copy action name
-  action_server->impl->action_name = rcutils_strdup(action_name, allocator);
-  if (NULL == action_server->impl->action_name) {
-    ret = RCL_RET_BAD_ALLOC;
+  // Store type hash
+  if (RCL_RET_OK != rcl_node_type_cache_register_type(
+      node, type_support->get_type_hash_func(type_support),
+      type_support->get_type_description_func(type_support),
+      type_support->get_type_description_sources_func(type_support)))
+  {
+    rcutils_reset_error();
+    RCL_SET_ERROR_MSG("Failed to register type for action");
     goto fail;
   }
+  action_server->impl->type_hash = *type_support->get_type_hash_func(type_support);
+
   return ret;
 fail:
   {
@@ -239,9 +276,9 @@ rcl_action_server_fini(rcl_action_server_t * action_server, rcl_node_t * node)
     action_server->impl->clock = NULL;
     // Deallocate action name
     rcl_allocator_t allocator = action_server->impl->options.allocator;
-    if (action_server->impl->action_name) {
-      allocator.deallocate(action_server->impl->action_name, allocator.state);
-      action_server->impl->action_name = NULL;
+    if (action_server->impl->remapped_action_name) {
+      allocator.deallocate(action_server->impl->remapped_action_name, allocator.state);
+      action_server->impl->remapped_action_name = NULL;
     }
     // Deallocate goal handles storage, but don't fini them.
     for (size_t i = 0; i < action_server->impl->num_goal_handles; ++i) {
@@ -249,6 +286,12 @@ rcl_action_server_fini(rcl_action_server_t * action_server, rcl_node_t * node)
     }
     allocator.deallocate(action_server->impl->goal_handles, allocator.state);
     action_server->impl->goal_handles = NULL;
+    if (
+      ROSIDL_TYPE_HASH_VERSION_UNSET != action_server->impl->type_hash.version &&
+      RCL_RET_OK != rcl_node_type_cache_unregister_type(node, &action_server->impl->type_hash))
+    {
+      ret = RCL_RET_ERROR;
+    }
     // Deallocate struct
     allocator.deallocate(action_server->impl, allocator.state);
     action_server->impl = NULL;
@@ -267,7 +310,7 @@ rcl_action_server_get_default_options(void)
   default_options.feedback_topic_qos = rmw_qos_profile_default;
   default_options.status_topic_qos = rcl_action_qos_profile_status_default;
   default_options.allocator = rcl_get_default_allocator();
-  default_options.result_timeout.nanoseconds = RCUTILS_S_TO_NS(15 * 60);  // 15 minutes
+  default_options.result_timeout.nanoseconds = RCUTILS_S_TO_NS(10);  // 10 seconds
   return default_options;
 }
 
@@ -430,13 +473,17 @@ _recalculate_expire_timer(
     if (!rcl_action_goal_handle_is_active(goal_handle)) {
       ++num_inactive_goals;
 
-      rcl_action_goal_info_t goal_info;
-      ret = rcl_action_goal_handle_get_info(goal_handle, &goal_info);
+      rcl_time_point_value_t goal_terminal_timestamp;
+      ret = rcl_action_goal_handle_get_goal_terminal_timestamp(
+        goal_handle, &goal_terminal_timestamp);
+      if (RCL_ACTION_RET_NOT_TERMINATED_YET == ret) {
+        continue;
+      }
       if (RCL_RET_OK != ret) {
         return RCL_RET_ERROR;
       }
 
-      int64_t delta = timeout - (current_time - _goal_info_stamp_to_nanosec(&goal_info));
+      int64_t delta = timeout - (current_time - goal_terminal_timestamp);
       if (delta < minimum_period) {
         minimum_period = delta;
       }
@@ -602,8 +649,7 @@ rcl_action_expire_goals(
   rcl_ret_t ret_final = RCL_RET_OK;
   const int64_t timeout = (int64_t)action_server->impl->options.result_timeout.nanoseconds;
   rcl_action_goal_handle_t * goal_handle;
-  rcl_action_goal_info_t goal_info;
-  int64_t goal_time;
+  rcl_time_point_value_t goal_terminal_timestamp;
   size_t num_goal_handles = action_server->impl->num_goal_handles;
   for (size_t i = 0u; i < num_goal_handles; ++i) {
     if (output_expired && num_goals_expired >= expired_goals_capacity) {
@@ -615,17 +661,26 @@ rcl_action_expire_goals(
     if (rcl_action_goal_handle_is_active(goal_handle)) {
       continue;
     }
-    rcl_action_goal_info_t * info_ptr = &goal_info;
+
+    // Retrieve the information of expired goals for output
     if (output_expired) {
-      info_ptr = &(expired_goals[num_goals_expired]);
+      ret = rcl_action_goal_handle_get_info(goal_handle, &(expired_goals[num_goals_expired]));
+      if (RCL_RET_OK != ret) {
+        ret_final = RCL_RET_ERROR;
+        continue;
+      }
     }
-    ret = rcl_action_goal_handle_get_info(goal_handle, info_ptr);
+
+    ret = rcl_action_goal_handle_get_goal_terminal_timestamp(goal_handle, &goal_terminal_timestamp);
+    if (RCL_ACTION_RET_NOT_TERMINATED_YET == ret) {
+      continue;
+    }
     if (RCL_RET_OK != ret) {
       ret_final = RCL_RET_ERROR;
       continue;
     }
-    goal_time = _goal_info_stamp_to_nanosec(info_ptr);
-    if ((current_time - goal_time) > timeout) {
+
+    if ((current_time - goal_terminal_timestamp) > timeout) {
       // Deallocate space used to store pointer to goal handle
       allocator.deallocate(action_server->impl->goal_handles[i], allocator.state);
       action_server->impl->goal_handles[i] = NULL;
@@ -685,6 +740,34 @@ rcl_action_notify_goal_done(
   if (!rcl_action_server_is_valid(action_server)) {
     return RCL_RET_ACTION_SERVER_INVALID;
   }
+
+  // Get current time (nanosec)
+  int64_t current_time;
+  rcl_ret_t ret = rcl_clock_get_now(action_server->impl->clock, &current_time);
+  if (RCL_RET_OK != ret) {
+    return RCL_RET_ERROR;
+  }
+
+  // Set current time to goal_terminal_timestamp of goal which has reached terminal state
+  for (size_t i = 0; i < action_server->impl->num_goal_handles; ++i) {
+    rcl_action_goal_handle_t * goal_handle = action_server->impl->goal_handles[i];
+    if (!rcl_action_goal_handle_is_active(goal_handle)) {
+      rcl_time_point_value_t goal_terminal_timestamp;
+      rcl_ret_t ret = rcl_action_goal_handle_get_goal_terminal_timestamp(
+        goal_handle, &goal_terminal_timestamp);
+      if (RCL_ACTION_RET_NOT_TERMINATED_YET == ret) {
+        ret = rcl_action_goal_handle_set_goal_terminal_timestamp(goal_handle, current_time);
+        if (RCL_RET_OK != ret) {
+          return RCL_RET_ERROR;
+        }
+        continue;
+      }
+      if (RCL_RET_OK != ret) {
+        return RCL_RET_ERROR;
+      }
+    }
+  }
+
   return _recalculate_expire_timer(
     &action_server->impl->expire_timer,
     action_server->impl->options.result_timeout.nanoseconds,
@@ -839,7 +922,7 @@ rcl_action_server_get_action_name(const rcl_action_server_t * action_server)
   if (!rcl_action_server_is_valid(action_server)) {
     return NULL;  // error already set
   }
-  return action_server->impl->action_name;
+  return action_server->impl->remapped_action_name;
 }
 
 const rcl_action_server_options_t *

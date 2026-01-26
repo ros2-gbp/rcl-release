@@ -25,6 +25,7 @@ extern "C"
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
 #include "rcl/node.h"
+#include "rcl/node_type_cache.h"
 #include "rcutils/logging_macros.h"
 #include "rcutils/macros.h"
 #include "rcl/time.h"
@@ -36,7 +37,7 @@ extern "C"
 #include "./publisher_impl.h"
 
 rcl_publisher_t
-rcl_get_zero_initialized_publisher()
+rcl_get_zero_initialized_publisher(void)
 {
   static rcl_publisher_t null_publisher = {0};
   return null_publisher;
@@ -99,8 +100,8 @@ rcl_publisher_init(
     ROS_PACKAGE_NAME, "Expanded and remapped topic name '%s'", remapped_topic_name);
 
   // Allocate space for the implementation struct.
-  publisher->impl = (rcl_publisher_impl_t *)allocator->allocate(
-    sizeof(rcl_publisher_impl_t), allocator->state);
+  publisher->impl = (rcl_publisher_impl_t *)allocator->zero_allocate(
+    1, sizeof(rcl_publisher_impl_t), allocator->state);
   RCL_CHECK_FOR_NULL_WITH_MSG(
     publisher->impl, "allocating memory failed", ret = RCL_RET_BAD_ALLOC; goto cleanup);
 
@@ -127,16 +128,29 @@ rcl_publisher_init(
     options->qos.avoid_ros_namespace_conventions;
   // options
   publisher->impl->options = *options;
+
+  if (RCL_RET_OK != rcl_node_type_cache_register_type(
+      node, type_support->get_type_hash_func(type_support),
+      type_support->get_type_description_func(type_support),
+      type_support->get_type_description_sources_func(type_support)))
+  {
+    rcutils_reset_error();
+    RCL_SET_ERROR_MSG("Failed to register type for subscription");
+    goto fail;
+  }
+  publisher->impl->type_hash = *type_support->get_type_hash_func(type_support);
+
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Publisher initialized");
   // context
   publisher->impl->context = node->context;
-  TRACEPOINT(
+  TRACETOOLS_TRACEPOINT(
     rcl_publisher_init,
     (const void *)publisher,
     (const void *)node,
     (const void *)publisher->impl->rmw_handle,
     remapped_topic_name,
     options->qos.depth);
+
   goto cleanup;
 fail:
   if (publisher->impl) {
@@ -187,6 +201,13 @@ rcl_publisher_fini(rcl_publisher_t * publisher, rcl_node_t * node)
       RCL_SET_ERROR_MSG(rmw_get_error_string().str);
       result = RCL_RET_ERROR;
     }
+    if (
+      ROSIDL_TYPE_HASH_VERSION_UNSET != publisher->impl->type_hash.version &&
+      RCL_RET_OK != rcl_node_type_cache_unregister_type(node, &publisher->impl->type_hash))
+    {
+      RCUTILS_SAFE_FWRITE_TO_STDERR(rcl_get_error_string().str);
+      result = RCL_RET_ERROR;
+    }
     allocator.deallocate(publisher->impl, allocator.state);
     publisher->impl = NULL;
   }
@@ -195,7 +216,7 @@ rcl_publisher_fini(rcl_publisher_t * publisher, rcl_node_t * node)
 }
 
 rcl_publisher_options_t
-rcl_publisher_get_default_options()
+rcl_publisher_get_default_options(void)
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
   static rcl_publisher_options_t default_options;
@@ -203,6 +224,19 @@ rcl_publisher_get_default_options()
   default_options.qos = rmw_qos_profile_default;
   default_options.allocator = rcl_get_default_allocator();
   default_options.rmw_publisher_options = rmw_get_default_publisher_options();
+
+  // Load disable flag to LoanedMessage via environmental variable.
+  bool disable_loaned_message = false;
+  rcl_ret_t ret = rcl_get_disable_loaned_message(&disable_loaned_message);
+  if (ret == RCL_RET_OK) {
+    default_options.disable_loaned_message = disable_loaned_message;
+  } else {
+    RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to get disable_loaned_message: ");
+    RCUTILS_SAFE_FWRITE_TO_STDERR(rcl_get_error_string().str);
+    rcl_reset_error();
+    default_options.disable_loaned_message = false;
+  }
+
   return default_options;
 }
 
@@ -245,7 +279,7 @@ rcl_publish(
     return RCL_RET_PUBLISHER_INVALID;  // error already set
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_message, RCL_RET_INVALID_ARGUMENT);
-  TRACEPOINT(rcl_publish, (const void *)publisher, (const void *)ros_message);
+  TRACETOOLS_TRACEPOINT(rcl_publish, (const void *)publisher, (const void *)ros_message);
   if (rmw_publish(publisher->impl->rmw_handle, ros_message, allocation) != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     return RCL_RET_ERROR;
@@ -263,6 +297,7 @@ rcl_publish_serialized_message(
     return RCL_RET_PUBLISHER_INVALID;  // error already set
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(serialized_message, RCL_RET_INVALID_ARGUMENT);
+  TRACETOOLS_TRACEPOINT(rcl_publish, (const void *)publisher, (const void *)serialized_message);
   rmw_ret_t ret = rmw_publish_serialized_message(
     publisher->impl->rmw_handle, serialized_message, allocation);
   if (ret != RMW_RET_OK) {
@@ -285,6 +320,7 @@ rcl_publish_loaned_message(
     return RCL_RET_PUBLISHER_INVALID;  // error already set
   }
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_message, RCL_RET_INVALID_ARGUMENT);
+  TRACETOOLS_TRACEPOINT(rcl_publish, (const void *)publisher, (const void *)ros_message);
   rmw_ret_t ret = rmw_publish_loaned_message(publisher->impl->rmw_handle, ros_message, allocation);
   if (ret != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
@@ -350,15 +386,13 @@ rcl_publisher_get_topic_name(const rcl_publisher_t * publisher)
   return publisher->impl->rmw_handle->topic_name;
 }
 
-#define _publisher_get_options(pub) & pub->impl->options
-
 const rcl_publisher_options_t *
 rcl_publisher_get_options(const rcl_publisher_t * publisher)
 {
   if (!rcl_publisher_is_valid_except_context(publisher)) {
     return NULL;  // error already set
   }
-  return _publisher_get_options(publisher);
+  return &publisher->impl->options;
 }
 
 rmw_publisher_t *
@@ -441,9 +475,7 @@ rcl_publisher_can_loan_messages(const rcl_publisher_t * publisher)
     return false;  // error message already set
   }
 
-  bool disable_loaned_message = false;
-  rcl_ret_t ret = rcl_get_disable_loaned_message(&disable_loaned_message);
-  if (ret == RCL_RET_OK && disable_loaned_message) {
+  if (publisher->impl->options.disable_loaned_message) {
     return false;
   }
 
