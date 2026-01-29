@@ -35,7 +35,8 @@ typedef struct rcl_action_goal_handle_impl_s
 rcl_action_goal_handle_t
 rcl_action_get_zero_initialized_goal_handle(void)
 {
-  static rcl_action_goal_handle_t null_handle = {0};
+  // All members are initialized to 0 or NULL by C99 6.7.8/10.
+  static rcl_action_goal_handle_t null_handle;
   return null_handle;
 }
 
@@ -169,6 +170,18 @@ rcl_action_goal_handle_is_cancelable(const rcl_action_goal_handle_t * goal_handl
 }
 
 bool
+rcl_action_goal_handle_is_abortable(const rcl_action_goal_handle_t * goal_handle)
+{
+  if (!rcl_action_goal_handle_is_valid(goal_handle)) {
+    return false;  // error message is set
+  }
+  // Check if the state machine reports an abort goal event is valid
+  rcl_action_goal_state_t state = rcl_action_transition_goal_state(
+    goal_handle->impl->state, GOAL_EVENT_ABORT);
+  return GOAL_STATE_ABORTED == state;
+}
+
+bool
 rcl_action_goal_handle_is_valid(const rcl_action_goal_handle_t * goal_handle)
 {
   RCL_CHECK_FOR_NULL_WITH_MSG(goal_handle, "goal handle pointer is invalid", return false);
@@ -191,7 +204,7 @@ rcl_action_goal_handle_get_goal_terminal_timestamp(
   RCL_CHECK_ARGUMENT_FOR_NULL(timestamp, RCL_RET_INVALID_ARGUMENT);
 
   if (goal_handle->impl->goal_terminal_timestamp == INVAILD_GOAL_TERMINAL_TIMESTAMP) {
-    return RCL_ACTION_RET_NOT_TERMINATED_YET;
+    return RCL_RET_ACTION_NOT_TERMINATED_YET;
   }
 
   *timestamp = goal_handle->impl->goal_terminal_timestamp;

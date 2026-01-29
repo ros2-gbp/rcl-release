@@ -2,33 +2,69 @@
 Changelog for package rcl_yaml_param_parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-9.2.9 (2026-01-19)
-------------------
-* Validate name input in add_name_to_ns function (`#1281 <https://github.com/ros2/rcl/issues/1281>`_) (`#1284 <https://github.com/ros2/rcl/issues/1284>`_)
-* Fix REP url locations (`#1271 <https://github.com/ros2/rcl/issues/1271>`_) (`#1273 <https://github.com/ros2/rcl/issues/1273>`_)
-* Contributors: mergify[bot]
+10.3.0 (2026-01-29)
+-------------------
 
-9.2.8 (2025-10-21)
-------------------
-* Fix param file parsing failure with wildcards due to ordering (`#1253 <https://github.com/ros2/rcl/issues/1253>`_) (`#1265 <https://github.com/ros2/rcl/issues/1265>`_)
-* Contributors: mergify[bot]
+10.2.7 (2026-01-19)
+-------------------
+* Validate name input in add_name_to_ns function (`#1281 <https://github.com/ros2/rcl/issues/1281>`_)
+* parse_key() should use yaml_map_lvl_t instead of uint_32. (`#1279 <https://github.com/ros2/rcl/issues/1279>`_)
+* Remove default from switch with enum, so that compiler warns. (`#1278 <https://github.com/ros2/rcl/issues/1278>`_)
+* Add yaml tags support (`#1275 <https://github.com/ros2/rcl/issues/1275>`_)
+  Co-authored-by: Lei Liu <Lei.Liu.AP@sony.com>
+* Contributors: Barry Xu, Tomoya Fujita
 
-9.2.7 (2025-06-23)
+10.2.6 (2025-11-17)
+-------------------
+* Fix REP url locations (`#1271 <https://github.com/ros2/rcl/issues/1271>`_)
+* Contributors: Tim Clephas
+
+10.2.5 (2025-10-21)
+-------------------
+* Fix param file parsing failure with wildcards due to ordering (`#1253 <https://github.com/ros2/rcl/issues/1253>`_)
+* Contributors: Barry Xu
+
+10.2.4 (2025-09-30)
+-------------------
+
+10.2.3 (2025-07-29)
+-------------------
+* Fix Cmake deprecation (`#1249 <https://github.com/ros2/rcl/issues/1249>`_)
+* Contributors: mosfet80
+
+10.2.2 (2025-06-23)
+-------------------
+
+10.2.1 (2025-05-30)
+-------------------
+
+10.2.0 (2025-04-25)
+-------------------
+
+10.1.0 (2025-04-04)
+-------------------
+
+10.0.2 (2025-01-31)
+-------------------
+* Cleanup errors after error paths in rcl_yaml_param_parser tests. (`#1203 <https://github.com/ros2/rcl/issues/1203>`_)
+  This gets rid of ugly "overwritten" warnings in the tests.
+* Contributors: Chris Lalancette
+
+10.0.1 (2024-11-20)
+-------------------
+
+10.0.0 (2024-10-03)
+-------------------
+
+9.4.1 (2024-07-29)
 ------------------
 
-9.2.6 (2025-04-29)
+9.4.0 (2024-06-17)
 ------------------
+* Add 'mimick' label to tests which use Mimick (`#1152 <https://github.com/ros2/rcl/issues/1152>`_)
+* Contributors: Scott K Logan
 
-9.2.5 (2025-04-02)
-------------------
-
-9.2.4 (2024-09-19)
-------------------
-
-9.2.3 (2024-05-13)
-------------------
-
-9.2.2 (2024-04-24)
+9.3.0 (2024-04-26)
 ------------------
 
 9.2.1 (2024-04-16)

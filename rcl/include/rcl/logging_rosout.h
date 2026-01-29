@@ -20,32 +20,16 @@
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
 #include "rcl/node.h"
+#include "rcl/macros.h"
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
+
+#include "rmw/qos_profiles.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-/// The default qos profile setting for topic /rosout
-/**
- * - depth = 1000
- * - durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
- * - lifespan = {10, 0}
- */
-static const rmw_qos_profile_t rcl_qos_profile_rosout_default =
-{
-  RMW_QOS_POLICY_HISTORY_KEEP_LAST,
-  1000,
-  RMW_QOS_POLICY_RELIABILITY_RELIABLE,
-  RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
-  RMW_QOS_DEADLINE_DEFAULT,
-  {10, 0},
-  RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
-  RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
-  false
-};
 
 /// Initializes the rcl_logging_rosout features
 /**

@@ -86,7 +86,6 @@ rcl_get_automatic_discovery_range(rmw_discovery_options_t * discovery_options)
   return RCL_RET_OK;
 }
 
-RCL_PUBLIC
 const char *
 rcl_automatic_discovery_range_to_string(rmw_automatic_discovery_range_t automatic_discovery_range)
 {
@@ -101,9 +100,8 @@ rcl_automatic_discovery_range_to_string(rmw_automatic_discovery_range_t automati
       return "RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET";
     case RMW_AUTOMATIC_DISCOVERY_RANGE_SYSTEM_DEFAULT:
       return "RMW_AUTOMATIC_DISCOVERY_RANGE_SYSTEM_DEFAULT";
-    default:
-      return NULL;
   }
+  return NULL;
 }
 
 rcl_ret_t

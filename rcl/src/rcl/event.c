@@ -38,7 +38,8 @@ extern "C"
 rcl_event_t
 rcl_get_zero_initialized_event(void)
 {
-  static rcl_event_t null_event = {0};
+  // All members are initialized to 0 or NULL by C99 6.7.8/10.
+  static rcl_event_t null_event;
   return null_event;
 }
 
@@ -70,9 +71,10 @@ rcl_publisher_event_init(
     case RCL_PUBLISHER_MATCHED:
       rmw_event_type = RMW_EVENT_PUBLICATION_MATCHED;
       break;
-    default:
-      RCL_SET_ERROR_MSG("Event type for publisher not supported");
-      return RCL_RET_INVALID_ARGUMENT;
+  }
+  if (rmw_event_type == RMW_EVENT_INVALID) {
+    RCL_SET_ERROR_MSG("Event type for publisher not supported");
+    return RCL_RET_INVALID_ARGUMENT;
   }
 
   // Allocate space for the implementation struct.
@@ -130,9 +132,10 @@ rcl_subscription_event_init(
     case RCL_SUBSCRIPTION_MATCHED:
       rmw_event_type = RMW_EVENT_SUBSCRIPTION_MATCHED;
       break;
-    default:
-      RCL_SET_ERROR_MSG("Event type for subscription not supported");
-      return RCL_RET_INVALID_ARGUMENT;
+  }
+  if (rmw_event_type == RMW_EVENT_INVALID) {
+    RCL_SET_ERROR_MSG("Event type for subscription not supported");
+    return RCL_RET_INVALID_ARGUMENT;
   }
 
   // Allocate space for the implementation struct.

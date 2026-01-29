@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.20)
 
 project(rcl)
 
@@ -19,8 +19,11 @@ find_package(type_description_interfaces REQUIRED)
 find_package(yaml REQUIRED)
 
 include(cmake/rcl_set_symbol_visibility_hidden.cmake)
+
+# Determine the logging implementation to use
 include(cmake/get_default_rcl_logging_implementation.cmake)
 get_default_rcl_logging_implementation(RCL_LOGGING_IMPL)
+message(STATUS "RCL_LOGGING_IMPLEMENTATION: ${RCL_LOGGING_IMPL}")
 
 # Default to C11
 if(NOT CMAKE_C_STANDARD)
@@ -53,7 +56,6 @@ set(${PROJECT_NAME}_sources
   src/rcl/init_options.c
   src/rcl/lexer.c
   src/rcl/lexer_lookahead.c
-  src/rcl/localhost.c
   src/rcl/logging_rosout.c
   src/rcl/logging.c
   src/rcl/log_level.c
@@ -97,11 +99,23 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   ${type_description_interfaces_TARGETS}
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  ${RCL_LOGGING_IMPL}::${RCL_LOGGING_IMPL}
   ${service_msgs_TARGETS}
   tracetools::tracetools
   yaml
 )
+
+# Link logging implementation based on configuration
+if(RCL_LOGGING_IMPL STREQUAL "rcl_logging_implementation")
+  # Dynamic loading: use rcl_logging_implementation abstraction
+  target_link_libraries(${PROJECT_NAME} PRIVATE
+    rcl_logging_implementation::rcl_logging_implementation
+  )
+else()
+  # Static linking: use specific logging implementation
+  target_link_libraries(${PROJECT_NAME} PRIVATE
+    ${RCL_LOGGING_IMPL}::${RCL_LOGGING_IMPL}
+  )
+endif()
 
 # Allow configuring the default discovery range
 if(DEFINED RCL_DEFAULT_DISCOVERY_RANGE)
