@@ -25,14 +25,13 @@ extern "C"
 #include "rcl_lifecycle/data_types.h"
 
 rcl_lifecycle_com_interface_t
-rcl_lifecycle_get_zero_initialized_com_interface(void);
+rcl_lifecycle_get_zero_initialized_com_interface();
 
 rcl_ret_t
 RCL_WARN_UNUSED
 rcl_lifecycle_com_interface_init(
   rcl_lifecycle_com_interface_t * com_interface,
   rcl_node_t * node_handle,
-  rcl_clock_t * clock,
   const rosidl_message_type_support_t * ts_pub_notify,
   const rosidl_service_type_support_t * ts_srv_change_state,
   const rosidl_service_type_support_t * ts_srv_get_state,
@@ -45,7 +44,6 @@ RCL_WARN_UNUSED
 rcl_lifecycle_com_interface_publisher_init(
   rcl_lifecycle_com_interface_t * com_interface,
   rcl_node_t * node_handle,
-  rcl_clock_t * clock,
   const rosidl_message_type_support_t * ts_pub_notify);
 
 rcl_ret_t
@@ -81,7 +79,7 @@ rcl_ret_t
 RCL_WARN_UNUSED
 rcl_lifecycle_com_interface_publish_notification(
   rcl_lifecycle_com_interface_t * com_interface,
-  const rcl_lifecycle_transition_t * transition);
+  const rcl_lifecycle_state_t * start, const rcl_lifecycle_state_t * goal);
 
 #ifdef __cplusplus
 }

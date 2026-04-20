@@ -31,12 +31,19 @@
 #include "../mocking_utils/patch.hpp"
 #include "../src/rcl/init_options_impl.h"
 
+#ifdef RMW_IMPLEMENTATION
+# define CLASSNAME_(NAME, SUFFIX) NAME ## __ ## SUFFIX
+# define CLASSNAME(NAME, SUFFIX) CLASSNAME_(NAME, SUFFIX)
+#else
+# define CLASSNAME(NAME, SUFFIX) NAME
+#endif
+
 using osrf_testing_tools_cpp::memory_tools::on_unexpected_malloc;
 using osrf_testing_tools_cpp::memory_tools::on_unexpected_realloc;
 using osrf_testing_tools_cpp::memory_tools::on_unexpected_calloc;
 using osrf_testing_tools_cpp::memory_tools::on_unexpected_free;
 
-class TestRCLFixture : public ::testing::Test
+class CLASSNAME (TestRCLFixture, RMW_IMPLEMENTATION) : public ::testing::Test
 {
 public:
   void SetUp()
@@ -99,7 +106,7 @@ private:
 
 /* Tests rcl_init_options_init() and rcl_init_options_fini() functions.
  */
-TEST_F(TestRCLFixture, test_rcl_init_options_init) {
+TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_init_options_init) {
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
 
   // fini a not empty options
@@ -133,7 +140,7 @@ TEST_F(TestRCLFixture, test_rcl_init_options_init) {
 
 /* Tests calling rcl_init() with invalid arguments fails.
  */
-TEST_F(TestRCLFixture, test_rcl_init_invalid_arguments) {
+TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_init_invalid_arguments) {
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   rcl_ret_t ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -243,7 +250,7 @@ TEST_F(TestRCLFixture, test_rcl_init_invalid_arguments) {
 
 /* Tests the rcl_init() and rcl_shutdown() functions.
  */
-TEST_F(TestRCLFixture, test_rcl_init_and_shutdown) {
+TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_init_and_shutdown) {
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   rcl_ret_t ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -314,7 +321,7 @@ TEST_F(TestRCLFixture, test_rcl_init_and_shutdown) {
 
 /* Tests rcl_init() deals with internal errors correctly.
  */
-TEST_F(TestRCLFixture, test_rcl_init_internal_error) {
+TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_init_internal_error) {
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   rcl_ret_t ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -357,7 +364,7 @@ TEST_F(TestRCLFixture, test_rcl_init_internal_error) {
 
 /* Tests rcl_shutdown() deals with internal errors correctly.
  */
-TEST_F(TestRCLFixture, test_rcl_shutdown_internal_error) {
+TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_shutdown_internal_error) {
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   rcl_ret_t ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -384,7 +391,7 @@ TEST_F(TestRCLFixture, test_rcl_shutdown_internal_error) {
 
 /* Tests the rcl_get_instance_id() function.
  */
-TEST_F(TestRCLFixture, test_rcl_get_instance_id) {
+TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_get_instance_id) {
   rcl_ret_t ret;
   rcl_context_t context = rcl_get_zero_initialized_context();
   // Instance id should be 0 before rcl_init().
@@ -447,7 +454,7 @@ TEST_F(TestRCLFixture, test_rcl_get_instance_id) {
   EXPECT_EQ(ret, RCL_RET_OK);
 }
 
-TEST_F(TestRCLFixture, test_rcl_init_options_access) {
+TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_init_options_access) {
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   rcl_init_options_t not_ini_init_options = rcl_get_zero_initialized_init_options();
   rcl_ret_t ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
@@ -462,16 +469,12 @@ TEST_F(TestRCLFixture, test_rcl_init_options_access) {
   EXPECT_EQ(0u, options->instance_id);
   EXPECT_EQ(nullptr, options->impl);
   EXPECT_EQ(NULL, rcl_init_options_get_rmw_init_options(nullptr));
-  rcl_reset_error();
   EXPECT_EQ(NULL, rcl_init_options_get_rmw_init_options(&not_ini_init_options));
-  rcl_reset_error();
 
   const rcl_allocator_t * options_allocator = rcl_init_options_get_allocator(&init_options);
   EXPECT_TRUE(rcutils_allocator_is_valid(options_allocator));
   EXPECT_EQ(NULL, rcl_init_options_get_allocator(nullptr));
-  rcl_reset_error();
   EXPECT_EQ(NULL, rcl_init_options_get_allocator(&not_ini_init_options));
-  rcl_reset_error();
 
   size_t domain_id;
   ret = rcl_init_options_get_domain_id(NULL, &domain_id);
@@ -507,10 +510,8 @@ TEST_F(TestRCLFixture, test_rcl_init_options_access) {
   // nullptr copy cases
   EXPECT_EQ(
     RCL_RET_INVALID_ARGUMENT, rcl_init_options_copy(nullptr, &init_options_dst));
-  rcl_reset_error();
   EXPECT_EQ(
     RCL_RET_INVALID_ARGUMENT, rcl_init_options_copy(&init_options, nullptr));
-  rcl_reset_error();
 
   // Expected usage copy
   ASSERT_EQ(RCL_RET_OK, rcl_init_options_copy(&init_options, &init_options_dst));
@@ -528,7 +529,7 @@ MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, >)
 MOCKING_UTILS_BOOL_OPERATOR_RETURNS_FALSE(rcutils_allocator_t, !=)
 
 // Tests rcl_init_options_init() mocked to fail
-TEST_F(TestRCLFixture, test_mocked_rcl_init_options_ini) {
+TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_mocked_rcl_init_options_ini) {
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   auto mock = mocking_utils::patch_and_return("lib:rcl", rmw_init_options_init, RMW_RET_ERROR);
   EXPECT_EQ(RCL_RET_ERROR, rcl_init_options_init(&init_options, rcl_get_default_allocator()));
@@ -536,7 +537,7 @@ TEST_F(TestRCLFixture, test_mocked_rcl_init_options_ini) {
 }
 
 // Tests rcl_init_options_fini() mocked to fail
-TEST_F(TestRCLFixture, test_mocked_rcl_init_options_fini) {
+TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_mocked_rcl_init_options_fini) {
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   rcl_ret_t ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
@@ -548,7 +549,7 @@ TEST_F(TestRCLFixture, test_mocked_rcl_init_options_fini) {
 }
 
 // Mock rcl_init_options_copy to fail
-TEST_F(TestRCLFixture, test_rcl_init_options_copy_fail_rmw_copy) {
+TEST_F(CLASSNAME(TestRCLFixture, RMW_IMPLEMENTATION), test_rcl_init_options_copy_fail_rmw_copy) {
   rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
   rcl_ret_t ret = rcl_init_options_init(&init_options, rcl_get_default_allocator());
   ASSERT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;

@@ -34,10 +34,12 @@ struct rcl_guard_condition_impl_s
 };
 
 rcl_guard_condition_t
-rcl_get_zero_initialized_guard_condition(void)
+rcl_get_zero_initialized_guard_condition()
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_guard_condition_t null_guard_condition;
+  static rcl_guard_condition_t null_guard_condition = {
+    .context = 0,
+    .impl = 0
+  };
   return null_guard_condition;
 }
 
@@ -139,10 +141,10 @@ rcl_guard_condition_fini(rcl_guard_condition_t * guard_condition)
 }
 
 rcl_guard_condition_options_t
-rcl_guard_condition_get_default_options(void)
+rcl_guard_condition_get_default_options()
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
-  rcl_guard_condition_options_t default_options;
+  static rcl_guard_condition_options_t default_options;
   default_options.allocator = rcl_get_default_allocator();
   return default_options;
 }

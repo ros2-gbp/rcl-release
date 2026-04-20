@@ -29,7 +29,6 @@ extern "C"
 #include "rcl/node.h"
 #include "rcl/visibility_control.h"
 
-#include "rmw/dynamic_message_type_support.h"
 #include "rmw/message_sequence.h"
 
 /// Internal rcl implementation struct.
@@ -52,8 +51,6 @@ typedef struct rcl_subscription_options_s
   rcl_allocator_t allocator;
   /// rmw specific subscription options, e.g. the rmw implementation specific payload.
   rmw_subscription_options_t rmw_subscription_options;
-  /// Disable flag to LoanedMessage, initialized via environmental variable.
-  bool disable_loaned_message;
 } rcl_subscription_options_t;
 
 typedef struct rcl_subscription_content_filter_options_s
@@ -97,14 +94,14 @@ rcl_get_zero_initialized_subscription(void);
  *
  * ```cpp
  * #include <rosidl_typesupport_cpp/message_type_support.hpp>
- * #include <std_msgs/msg/string.hpp>
+ * #include <std_msgs/msgs/string.hpp>
  * using rosidl_typesupport_cpp::get_message_type_support_handle;
  * const rosidl_message_type_support_t * string_ts =
  *   get_message_type_support_handle<std_msgs::msg::String>();
  * ```
  *
  * The rosidl_message_type_support_t object contains message type specific
- * information used to subscribe to messages.
+ * information used to publish messages.
  *
  * The topic name must be a c string which follows the topic and service name
  * format rules for unexpanded names, also known as non-fully qualified names:
@@ -209,7 +206,6 @@ rcl_subscription_fini(rcl_subscription_t * subscription, rcl_node_t * node);
  * - qos = rmw_qos_profile_default
  * - allocator = rcl_get_default_allocator()
  * - rmw_subscription_options = rmw_get_default_subscription_options();
- * - disable_loaned_message = true, false only if ROS_DISABLE_LOANED_MESSAGES=0
  *
  * \return A structure containing the default options for a subscription.
  */
@@ -266,30 +262,6 @@ rcl_subscription_options_set_content_filter_options(
   const char * filter_expression,
   size_t expression_parameters_argc,
   const char * expression_parameter_argv[],
-  rcl_subscription_options_t * options);
-
-/// Set the acceptable buffer backends for the given subscription options.
-/**
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | No
- *
- * \param[in] acceptable_buffer_backends Comma-separated list of acceptable buffer backend names.
- *   NULL or empty string means CPU-only (default). "any" means all installed backends.
- * \param[out] options The subscription options to be set.
- * \return `RCL_RET_OK` if set options successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if options is NULL, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory fails.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_subscription_options_set_acceptable_buffer_backends(
-  const char * acceptable_buffer_backends,
   rcl_subscription_options_t * options);
 
 /// Return the zero initialized subscription content filter options.
@@ -624,44 +596,6 @@ rcl_take_serialized_message(
   rmw_message_info_t * message_info,
   rmw_subscription_allocation_t * allocation);
 
-/// Take a dynamic type message from a topic using a rcl subscription.
-/**
- * In contrast to rcl_take(), this function takes a dynamic type message with dynamic data taken
- * directly from the middleware.
- * It is the job of the caller to ensure that the type associated with the subscription
- * matches, and that the subscription uses the dynamic type rosidl_message_type_support_t.
- *
- * Apart from the differences above, this function behaves like rcl_take().
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] subscription the handle to the subscription from which to take
- * \param[inout] dynamic_message pointer to a (pre-allocated) dynamic type message.
- * \param[out] message_info rmw struct which contains meta-data for the message
- * \param[in] allocation structure pointer used for memory preallocation (may be NULL)
- * \return #RCL_RET_OK if the message was taken, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_SUBSCRIPTION_INVALID if the subscription is invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_SUBSCRIPTION_TAKE_FAILED if take failed but no error
- *         occurred in the middleware, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_take_dynamic_message(
-  const rcl_subscription_t * subscription,
-  rosidl_dynamic_typesupport_dynamic_data_t * dynamic_message,
-  rmw_message_info_t * message_info,
-  rmw_subscription_allocation_t * allocation);
-
 /// Take a loaned message from a topic using a rcl subscription.
 /**
  * Depending on the middleware, incoming messages can be loaned to the user's callback
@@ -910,17 +844,6 @@ rcl_subscription_can_loan_messages(const rcl_subscription_t * subscription);
  * \sa rmw_subscription_set_on_new_message_callback for details about this
  * function.
  *
- * Since this callback is called from the middleware, you should
- * aim to make it fast and not blocking. This callback
- * is intended to implement an event driven executor and
- * not process data directly.
- *
- * Doing work in this callback can cause delays,
- * deadlocks, or latency due to cross thread waiting
- * as this process runs on middleware managed threads
- * and is meant only to notify the executor that new data
- * is available in the middleware queue.
- *
  * <hr>
  * Attribute          | Adherence
  * ------------------ | -------------
@@ -935,7 +858,7 @@ rcl_subscription_can_loan_messages(const rcl_subscription_t * subscription);
  * \param[in] user_data Given to the callback when called later, may be NULL
  * \return `RCL_RET_OK` if successful, or
  * \return `RCL_RET_INVALID_ARGUMENT` if `subscription` is NULL, or
- * \return `RCL_RET_UNSUPPORTED` if the API is not supported by the middleware
+ * \return `RCL_RET_UNSUPPORTED` if the API is not implemented in the dds implementation
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -944,16 +867,6 @@ rcl_subscription_set_on_new_message_callback(
   const rcl_subscription_t * subscription,
   rcl_event_callback_t callback,
   const void * user_data);
-
-/// Check if subscription instance supports content filtering.
-/**
- * \param[in] subscription The subscription instance to check for content filtering support
- * \return `true` if the subscription instance supports content filtering, `false` otherwise
- *   (including when \p subscription is `NULL` or invalid).
- */
-RCL_PUBLIC
-bool
-rcl_subscription_is_cft_supported(const rcl_subscription_t * subscription);
 
 #ifdef __cplusplus
 }

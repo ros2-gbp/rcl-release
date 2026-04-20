@@ -23,8 +23,8 @@
 
 #include "rcutils/allocator.h"
 #include "rcutils/error_handling.h"
+#include "rcutils/filesystem.h"
 #include "rcutils/strdup.h"
-#include "rcutils/types/string_array.h"
 
 #include "../src/impl/yaml_variant.h"
 
@@ -46,7 +46,6 @@ BENCHMARK_F(PerformanceTest, bool_copy_variant)(benchmark::State & st)
   reset_heap_counters();
 
   for (auto _ : st) {
-    RCUTILS_UNUSED(_);
     if (!rcl_yaml_variant_copy(&dest_variant, &src_variant, allocator)) {
       st.SkipWithError(rcutils_get_error_string().str);
     }
@@ -66,7 +65,6 @@ BENCHMARK_F(PerformanceTest, int_copy_variant)(benchmark::State & st)
   reset_heap_counters();
 
   for (auto _ : st) {
-    RCUTILS_UNUSED(_);
     if (!rcl_yaml_variant_copy(&dest_variant, &src_variant, allocator)) {
       st.SkipWithError(rcutils_get_error_string().str);
     }
@@ -86,7 +84,6 @@ BENCHMARK_F(PerformanceTest, double_copy_variant)(benchmark::State & st)
   reset_heap_counters();
 
   for (auto _ : st) {
-    RCUTILS_UNUSED(_);
     if (!rcl_yaml_variant_copy(&dest_variant, &src_variant, allocator)) {
       st.SkipWithError(rcutils_get_error_string().str);
     }
@@ -113,46 +110,6 @@ BENCHMARK_F(PerformanceTest, string_copy_variant)(benchmark::State & st)
   reset_heap_counters();
 
   for (auto _ : st) {
-    RCUTILS_UNUSED(_);
-    if (!rcl_yaml_variant_copy(&dest_variant, &src_variant, allocator)) {
-      st.SkipWithError(rcutils_get_error_string().str);
-    }
-    rcl_yaml_variant_fini(&dest_variant, allocator);
-  }
-}
-
-BENCHMARK_F(PerformanceTest, array_byte_copy_variant)(benchmark::State & st)
-{
-  rcl_variant_t src_variant{};
-  rcl_variant_t dest_variant{};
-  rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  using ArrayT = std::remove_pointer<decltype(src_variant.byte_array_value)>::type;
-  src_variant.byte_array_value =
-    static_cast<ArrayT *>(allocator.allocate(sizeof(ArrayT), allocator.state));
-  if (src_variant.byte_array_value == nullptr) {
-    st.SkipWithError("Failed to allocate byte_array_value");
-    return;
-  }
-  using ValueT = std::remove_pointer<decltype(src_variant.byte_array_value->values)>::type;
-  src_variant.byte_array_value->values =
-    static_cast<ValueT *>(
-    allocator.zero_allocate(kSize, sizeof(ValueT), allocator.state));
-  if (src_variant.byte_array_value->values == nullptr) {
-    allocator.deallocate(src_variant.byte_array_value, allocator.state);
-    st.SkipWithError("Failed to allocate byte_array_value->values");
-    return;
-  }
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
-  {
-    rcl_yaml_variant_fini(&src_variant, allocator);
-    rcl_yaml_variant_fini(&dest_variant, allocator);
-  });
-  src_variant.byte_array_value->size = kSize;
-
-  reset_heap_counters();
-
-  for (auto _ : st) {
-    RCUTILS_UNUSED(_);
     if (!rcl_yaml_variant_copy(&dest_variant, &src_variant, allocator)) {
       st.SkipWithError(rcutils_get_error_string().str);
     }
@@ -182,7 +139,6 @@ BENCHMARK_F(PerformanceTest, array_bool_copy_variant)(benchmark::State & st)
   reset_heap_counters();
 
   for (auto _ : st) {
-    RCUTILS_UNUSED(_);
     if (!rcl_yaml_variant_copy(&dest_variant, &src_variant, allocator)) {
       st.SkipWithError(rcutils_get_error_string().str);
     }
@@ -212,7 +168,6 @@ BENCHMARK_F(PerformanceTest, array_int_copy_variant)(benchmark::State & st)
   reset_heap_counters();
 
   for (auto _ : st) {
-    RCUTILS_UNUSED(_);
     if (!rcl_yaml_variant_copy(&dest_variant, &src_variant, allocator)) {
       st.SkipWithError(rcutils_get_error_string().str);
     }
@@ -242,7 +197,6 @@ BENCHMARK_F(PerformanceTest, array_double_copy_variant)(benchmark::State & st)
   reset_heap_counters();
 
   for (auto _ : st) {
-    RCUTILS_UNUSED(_);
     if (!rcl_yaml_variant_copy(&dest_variant, &src_variant, allocator)) {
       st.SkipWithError(rcutils_get_error_string().str);
     }
@@ -281,7 +235,6 @@ BENCHMARK_F(PerformanceTest, array_string_copy_variant)(benchmark::State & st)
   reset_heap_counters();
 
   for (auto _ : st) {
-    RCUTILS_UNUSED(_);
     if (!rcl_yaml_variant_copy(&dest_variant, &src_variant, allocator)) {
       st.SkipWithError(rcutils_get_error_string().str);
     }

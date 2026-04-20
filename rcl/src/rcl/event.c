@@ -36,10 +36,9 @@ extern "C"
 #include "./subscription_impl.h"
 
 rcl_event_t
-rcl_get_zero_initialized_event(void)
+rcl_get_zero_initialized_event()
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_event_t null_event;
+  static rcl_event_t null_event = {0};
   return null_event;
 }
 
@@ -65,16 +64,9 @@ rcl_publisher_event_init(
     case RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS:
       rmw_event_type = RMW_EVENT_OFFERED_QOS_INCOMPATIBLE;
       break;
-    case RCL_PUBLISHER_INCOMPATIBLE_TYPE:
-      rmw_event_type = RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE;
-      break;
-    case RCL_PUBLISHER_MATCHED:
-      rmw_event_type = RMW_EVENT_PUBLICATION_MATCHED;
-      break;
-  }
-  if (rmw_event_type == RMW_EVENT_INVALID) {
-    RCL_SET_ERROR_MSG("Event type for publisher not supported");
-    return RCL_RET_INVALID_ARGUMENT;
+    default:
+      RCL_SET_ERROR_MSG("Event type for publisher not supported");
+      return RCL_RET_INVALID_ARGUMENT;
   }
 
   // Allocate space for the implementation struct.
@@ -126,16 +118,9 @@ rcl_subscription_event_init(
     case RCL_SUBSCRIPTION_MESSAGE_LOST:
       rmw_event_type = RMW_EVENT_MESSAGE_LOST;
       break;
-    case RCL_SUBSCRIPTION_INCOMPATIBLE_TYPE:
-      rmw_event_type = RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE;
-      break;
-    case RCL_SUBSCRIPTION_MATCHED:
-      rmw_event_type = RMW_EVENT_SUBSCRIPTION_MATCHED;
-      break;
-  }
-  if (rmw_event_type == RMW_EVENT_INVALID) {
-    RCL_SET_ERROR_MSG("Event type for subscription not supported");
-    return RCL_RET_INVALID_ARGUMENT;
+    default:
+      RCL_SET_ERROR_MSG("Event type for subscription not supported");
+      return RCL_RET_INVALID_ARGUMENT;
   }
 
   // Allocate space for the implementation struct.

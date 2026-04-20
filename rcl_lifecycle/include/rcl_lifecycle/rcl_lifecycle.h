@@ -53,7 +53,7 @@ extern "C"
  */
 RCL_LIFECYCLE_PUBLIC
 rcl_lifecycle_state_t
-rcl_lifecycle_get_zero_initialized_state(void);
+rcl_lifecycle_get_zero_initialized_state();
 
 /// Initialize a rcl_lifecycle_state_init.
 /**
@@ -123,7 +123,7 @@ rcl_lifecycle_state_fini(
  */
 RCL_LIFECYCLE_PUBLIC
 rcl_lifecycle_transition_t
-rcl_lifecycle_get_zero_initialized_transition(void);
+rcl_lifecycle_get_zero_initialized_transition();
 
 /// Initialize a transition from a start state to the goal state.
 /**
@@ -197,7 +197,7 @@ rcl_lifecycle_transition_fini(
 /// Return a default initialized state machine options struct.
 RCL_LIFECYCLE_PUBLIC
 rcl_lifecycle_state_machine_options_t
-rcl_lifecycle_get_default_state_machine_options(void);
+rcl_lifecycle_get_default_state_machine_options();
 
 /// Return a rcl_lifecycle_state_machine_t struct with members set to `NULL` or 0.
 /**
@@ -206,7 +206,7 @@ rcl_lifecycle_get_default_state_machine_options(void);
  */
 RCL_LIFECYCLE_PUBLIC
 rcl_lifecycle_state_machine_t
-rcl_lifecycle_get_zero_initialized_state_machine(void);
+rcl_lifecycle_get_zero_initialized_state_machine();
 
 /// Initialize state machine
 /**
@@ -225,7 +225,6 @@ rcl_lifecycle_get_zero_initialized_state_machine(void);
  * \param[inout] state_machine struct to be initialized
  * \param[in] node_handle a valid (not finalized) handle to the node used to create the publisher
  *    and the services
- * \param[in] clock the clock associated with the node used for time stamping transition events
  * \param[in] ts_pub_notify pointer to transition publisher, it used to publish the transitions
  * \param[in] ts_srv_change_state pointer to the service that allows to trigger changes on the state
  * \param[in] ts_srv_get_state pointer to the service that allows to get the current state
@@ -245,7 +244,6 @@ rcl_ret_t
 rcl_lifecycle_state_machine_init(
   rcl_lifecycle_state_machine_t * state_machine,
   rcl_node_t * node_handle,
-  rcl_clock_t * clock,
   const rosidl_message_type_support_t * ts_pub_notify,
   const rosidl_service_type_support_t * ts_srv_change_state,
   const rosidl_service_type_support_t * ts_srv_get_state,
@@ -353,30 +351,6 @@ rcl_lifecycle_get_transition_by_label(
   const rcl_lifecycle_state_t * state,
   const char * label);
 
-/// Get a label by id.
-/**
- * A string label is returned based on the `id`.
- * If the `id` is not set in the transition map then returns NULL.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] transition_map pointer to the transition map
- * \param[in] transition_id id to be find in the transitions map
- * \return a string pointer to the label exists in the transitino map or otherwise it return NULL
- */
-RCL_LIFECYCLE_PUBLIC
-RCL_WARN_UNUSED
-const char *
-rcl_lifecycle_get_transition_label_by_id(
-  const rcl_lifecycle_transition_map_t * transition_map,
-  uint8_t transition_id);
-
 /// Trigger a state by id.
 /**
  * This function will trigger a transition based on the `id`. If the argument
@@ -437,31 +411,24 @@ rcl_lifecycle_trigger_transition_by_label(
   const char * label,
   bool publish_notification);
 
-/// Log the state machine data
+/// Print the state machine data
 /**
- * This function will log the all data in the state machine
+ * This function will print in the standard output the data in the
  * rcl_lifecycle_state_machine_t struct.
  *
- * the logging level must be INFO or a more verbose level (e.g., DEBUG).
+ * <hr>
+ * Attribute          | Adherence
+ * ------------------ | -------------
+ * Allocates Memory   | No
+ * Thread-Safe        | No
+ * Uses Atomics       | No
+ * Lock-Free          | Yes
  *
- * \param[in] state_machine pointer to the state machine struct to log
+ * \param[in] state_machine pointer to the state machine struct to print
  */
 RCL_LIFECYCLE_PUBLIC
 void
 rcl_print_state_machine(const rcl_lifecycle_state_machine_t * state_machine);
-
-/// Log the transition map
-/**
- * This function will log the all data in the transition map
- * rcl_lifecycle_state_machine_t struct.
- *
- * the logging level must be INFO or a more verbose level (e.g., DEBUG).
- *
- * \param[in] transition_map pointer to the transition map to log
- */
-RCL_LIFECYCLE_PUBLIC
-void
-rcl_print_transition_map(const rcl_lifecycle_transition_map_t * transition_map);
 
 #ifdef __cplusplus
 }

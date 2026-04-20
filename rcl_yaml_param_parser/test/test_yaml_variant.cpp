@@ -14,19 +14,17 @@
 
 #include <gtest/gtest.h>
 
-#include <type_traits>
+#include <yaml.h>
+
+#include <string>
+#include <vector>
 
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
-
 #include "rcl_yaml_param_parser/parser.h"
-
 #include "../src/impl/yaml_variant.h"
-
 #include "rcutils/allocator.h"
 #include "rcutils/strdup.h"
 #include "rcutils/testing/fault_injection.h"
-#include "rcutils/types/rcutils_ret.h"
-#include "rcutils/types/string_array.h"
 
 #define TEST_VARIANT_COPY(field, tmp_var) \
   do { \
@@ -132,11 +130,6 @@ TEST(TestYamlVariant, copy_string_value) {
     rcl_yaml_variant_fini(&dest_variant, allocator);
   });
   EXPECT_STREQ(tmp_string, dest_variant.string_value);
-}
-
-TEST(TestYamlVariant, copy_byte_array_values) {
-  constexpr uint8_t byte_array[] = {0x01, 0x02, 0x03};
-  TEST_VARIANT_ARRAY_COPY(byte_array_value, byte_array);
 }
 
 TEST(TestYamlVariant, copy_bool_array_values) {
