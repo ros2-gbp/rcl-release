@@ -69,11 +69,13 @@ typedef struct rcl_lifecycle_transition_map_s
   unsigned int transitions_size;
 } rcl_lifecycle_transition_map_t;
 
-/// It contains the communication interfac with the ROS world
+/// It contains the communication interface with the ROS world
 typedef struct rcl_lifecycle_com_interface_s
 {
   /// Handle to the node used to create the publisher and the services
   rcl_node_t * node_handle;
+  /// Node clock for timestamping transition event messages
+  rcl_clock_t * clock;
   /// Event used to publish the transitions
   rcl_publisher_t pub_transition_event;
   /// Service that allows to trigger changes on the state

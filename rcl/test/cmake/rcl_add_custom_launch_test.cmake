@@ -21,9 +21,9 @@ set(rcl_add_custom_launch_test_INCLUDED TRUE)
 
 macro(rcl_add_custom_launch_test test_name executable1 executable2)
   set(TEST_NAME "${test_name}")
-  set(TEST_EXECUTABLE1 "$<TARGET_FILE:${executable1}${target_suffix}>")
+  set(TEST_EXECUTABLE1 "$<TARGET_FILE:${executable1}>")
   set(TEST_EXECUTABLE1_NAME "${executable1}")
-  set(TEST_EXECUTABLE2 "$<TARGET_FILE:${executable2}${target_suffix}>")
+  set(TEST_EXECUTABLE2 "$<TARGET_FILE:${executable2}>")
   set(TEST_EXECUTABLE2_NAME "${executable2}")
   configure_file(
     rcl/test_two_executables.py.in
@@ -34,12 +34,14 @@ macro(rcl_add_custom_launch_test test_name executable1 executable2)
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test/${test_name}${target_suffix}_$<CONFIG>.py"
     INPUT "${CMAKE_CURRENT_BINARY_DIR}/${test_name}${target_suffix}.py.configure"
   )
+  set(RUNNER "RUNNER" "${ament_cmake_ros_DIR}/run_test_isolated.py")
   add_launch_test(
     "${CMAKE_CURRENT_BINARY_DIR}/test/${test_name}${target_suffix}_$<CONFIG>.py"
     TARGET ${test_name}${target_suffix}
+    RUNNER "${RUNNER}"
     ${ARGN}
   )
   if(TEST ${test_name}${target_suffix})
-    set_tests_properties(${test_name}${target_suffix} PROPERTIES DEPENDS "${executable1}${target_suffix} ${executable2}${target_suffix}")
+    set_tests_properties(${test_name}${target_suffix} PROPERTIES DEPENDS "${executable1} ${executable2}")
   endif()
 endmacro()

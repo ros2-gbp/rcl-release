@@ -15,9 +15,10 @@
 #ifndef IMPL__ADD_TO_ARRAYS_H_
 #define IMPL__ADD_TO_ARRAYS_H_
 
-#include <yaml.h>
-
-#include "rcutils/types.h"
+#include "rcutils/allocator.h"
+#include "rcutils/macros.h"
+#include "rcutils/types/rcutils_ret.h"
+#include "rcutils/types/string_array.h"
 
 #include "./types.h"
 #include "rcl_yaml_param_parser/types.h"
@@ -67,10 +68,6 @@ rcutils_ret_t add_val_to_string_arr(
   rcutils_string_array_t * const val_array,
   char * value,
   const rcutils_allocator_t allocator);
-
-///
-/// TODO (anup.pemmaiah): Support byte array
-///
 
 #ifdef __cplusplus
 }

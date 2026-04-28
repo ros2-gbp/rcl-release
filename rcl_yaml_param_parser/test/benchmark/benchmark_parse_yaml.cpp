@@ -12,26 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <filesystem>
 #include <string>
 
 #include "performance_test_fixture/performance_test_fixture.hpp"
 
 #include "rcl_yaml_param_parser/parser.h"
 
-#include "rcpputils/filesystem_helper.hpp"
-
 #include "rcutils/allocator.h"
 #include "rcutils/error_handling.h"
-#include "rcutils/filesystem.h"
 
 using performance_test_fixture::PerformanceTest;
 
 BENCHMARK_F(PerformanceTest, parser_yaml_param)(benchmark::State & st)
 {
   std::string path =
-    (rcpputils::fs::current_path() / "test" / "benchmark" / "benchmark_params.yaml").string();
+    (std::filesystem::current_path() / "test" / "benchmark" / "benchmark_params.yaml").string();
   reset_heap_counters();
   for (auto _ : st) {
+    RCUTILS_UNUSED(_);
     rcl_params_t * params_hdl = rcl_yaml_node_struct_init(rcutils_get_default_allocator());
     if (NULL == params_hdl) {
       st.SkipWithError(rcutils_get_error_string().str);
