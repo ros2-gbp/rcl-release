@@ -1,0 +1,12 @@
+Source: ros-lyrical-rcl-action
+Section: misc
+Priority: optional
+Maintainer: Audrow Nash <audrow@openrobotics.org>
+Build-Depends: debhelper (>= 9.0.0), ros-lyrical-action-msgs, ros-lyrical-ament-cmake-gen-version-h, ros-lyrical-ament-cmake-gtest <!nocheck>, ros-lyrical-ament-cmake-ros, ros-lyrical-ament-lint-auto <!nocheck>, ros-lyrical-ament-lint-common <!nocheck>, ros-lyrical-osrf-testing-tools-cpp <!nocheck>, ros-lyrical-rcl, ros-lyrical-rcutils, ros-lyrical-rmw, ros-lyrical-rmw-implementation-cmake <!nocheck>, ros-lyrical-rosidl-runtime-c, ros-lyrical-test-msgs <!nocheck>, ros-lyrical-ros-workspace
+Homepage: https://index.ros.org/p/rcl_action/#lyrical
+Standards-Version: 3.9.2
+
+Package: ros-lyrical-rcl-action
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-lyrical-action-msgs, ros-lyrical-rcl, ros-lyrical-rcutils, ros-lyrical-rmw, ros-lyrical-rosidl-runtime-c, ros-lyrical-ros-workspace
+Description: Package containing a C-based ROS action implementation
