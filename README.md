@@ -1,3 +1,30 @@
+## rcl (lyrical) - 10.4.4-1
+
+The packages in the `rcl` repository were released into the `lyrical` distro by running `/usr/local/google/home/sloretz/projects/lyrical/env3/bin/bloom-release rcl -r lyrical -t lyrical` on `Thu, 30 Apr 2026 16:09:15 -0000`
+
+These packages were released:
+- `rcl`
+- `rcl_action`
+- `rcl_lifecycle`
+- `rcl_yaml_param_parser`
+
+Version of package(s) in repository `rcl`:
+
+- upstream repository: https://github.com/ros2/rcl.git
+- release repository: https://github.com/ros2-gbp/rcl-release.git
+- rosdistro version: `10.4.3-3`
+- old version: `10.4.3-3`
+- new version: `10.4.4-1`
+
+Versions of tools used:
+
+- bloom version: `0.14.2`
+- catkin_pkg version: `1.1.0`
+- rosdep version: `0.26.0`
+- rosdistro version: `1.0.1`
+- vcstools version: `0.1.42`
+
+
 ## rcl (humble) - 5.3.13-1
 
 The packages in the `rcl` repository were released into the `humble` distro by running `/usr/bin/bloom-release --rosdistro humble --track humble rcl` on `Mon, 20 Apr 2026 13:45:13 -0000`
