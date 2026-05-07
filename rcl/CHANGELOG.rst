@@ -2,10 +2,11 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-10.4.4 (2026-04-30)
+10.5.0 (2026-05-07)
 -------------------
-* feat: Added check for double usage of entities in rcl_waitset (`#1206 <https://github.com/ros2/rcl/issues/1206>`_)
-* Contributors: Janosch Machowinski
+* cleanup headers (`#1318 <https://github.com/ros2/rcl/issues/1318>`_)
+* Added check for double usage of entities in rcl_waitset (`#1206 <https://github.com/ros2/rcl/issues/1206>`_)
+* Contributors: Alejandro Hernández Cordero, Janosch Machowinski
 
 10.4.3 (2026-04-14)
 -------------------

@@ -2,8 +2,10 @@
 Changelog for package rcl_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-10.4.4 (2026-04-30)
+10.5.0 (2026-05-07)
 -------------------
+* cleanup headers (`#1318 <https://github.com/ros2/rcl/issues/1318>`_)
+* Contributors: Alejandro Hernández Cordero
 
 10.4.2 (2026-04-09)
 -------------------
