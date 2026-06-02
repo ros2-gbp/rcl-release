@@ -20,7 +20,6 @@
 
 #include "rcl/rcl.h"
 #include "rcl/node.h"
-#include "rmw/error_handling.h"
 #include "rmw/rmw.h"  // For rmw_get_implementation_identifier.
 #include "rmw/validate_namespace.h"
 #include "rmw/validate_node_name.h"
@@ -493,26 +492,6 @@ TEST_F(TestNodeFixture, test_rcl_node_init_with_internal_errors) {
     rcl_reset_error();
   }
 
-  // Verify rmw_create_node error message is preserved through rcl_node_init failure path.
-  // Regression test for https://github.com/ros2/rcl/issues/983
-  {
-    auto mock = mocking_utils::patch(
-      "lib:rcl", rmw_create_node,
-      [](auto, auto, auto) -> rmw_node_t * {
-        RMW_SET_ERROR_MSG("test_rmw_create_node_failure_reason");
-        return nullptr;
-      });
-    ret = rcl_node_init(&node, name, namespace_, &context, &options);
-    EXPECT_EQ(RCL_RET_ERROR, ret);
-    ASSERT_TRUE(rcl_error_is_set());
-    // The RMW error message must be preserved, not overwritten with
-    // the generic "rcl node's rmw handle is invalid" message.
-    EXPECT_NE(
-      std::string(rcl_get_error_string().str).find("test_rmw_create_node_failure_reason"),
-      std::string::npos) << "RMW error was overwritten: " << rcl_get_error_string().str;
-    rcl_reset_error();
-  }
-
   {
     auto mock = mocking_utils::patch_and_return(
       "lib:rcl", rmw_node_get_graph_guard_condition, nullptr);
@@ -880,7 +859,7 @@ TEST_F(TestNodeFixture, test_rcl_node_options) {
 
   EXPECT_TRUE(default_options.use_global_arguments);
   EXPECT_TRUE(default_options.enable_rosout);
-  EXPECT_EQ(rmw_qos_profile_rosout_default, default_options.rosout_qos);
+  EXPECT_EQ(rcl_qos_profile_rosout_default, default_options.rosout_qos);
   EXPECT_TRUE(rcutils_allocator_is_valid(&(default_options.allocator)));
 
   EXPECT_EQ(RCL_RET_INVALID_ARGUMENT, rcl_node_options_copy(nullptr, &default_options));

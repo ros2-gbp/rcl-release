@@ -203,54 +203,6 @@ RCL_PUBLIC
 bool
 rcl_event_is_valid(const rcl_event_t * event);
 
-/// Check if a publisher event type is supported by the active RMW implementation.
-/**
- * This API allows application code to introspect at runtime whether a
- * particular publisher event type is supported by the currently loaded
- * RMW implementation, enabling portable code that adapts gracefully
- * when switching between RMW implementations.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] event_type the publisher event type to check
- * \return `true` if the event type is supported, `false` otherwise
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-bool
-rcl_publisher_event_type_is_supported(
-  const rcl_publisher_event_type_t event_type);
-
-/// Check if a subscription event type is supported by the active RMW implementation.
-/**
- * This API allows application code to introspect at runtime whether a
- * particular subscription event type is supported by the currently loaded
- * RMW implementation, enabling portable code that adapts gracefully
- * when switching between RMW implementations.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] event_type the subscription event type to check
- * \return `true` if the event type is supported, `false` otherwise
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-bool
-rcl_subscription_event_type_is_supported(
-  const rcl_subscription_event_type_t event_type);
-
 /// Set the callback function for the event.
 /**
  * This API sets the callback function to be called whenever the
@@ -272,7 +224,7 @@ rcl_subscription_event_type_is_supported(
  * \param[in] user_data Given to the callback when called later, may be NULL
  * \return `RCL_RET_OK` if callback was set to the listener, or
  * \return `RCL_RET_INVALID_ARGUMENT` if `event` is NULL, or
- * \return `RCL_RET_UNSUPPORTED` if the API is not supported by the middleware
+ * \return `RCL_RET_UNSUPPORTED` if the API is not implemented in the dds implementation
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED

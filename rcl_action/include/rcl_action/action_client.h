@@ -25,8 +25,6 @@ extern "C"
 #include "rcl/event_callback.h"
 #include "rcl/macros.h"
 #include "rcl/node.h"
-#include "rcl/publisher.h"
-#include "rcl/service_introspection.h"
 
 
 /// Internal action client implementation struct.
@@ -743,119 +741,6 @@ RCL_ACTION_PUBLIC
 bool
 rcl_action_client_is_valid(
   const rcl_action_client_t * action_client);
-
-/// Configures service introspection features for all internal service clients of the action client.
-/**
- * For the internal goal, cancel, and result clients of the action client, call
- * \ref rcl_client_configure_service_introspection separately for each.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Maybe [1]
- * Lock-Free          | Maybe [1]
- * <i>[1] rmw implementation defined</i>
- *
- * \param[in] action_client action client on which to configure internal service introspection
- * \param[in] node valid rcl_node_t to use to create the introspection publisher
- * \param[in] clock valid rcl_clock_t to use to generate the introspection timestamps
- * \param[in] type_support type support library associated with this action client
- * \param[in] publisher_options options to use when creating the introspection publisher
- * \param[in] introspection_state rcl_service_introspection_state_t describing whether
- *            introspection should be OFF, METADATA, or CONTENTS
- * \return #RCL_RET_OK if the call was successful, or
- * \return #RCL_RET_ERROR if calling rcl_client_configure_service_introspection for each internal
- *         client doesn't return RCL_RET_OK, or
- * \return #RCL_RET_INVALID_ARGUMENT if the given node or clock or type_support is invalid
- */
-RCL_ACTION_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_configure_action_introspection(
-  rcl_action_client_t * action_client,
-  rcl_node_t * node,
-  rcl_clock_t * clock,
-  const rosidl_action_type_support_t * type_support,
-  const rcl_publisher_options_t publisher_options,
-  rcl_service_introspection_state_t introspection_state);
-
-/// Configure feedback subscription content filter to add one goal ID
-/**
- *
- * If rmw middleware doesn't support content filtering feature, return RCL_RET_UNSUPPORTED.
- *
- * According to the DDS spec, the content filter can have up to 100 parameters. Each goal ID uses
- * 16 parameters, so if more than 6 goal IDs are configured at the same time, an RCL_RET_ERROR
- * will be returned.
- *
- * Different RMW implementations may also have restrictions on the length of content filter
- * expressions. If this default limit is exceeded, an RCL_RET_ERROR will be returned. For example,
- * in ConnextDDS, the `contentfilter_property_max_length` setting affects the available length of
- * content filter expressions.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Maybe [1]
- * Lock-Free          | Maybe [1]
- * <i>[1] rmw implementation defined</i>
- *
- * \param[in] action_client action client whose feedback subscription content filter will be
- *            configured
- * \param[in] goal_id goal id represented as a uint8_t array
- * \param[in] array_size size of the goal_id array
- * \return #RCL_RET_OK if the call was successful, or
- * \return #RCL_RET_ACTION_CLIENT_INVALID if the action client is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if calling other rcl functions internally does not return RCL_RET_OK, or
- * \return #RCL_RET_UNSUPPORTED if the middleware doesn't support content filtering
- */
-RCL_ACTION_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_configure_feedback_subscription_filter_add_goal_id(
-  const rcl_action_client_t * action_client,
-  const uint8_t * goal_id_array,
-  size_t array_size);
-
-/// Configure feedback subscription content filter to remove one goal ID
-/**
- * If goal ID doesn't exist in feedback subscription content filter, return RCL_RET_OK.
- *
- * If rmw middleware doesn't support content filtering feature, return RCL_RET_UNSUPPORTED.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Maybe [1]
- * Lock-Free          | Maybe [1]
- * <i>[1] rmw implementation defined</i>
- *
- * \param[in] action_client action client whose feedback subscription content filter will be
- *            configured
- * \param[in] goal_id goal id represented as a uint8_t array
- * \param[in] array_size size of the goal_id array
- * \return #RCL_RET_OK if the call was successful, or
- * \return #RCL_RET_ACTION_CLIENT_INVALID if the action client is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if calling other rcl functions internally does not return RCL_RET_OK, or
- * \return #RCL_RET_UNSUPPORTED if the middleware doesn't support content filtering
- */
-RCL_ACTION_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_configure_feedback_subscription_filter_remove_goal_id(
-  const rcl_action_client_t * action_client,
-  const uint8_t * goal_id_array,
-  size_t array_size);
 
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED

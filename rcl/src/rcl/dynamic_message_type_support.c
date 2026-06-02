@@ -32,6 +32,8 @@ extern "C"
 
 
 /// Initialize a rosidl_message_type_support_t from a TypeDescription message
+RCL_PUBLIC
+RCL_WARN_UNUSED
 rcl_ret_t
 rcl_dynamic_message_type_support_handle_init(
   const char * serialization_lib_name,
@@ -111,6 +113,8 @@ rcl_dynamic_message_type_support_handle_init(
   return RCL_RET_OK;
 }
 
+RCL_PUBLIC
+RCL_WARN_UNUSED
 rcl_ret_t
 rcl_dynamic_message_type_support_handle_fini(rosidl_message_type_support_t * ts)
 {

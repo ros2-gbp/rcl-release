@@ -507,17 +507,6 @@ rcl_service_response_publisher_get_actual_qos(const rcl_service_t * service);
  *
  * \sa rmw_service_set_on_new_request_callback for details about this function.
  *
- * Since this callback is called from the middleware, you should
- * aim to make it fast and not blocking. This callback
- * is intended to implement an event driven executor and
- * not process data directly.
- *
- * Doing work in this callback can cause delays,
- * deadlocks, or latency due to cross thread waiting
- * as this process runs on middleware managed threads
- * and is meant only to notify the executor that new data
- * is available in the middleware queue.
- *
  * <hr>
  * Attribute          | Adherence
  * ------------------ | -------------
@@ -532,7 +521,7 @@ rcl_service_response_publisher_get_actual_qos(const rcl_service_t * service);
  * \param[in] user_data Given to the callback when called later, may be NULL
  * \return `RCL_RET_OK` if callback was set to the listener, or
  * \return `RCL_RET_INVALID_ARGUMENT` if `service` is NULL, or
- * \return `RCL_RET_UNSUPPORTED` if the API is not supported by the middleware
+ * \return `RCL_RET_UNSUPPORTED` if the API is not implemented in the dds implementation
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
@@ -544,7 +533,6 @@ rcl_service_set_on_new_request_callback(
 
 /// Configure service introspection features for the service.
 /**
- * \anchor rcl_service_configure_service_introspection
  * Enables or disables service introspection features for this service.
  * If the introspection state is RCL_SERVICE_INTROSPECTION_OFF, then introspection will
  * be disabled.  If the state is RCL_SERVICE_INTROSPECTION_METADATA, the client metadata

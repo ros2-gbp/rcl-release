@@ -39,13 +39,22 @@ extern "C"
 
 #include "./common.h"
 #include "./service_event_publisher.h"
-#include "./service_impl.h"
+
+struct rcl_service_impl_s
+{
+  rcl_service_options_t options;
+  rmw_qos_profile_t actual_request_subscription_qos;
+  rmw_qos_profile_t actual_response_publisher_qos;
+  rmw_service_t * rmw_handle;
+  rcl_service_event_publisher_t * service_event_publisher;
+  char * remapped_service_name;
+  rosidl_type_hash_t type_hash;
+};
 
 rcl_service_t
 rcl_get_zero_initialized_service(void)
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_service_t null_service;
+  static rcl_service_t null_service = {0};
   return null_service;
 }
 
@@ -179,7 +188,6 @@ rcl_service_init(
 
   // options
   service->impl->options = *options;
-  service->impl->in_use_by_waitset = false;
 
   if (RCL_RET_OK != rcl_node_type_cache_register_type(
       node, type_support->get_type_hash_func(type_support),
@@ -277,7 +285,7 @@ rcl_service_options_t
 rcl_service_get_default_options(void)
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
-  rcl_service_options_t default_options;
+  static rcl_service_options_t default_options;
   // Must set the allocator and qos after because they are not a compile time constant.
   default_options.qos = rmw_qos_profile_services_default;
   default_options.allocator = rcl_get_default_allocator();

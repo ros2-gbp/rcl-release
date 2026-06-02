@@ -42,8 +42,7 @@ extern "C"
 rcl_subscription_t
 rcl_get_zero_initialized_subscription(void)
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_subscription_t null_subscription;
+  static rcl_subscription_t null_subscription = {0};
   return null_subscription;
 }
 
@@ -100,12 +99,8 @@ rcl_subscription_init(
     1, sizeof(rcl_subscription_impl_t), allocator->state);
   RCL_CHECK_FOR_NULL_WITH_MSG(
     subscription->impl, "allocating memory failed", ret = RCL_RET_BAD_ALLOC; goto cleanup);
-
-  // options
-  subscription->impl->options = *options;
-  subscription->impl->in_use_by_waitset = false;
-
   // Fill out the implemenation struct.
+  // rmw_handle
   // TODO(wjwwood): pass allocator once supported in rmw api.
   subscription->impl->rmw_handle = rmw_create_subscription(
     rcl_node_get_rmw_handle(node),
@@ -127,6 +122,8 @@ rcl_subscription_init(
   }
   subscription->impl->actual_qos.avoid_ros_namespace_conventions =
     options->qos.avoid_ros_namespace_conventions;
+  // options
+  subscription->impl->options = *options;
 
   if (RCL_RET_OK != rcl_node_type_cache_register_type(
       node, type_support->get_type_hash_func(type_support),
@@ -230,7 +227,7 @@ rcl_subscription_options_t
 rcl_subscription_get_default_options(void)
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
-  rcl_subscription_options_t default_options;
+  static rcl_subscription_options_t default_options;
   // Must set these after declaration because they are not a compile time constants.
   default_options.qos = rmw_qos_profile_default;
   default_options.allocator = rcl_get_default_allocator();
@@ -274,43 +271,6 @@ rcl_subscription_options_fini(rcl_subscription_options_t * option)
       option->rmw_subscription_options.content_filter_options, allocator->state);
     option->rmw_subscription_options.content_filter_options = NULL;
   }
-
-  if (option->rmw_subscription_options.acceptable_buffer_backends) {
-    allocator->deallocate(
-      (char *)option->rmw_subscription_options.acceptable_buffer_backends, allocator->state);
-    option->rmw_subscription_options.acceptable_buffer_backends = NULL;
-  }
-
-  return RCL_RET_OK;
-}
-
-rcl_ret_t
-rcl_subscription_options_set_acceptable_buffer_backends(
-  const char * acceptable_buffer_backends,
-  rcl_subscription_options_t * options)
-{
-  RCL_CHECK_ARGUMENT_FOR_NULL(options, RCL_RET_INVALID_ARGUMENT);
-  const rcl_allocator_t * allocator = &options->allocator;
-  RCL_CHECK_ALLOCATOR_WITH_MSG(allocator, "invalid allocator", return RCL_RET_INVALID_ARGUMENT);
-
-  // Free any previously allocated value
-  if (options->rmw_subscription_options.acceptable_buffer_backends) {
-    allocator->deallocate(
-      (char *)options->rmw_subscription_options.acceptable_buffer_backends, allocator->state);
-    options->rmw_subscription_options.acceptable_buffer_backends = NULL;
-  }
-
-  if (NULL == acceptable_buffer_backends || '\0' == acceptable_buffer_backends[0]) {
-    return RCL_RET_OK;
-  }
-
-  char * dup = rcutils_strdup(acceptable_buffer_backends, *allocator);
-  if (NULL == dup) {
-    RCL_SET_ERROR_MSG("failed to allocate acceptable_buffer_backends string");
-    return RCL_RET_BAD_ALLOC;
-  }
-  options->rmw_subscription_options.acceptable_buffer_backends = dup;
-
   return RCL_RET_OK;
 }
 
@@ -753,7 +713,6 @@ rcl_take_loaned_message(
   }
   RCUTILS_LOG_DEBUG_NAMED(
     ROS_PACKAGE_NAME, "Subscription loaned take succeeded: %s", taken ? "true" : "false");
-  TRACETOOLS_TRACEPOINT(rcl_take, (const void *)(*loaned_message));
   if (!taken) {
     return RCL_RET_SUBSCRIPTION_TAKE_FAILED;
   }
@@ -873,15 +832,6 @@ rcl_subscription_set_on_new_message_callback(
     subscription->impl->rmw_handle,
     callback,
     user_data);
-}
-
-bool
-rcl_subscription_is_cft_supported(const rcl_subscription_t * subscription)
-{
-  if (!rcl_subscription_is_valid(subscription)) {
-    return false;  // error message already set
-  }
-  return subscription->impl->rmw_handle->is_cft_supported;
 }
 
 #ifdef __cplusplus

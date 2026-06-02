@@ -25,14 +25,21 @@ extern "C"
 #include "rmw/rmw.h"
 
 #include "./context_impl.h"
-#include "./guard_condition_impl.h"
 
+struct rcl_guard_condition_impl_s
+{
+  rmw_guard_condition_t * rmw_handle;
+  bool allocated_rmw_guard_condition;
+  rcl_guard_condition_options_t options;
+};
 
 rcl_guard_condition_t
 rcl_get_zero_initialized_guard_condition(void)
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_guard_condition_t null_guard_condition;
+  static rcl_guard_condition_t null_guard_condition = {
+    .context = 0,
+    .impl = 0
+  };
   return null_guard_condition;
 }
 
@@ -69,7 +76,6 @@ __rcl_guard_condition_init_from_rmw_impl(
     RCL_SET_ERROR_MSG("allocating memory failed");
     return RCL_RET_BAD_ALLOC;
   }
-  guard_condition->impl->in_use_by_waitset = false;
   // Create the rmw guard condition.
   if (rmw_guard_condition) {
     // If given, just assign (cast away const).
@@ -138,7 +144,7 @@ rcl_guard_condition_options_t
 rcl_guard_condition_get_default_options(void)
 {
   // !!! MAKE SURE THAT CHANGES TO THESE DEFAULTS ARE REFLECTED IN THE HEADER DOC STRING
-  rcl_guard_condition_options_t default_options;
+  static rcl_guard_condition_options_t default_options;
   default_options.allocator = rcl_get_default_allocator();
   return default_options;
 }

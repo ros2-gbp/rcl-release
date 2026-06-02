@@ -31,8 +31,7 @@
 
 rcl_service_event_publisher_t rcl_get_zero_initialized_service_event_publisher(void)
 {
-  // All members are initialized to 0 or NULL by C99 6.7.8/10.
-  static rcl_service_event_publisher_t zero_service_event_publisher;
+  static rcl_service_event_publisher_t zero_service_event_publisher = {0};
   return zero_service_event_publisher;
 }
 

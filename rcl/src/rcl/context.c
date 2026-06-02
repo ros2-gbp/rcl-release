@@ -28,7 +28,7 @@ extern "C"
 rcl_context_t
 rcl_get_zero_initialized_context(void)
 {
-  rcl_context_t context = {
+  static rcl_context_t context = {
     .impl = NULL,
     .instance_id_storage = {0},
   };
