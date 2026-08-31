@@ -15,11 +15,19 @@
 #include <ctype.h>
 #include <errno.h>
 #include <locale.h>
+#ifdef __APPLE__
+#include <xlocale.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32
 #include <windows.h>
+#elif defined(__APPLE__)
+#include <pthread.h>
+typedef pthread_once_t once_flag;
+#define ONCE_FLAG_INIT PTHREAD_ONCE_INIT
+#define call_once(flag, func) pthread_once((flag), (func))
 #else
 #include <threads.h>
 #endif
