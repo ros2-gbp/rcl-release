@@ -2,22 +2,15 @@
 Changelog for package rcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-10.5.2 (2026-08-31)
+10.4.5 (2026-08-31)
 -------------------
-* Fix deprecated atomic initialization (`#1332 <https://github.com/ros2/rcl/issues/1332>`_)
-* use C++ 20 in default. (`#1322 <https://github.com/ros2/rcl/issues/1322>`_)
-* Contributors: Maurice Alexander Purnawan, Tomoya Fujita
+* Fix deprecated atomic initialization (`#1332 <https://github.com/ros2/rcl/issues/1332>`_) (`#1333 <https://github.com/ros2/rcl/issues/1333>`_)
+* Contributors: mergify[bot]
 
-10.5.1 (2026-05-22)
+10.4.4 (2026-04-30)
 -------------------
-* add rcl_publisher/subscription_event_type_is_supported(). (`#1317 <https://github.com/ros2/rcl/issues/1317>`_)
-* Contributors: Tomoya Fujita
-
-10.5.0 (2026-05-07)
--------------------
-* cleanup headers (`#1318 <https://github.com/ros2/rcl/issues/1318>`_)
-* Added check for double usage of entities in rcl_waitset (`#1206 <https://github.com/ros2/rcl/issues/1206>`_)
-* Contributors: Alejandro Hernández Cordero, Janosch Machowinski
+* feat: Added check for double usage of entities in rcl_waitset (`#1206 <https://github.com/ros2/rcl/issues/1206>`_)
+* Contributors: Janosch Machowinski
 
 10.4.3 (2026-04-14)
 -------------------

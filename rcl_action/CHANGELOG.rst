@@ -2,16 +2,10 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-10.5.2 (2026-08-31)
--------------------
-* introduce rcl_action_endpoint_info_array_t. (`#1326 <https://github.com/ros2/rcl/issues/1326>`_)
-* use C++ 20 in default. (`#1322 <https://github.com/ros2/rcl/issues/1322>`_)
-* Contributors: Tomoya Fujita
-
-10.5.1 (2026-05-22)
+10.4.5 (2026-08-31)
 -------------------
 
-10.5.0 (2026-05-07)
+10.4.4 (2026-04-30)
 -------------------
 
 10.4.2 (2026-04-09)
