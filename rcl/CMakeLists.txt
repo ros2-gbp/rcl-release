@@ -19,18 +19,15 @@ find_package(type_description_interfaces REQUIRED)
 find_package(yaml REQUIRED)
 
 include(cmake/rcl_set_symbol_visibility_hidden.cmake)
+
+# Determine the logging implementation to use
 include(cmake/get_default_rcl_logging_implementation.cmake)
 get_default_rcl_logging_implementation(RCL_LOGGING_IMPL)
+message(STATUS "RCL_LOGGING_IMPLEMENTATION: ${RCL_LOGGING_IMPL}")
 
 # Default to C11
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 11)
-endif()
-
-# Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -46,6 +43,7 @@ set(${PROJECT_NAME}_sources
   src/rcl/domain_id.c
   src/rcl/dynamic_message_type_support.c
   src/rcl/event.c
+  src/rcl/event_callback.c
   src/rcl/expand_topic_name.c
   src/rcl/graph.c
   src/rcl/guard_condition.c
@@ -84,7 +82,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(${PROJECT_NAME} PUBLIC
   # TODO(clalancette): rcl_interfaces should be PRIVATE, but downstream depends on it for now
-  ${rcl_interfaces_TARGETS}
+  rcl_interfaces::rcl_interfaces
   # TODO(clalancette): rcl_logging_interface should be PRIVATE, but downstream depends on it for now
   rcl_logging_interface::rcl_logging_interface
   rcl_yaml_param_parser::rcl_yaml_param_parser
@@ -93,14 +91,26 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   # TODO(clalancette): rmw_implementation should be PRIVATE, but downstream depends on it for now
   rmw_implementation::rmw_implementation
   rosidl_runtime_c::rosidl_runtime_c
-  ${type_description_interfaces_TARGETS}
+  type_description_interfaces::type_description_interfaces
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  ${RCL_LOGGING_IMPL}::${RCL_LOGGING_IMPL}
-  ${service_msgs_TARGETS}
+  service_msgs::service_msgs
   tracetools::tracetools
   yaml
 )
+
+# Link logging implementation based on configuration
+if(RCL_LOGGING_IMPL STREQUAL "rcl_logging_implementation")
+  # Dynamic loading: use rcl_logging_implementation abstraction
+  target_link_libraries(${PROJECT_NAME} PRIVATE
+    rcl_logging_implementation::rcl_logging_implementation
+  )
+else()
+  # Static linking: use specific logging implementation
+  target_link_libraries(${PROJECT_NAME} PRIVATE
+    ${RCL_LOGGING_IMPL}::${RCL_LOGGING_IMPL}
+  )
+endif()
 
 # Allow configuring the default discovery range
 if(DEFINED RCL_DEFAULT_DISCOVERY_RANGE)

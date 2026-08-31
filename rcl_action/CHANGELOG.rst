@@ -2,28 +2,74 @@
 Changelog for package rcl_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-10.1.5 (2026-07-14)
+10.5.2 (2026-08-31)
 -------------------
-* fix(rcl_action): use RMW isolation for cross-node tests (`#1311 <https://github.com/ros2/rcl/issues/1311>`_) (`#1316 <https://github.com/ros2/rcl/issues/1316>`_)
-* Contributors: mergify[bot]
+* introduce rcl_action_endpoint_info_array_t. (`#1326 <https://github.com/ros2/rcl/issues/1326>`_)
+* use C++ 20 in default. (`#1322 <https://github.com/ros2/rcl/issues/1322>`_)
+* Contributors: Tomoya Fujita
 
-10.1.4 (2026-01-19)
--------------------
-* Fix REP url locations (`#1271 <https://github.com/ros2/rcl/issues/1271>`_) (`#1272 <https://github.com/ros2/rcl/issues/1272>`_)
-* Contributors: mergify[bot]
-
-10.1.3 (2025-10-21)
+10.5.1 (2026-05-22)
 -------------------
 
-10.1.2 (2025-09-30)
+10.5.0 (2026-05-07)
 -------------------
-* Fix Cmake deprecation (`#1249 <https://github.com/ros2/rcl/issues/1249>`_) (`#1250 <https://github.com/ros2/rcl/issues/1250>`_)
-  cmake version < then 3.10 is deprecated
-  (cherry picked from commit 06c9ba61513efed8d21fdc6e7719438c04a927ea)
-  Co-authored-by: mosfet80 <10235105+mosfet80@users.noreply.github.com>
-* Contributors: mergify[bot]
 
-10.1.1 (2025-06-23)
+10.4.2 (2026-04-09)
+-------------------
+* fix(rcl_action): use RMW isolation for cross-node tests (`#1311 <https://github.com/ros2/rcl/issues/1311>`_)
+* Add 2 interfaces for configuring action client feedback subscription contents filter (`#1287 <https://github.com/ros2/rcl/issues/1287>`_)
+* Apply change from "Use new aggregate rosidl target instead of _TARGETS (`#1302 <https://github.com/ros2/rcl/issues/1302>`_)" on some leftovers (`#1309 <https://github.com/ros2/rcl/issues/1309>`_)
+* Contributors: Alexis Tsogias, Barry Xu, Yuyuan Yuan
+
+10.4.1 (2026-03-24)
+-------------------
+* simplify error logging for timer cancellation (`#1307 <https://github.com/ros2/rcl/issues/1307>`_)
+* fix: Prevent short time endless loop in expire_timer (`#1303 <https://github.com/ros2/rcl/issues/1303>`_)
+* Contributors: Janosch Machowinski, William Woodall
+
+10.4.0 (2026-03-20)
+-------------------
+* Add API for client libraries to set action server goal expiration callbacks (`#1295 <https://github.com/ros2/rcl/issues/1295>`_)
+* support rcl_action_count_clients and rcl_action_count_servers. (`#1294 <https://github.com/ros2/rcl/issues/1294>`_)
+* Contributors: Skyler Medeiros, Tomoya Fujita
+
+10.3.2 (2026-03-07)
+-------------------
+
+10.3.1 (2026-02-09)
+-------------------
+
+10.3.0 (2026-01-29)
+-------------------
+
+10.2.7 (2026-01-19)
+-------------------
+
+10.2.6 (2025-11-17)
+-------------------
+* Fix REP url locations (`#1271 <https://github.com/ros2/rcl/issues/1271>`_)
+* Contributors: Tim Clephas
+
+10.2.5 (2025-10-21)
+-------------------
+
+10.2.4 (2025-09-30)
+-------------------
+* add rcl_action_goal_handle_is_abortable(). (`#1257 <https://github.com/ros2/rcl/issues/1257>`_)
+* Contributors: Tomoya Fujita
+
+10.2.3 (2025-07-29)
+-------------------
+* Fix Cmake deprecation (`#1249 <https://github.com/ros2/rcl/issues/1249>`_)
+* Contributors: mosfet80
+
+10.2.2 (2025-06-23)
+-------------------
+
+10.2.1 (2025-05-30)
+-------------------
+
+10.2.0 (2025-04-25)
 -------------------
 
 10.1.0 (2025-04-04)

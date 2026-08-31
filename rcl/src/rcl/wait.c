@@ -32,6 +32,11 @@ extern "C"
 #include "rmw/event.h"
 
 #include "./context_impl.h"
+#include "./client_impl.h"
+#include "./guard_condition_impl.h"
+#include "./service_impl.h"
+#include "./subscription_impl.h"
+#include "./timer_impl.h"
 
 struct rcl_wait_set_impl_s
 {
@@ -296,6 +301,30 @@ rcl_wait_set_get_allocator(const rcl_wait_set_t * wait_set, rcl_allocator_t * al
   } \
   memset(wait_set->impl->RMWStorage, 0, sizeof(void *) * Type ## s_size);
 
+/*
+ * Ensure that the waitset lists do not contain duplicated entries.
+ * For example, considering `wait_set->clients`:
+ * - first we set `in_use_by_waitset` to false for each entry.
+ * - then we loop again setting `in_use_by_waitset` to true one by one
+ * - if we find an entry where `in_use_by_waitset` was already true, it
+ *   means that it was present twice in the waitset and we return an error
+*/
+#define CHECK_DOUBLE_USAGE(Type) \
+  for (size_t idx = 0; idx < wait_set->size_of_ ## Type ## s; idx++) { \
+    if (wait_set->Type ## s[idx]) { \
+      wait_set->Type ## s[idx]->impl->in_use_by_waitset = false; \
+    } \
+  } \
+  for (size_t idx = 0; idx < wait_set->size_of_ ## Type ## s; idx++) { \
+    if (wait_set->Type ## s[idx]) { \
+      if(wait_set->Type ## s[idx]->impl->in_use_by_waitset) { \
+        RCL_SET_ERROR_MSG("Entitiy of type " #Type " added multiple times to waitset."); \
+        return RCL_RET_WAIT_SET_INVALID; \
+      } \
+      wait_set->Type ## s[idx]->impl->in_use_by_waitset = true; \
+    } \
+  }
+
 /* Implementation-specific notes:
  *
  * Add the rmw representation to the underlying rmw array and increment
@@ -524,6 +553,13 @@ rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout)
     RCL_SET_ERROR_MSG("wait set is empty");
     return RCL_RET_WAIT_SET_EMPTY;
   }
+
+  CHECK_DOUBLE_USAGE(client);
+  CHECK_DOUBLE_USAGE(guard_condition);
+  CHECK_DOUBLE_USAGE(service);
+  CHECK_DOUBLE_USAGE(subscription);
+  CHECK_DOUBLE_USAGE(timer);
+
   // Calculate the timeout argument.
   // By default, set the timer to block indefinitely if none of the below conditions are met.
   rmw_time_t * timeout_argument = NULL;
@@ -564,23 +600,29 @@ rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout)
       }
 
       rcl_clock_t * clock;
-      if (rcl_timer_clock(wait_set->timers[t_idx], &clock) != RCL_RET_OK) {
+      rcl_ret_t ret = rcl_timer_clock(wait_set->timers[t_idx], &clock);
+      if (ret != RCL_RET_OK) {
         // should never happen
+        RCL_EXPECT_ERROR_IS_SET(ret);
         return RCL_RET_ERROR;
       }
 
       if (clock->type == RCL_ROS_TIME) {
         bool timer_override_active = false;
-        if (rcl_is_enabled_ros_time_override(clock, &timer_override_active) != RCL_RET_OK) {
+        ret = rcl_is_enabled_ros_time_override(clock, &timer_override_active);
+        if (ret != RCL_RET_OK) {
           // should never happen
+          RCL_EXPECT_ERROR_IS_SET(ret);
           return RCL_RET_ERROR;
         }
 
         if (timer_override_active) {
           // we need to check, it the timer is already ready
           bool override_timer_is_ready = false;
-          if (rcl_timer_is_ready(wait_set->timers[t_idx], &override_timer_is_ready) != RCL_RET_OK) {
+          ret = rcl_timer_is_ready(wait_set->timers[t_idx], &override_timer_is_ready);
+          if (ret != RCL_RET_OK) {
             // should never happen
+            RCL_EXPECT_ERROR_IS_SET(ret);
             return RCL_RET_ERROR;
           }
 
@@ -599,12 +641,13 @@ rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout)
 
       // get the time of the next call to the timer
       int64_t next_call_time = INT64_MAX;
-      rcl_ret_t ret = rcl_timer_get_next_call_time(wait_set->timers[t_idx], &next_call_time);
+      ret = rcl_timer_get_next_call_time(wait_set->timers[t_idx], &next_call_time);
       if (ret == RCL_RET_TIMER_CANCELED) {
         wait_set->timers[t_idx] = NULL;
         continue;
       }
       if (ret != RCL_RET_OK) {
+        RCL_EXPECT_ERROR_IS_SET(ret);
         return ret;  // The rcl error state should already be set.
       }
       if (next_call_time < min_next_call_time[clock->type]) {
@@ -631,6 +674,7 @@ rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout)
       int64_t cur_time;
       rmw_ret_t ret = rcl_clock_get_now(clocks[i], &cur_time);
       if (ret != RCL_RET_OK) {
+        RCL_EXPECT_ERROR_IS_SET(ret);
         return ret;  // The rcl error state should already be set.
       }
 
@@ -679,6 +723,7 @@ rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout)
     bool current_timer_is_ready = false;
     rcl_ret_t ret = rcl_timer_is_ready(wait_set->timers[i], &current_timer_is_ready);
     if (ret != RCL_RET_OK) {
+      RCL_EXPECT_ERROR_IS_SET(ret);
       return ret;  // The rcl error state should already be set.
     }
     if (!current_timer_is_ready) {
@@ -689,7 +734,8 @@ rcl_wait(rcl_wait_set_t * wait_set, int64_t timeout)
   }
   // Check for timeout, return RCL_RET_TIMEOUT only if it wasn't a timer.
   if (ret != RMW_RET_OK && ret != RMW_RET_TIMEOUT) {
-    RCL_SET_ERROR_MSG(rmw_get_error_string().str);
+    RCL_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "Error from rmw_wait(): %d %s", ret, rmw_get_error_string().str);
     return RCL_RET_ERROR;
   }
   // Set corresponding rcl subscription handles NULL.

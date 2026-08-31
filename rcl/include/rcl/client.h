@@ -475,6 +475,17 @@ rcl_client_response_subscription_get_actual_qos(const rcl_client_t * client);
  *
  * \sa rmw_client_set_on_new_response_callback for details about this function.
  *
+ * Since this callback is called from the middleware, you should
+ * aim to make it fast and not blocking. This callback
+ * is intended to implement an event driven executor and
+ * not process data directly.
+ *
+ * Doing work in this callback can cause delays,
+ * deadlocks, or latency due to cross thread waiting
+ * as this process runs on middleware managed threads
+ * and is meant only to notify the executor that new data
+ * is available in the middleware queue.
+ *
  * <hr>
  * Attribute          | Adherence
  * ------------------ | -------------
@@ -489,7 +500,7 @@ rcl_client_response_subscription_get_actual_qos(const rcl_client_t * client);
  * \param[in] user_data Given to the callback when called later, may be NULL
  * \return `RCL_RET_OK` if callback was set to the listener, or
  * \return `RCL_RET_INVALID_ARGUMENT` if `client` is NULL, or
- * \return `RCL_RET_UNSUPPORTED` if the API is not implemented in the dds implementation
+ * \return `RCL_RET_UNSUPPORTED` if the API is not supported by the middleware
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED

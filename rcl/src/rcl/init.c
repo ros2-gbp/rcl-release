@@ -40,7 +40,11 @@ extern "C"
 #include "./context_impl.h"
 #include "./init_options_impl.h"
 
-static atomic_uint_least64_t __rcl_next_unique_id = ATOMIC_VAR_INIT(1);
+#if defined(_WIN32) && !defined(__MINGW64__)
+static atomic_uint_least64_t __rcl_next_unique_id = {1};
+#else
+static atomic_uint_least64_t __rcl_next_unique_id = 1;
+#endif
 
 rcl_ret_t
 rcl_init(
@@ -67,6 +71,7 @@ rcl_init(
   rcl_allocator_t allocator = options->impl->allocator;
   RCL_CHECK_ALLOCATOR(&allocator, return RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(context, RCL_RET_INVALID_ARGUMENT);
+  RCUTILS_LOGGING_AUTOINIT_WITH_ALLOCATOR(allocator);
 
   RCUTILS_LOG_DEBUG_NAMED(
     ROS_PACKAGE_NAME,
